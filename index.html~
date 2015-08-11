@@ -35,16 +35,18 @@
     <div class="container">
 
       <div class="masthead">
-        <h3 class="text-muted">Enrique Gabriel Baquela Blog</h3>
+        <h3 class="text-muted">Escuela de Perfeccionamiento en Investigaci&oacuten Operativa</h3>
         <ul class="nav nav-justified">
           <li class="active"><a href="index.html">Inicio</a></li>
-          <li><a href="#">Acerca de mi</a></li>
-          <li><a href="#">Modelizando sistemas</a></li>
+          <li><a href="comisionDirectiva.htm">Comisión Directiva</a></li>
+          <li><a href="comiteOrganizador.htm">Comite Organizador</a></li>
+          <li><a href="listaTrabajosArea.htm">Trabajos por área</a></li>
+          <li><a href="listaTrabajosAutor.htm">Trabajos por autor</a></li>
+          <li><a href="ISBN 2014 - Ficha 987-24267-5-9.pdf">ISBN</a></li>
         </ul>
       </div>
 
       <!-- Jumbotron -->
-      <!--
       <div class="jumbotron">
         <h1>XXVII ENDIO / XXV EPIO</h1>
         <p class="lead">XXVII Encuentro Nacional de Docentes en Investigaci&oacuten Operativa (ENDIO) y XXV Escuela de Perfeccionamiento en Investigaci&oacuten Operatiova (EPIO).</p>
@@ -58,16 +60,40 @@ Gabriel Baquela; coordinado por Patricia A. Iñiguez y Silvia Adriana Ramos. –
 comp. III. Iñiguez, Patricia A., coord. IV. Ramos, Silvia Adriana, coord.
 CDD 658</p>
       </div>
-      -->
+      
       <!--
+      <div class="center-block">
+        <img src="img/bannerENDIO.PNG" class="img-responsive" alt="Responsive image">
+      </div>
+      -->
 		<div class="text-center">
     		<img src="img/bannerENDIO.PNG" alt="XXVII ENDIO / XXV EPIO - Universidad Tecnológica Nacional - Facultad Regional San Nicolás - San Nicolás de los Arroyos - Mayo 2014"/>
 		</div>
+      
+      <!-- Example row of columns -->
+      <!--
+      <div class="row">
+        <div class="col-lg-4">
+          <h2>Objetivos</h2>
+          <p>Promover y difundir el conocimiento t&eacutecnico-cient&iacutefico y docente en el campo de la Investigaci&oacuten Operativa y disciplinas afines, por medio del intercambio de ideas, trabajos de investigaci&oacuten y de campo. </p>
+          <p><a class="btn btn-primary" href="objetivos.htm" role="button">Ver detalles &raquo;</a></p>
+        </div>
+        <div class="col-lg-4">
+          <h2>Sede</h2>
+          <p>El XXVII ENDIO y XXV EPIO se realizar&aacute en la Facultad Regional San Nicol&aacutes de la Universidad Tecnol&oacutegica Nacional, entre el 21 y 23 de Mayo de 2014. </p>
+          <p><a class="btn btn-primary" href="sede.htm" role="button">Ver detalles &raquo;</a></p>
+       </div>
+        <div class="col-lg-4">
+          <h2>EPIO</h2>
+          <p>La EPIO es una asociaci&oacuten civil sin fines de lucro, de caracter federal, que tiene por objeto difundir, promover y contribuir al avance de la Investigaci&oacuten Operativa en Argentina.</p>
+          <p><a class="btn btn-primary" href="epio.htm" role="button">Ver detalles &raquo;</a></p>
+        </div>
+      </div>
       -->
 
       <!-- Site footer -->
       <div class="footer">
-        <p>&copy; egbaquela 2015</p>
+        <p>&copy; EPIO 2014</p>
       </div>
 
     </div> <!-- /container -->
