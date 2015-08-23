@@ -1,80 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="Enrique Gabriel Baquela" >
-    <link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">
+    <!--<link rel="shortcut icon" href="img/favicon.png">-->
 
-    <title>Congreso ENDIO - EPIO</title>
+    <title>Enrique Gabriel Baquela</title>
 
-    <!-- Bootstrap core CSS -->  
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet"href="css/bootstrap-theme.min.css">
-     
-    <!-- Custom styles for this template -->     
-    <link href="css/justified-nav.css" rel="stylesheet">
-    
     <script src="js/jquery-1.10.2.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="semantic/dist/semantic.min.css">
+    <script src="semantic/dist/semantic.min.js"></script>
 
-    <!-- Just for debugging purposes. Don't actually copy this line! -->
-    <!--[if lt IE 9]><script src="js/ie8-responsive-file-warning.js"></script><![endif]-->
+  <style type="text/css">
 
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-    <![endif]-->
+    .hidden.menu {
+      display: none;
+    }
+
+    .masthead.segment {
+      min-height: 700px;
+      padding: 1em 0em;
+    }
+    .masthead .logo.item img {
+      margin-right: 1em;
+    }
+    .masthead .ui.menu .ui.button {
+      margin-left: 0.5em;
+    }
+    .masthead h1.ui.header {
+      margin-top: 3em;
+      margin-bottom: 0em;
+      font-size: 4em;
+      font-weight: normal;
+    }
+    .masthead h2 {
+      font-size: 1.7em;
+      font-weight: normal;
+    }
+
+    .ui.vertical.stripe {
+      padding: 8em 0em;
+    }
+    .ui.vertical.stripe h3 {
+      font-size: 2em;
+    }
+    .ui.vertical.stripe .button + h3,
+    .ui.vertical.stripe p + h3 {
+      margin-top: 3em;
+    }
+    .ui.vertical.stripe .floated.image {
+      clear: both;
+    }
+    .ui.vertical.stripe p {
+      font-size: 1.33em;
+    }
+    .ui.vertical.stripe .horizontal.divider {
+      margin: 3em 0em;
+    }
+
+    .quote.stripe.segment {
+      padding: 0em;
+    }
+    .quote.stripe.segment .grid .column {
+      padding-top: 5em;
+      padding-bottom: 5em;
+    }
+
+    .footer.segment {
+      padding: 5em 0em;
+    }
+
+    .secondary.pointing.menu .toc.item {
+      display: none;
+    }
+
+    @media only screen and (max-width: 700px) {
+      .ui.fixed.menu {
+        display: none !important;
+      }
+      .secondary.pointing.menu .item,
+      .secondary.pointing.menu .menu {
+        display: none;
+      }
+      .secondary.pointing.menu .toc.item {
+        display: block;
+      }
+      .masthead.segment {
+        min-height: 350px;
+      }
+      .masthead h1.ui.header {
+        font-size: 2em;
+        margin-top: 1.5em;
+      }
+      .masthead h2 {
+        margin-top: 0.5em;
+        font-size: 1.5em;
+      }
+    }
+
+
+  </style>
+
+
+
+  <script>
+  $(document)
+    .ready(function() {
+
+      // fix menu when passed
+      $('.masthead')
+        .visibility({
+          once: false,
+          onBottomPassed: function() {
+            $('.fixed.menu').transition('fade in');
+          },
+          onBottomPassedReverse: function() {
+            $('.fixed.menu').transition('fade out');
+          }
+        })
+      ;
+
+      // create sidebar and attach to menu open
+      $('.ui.sidebar')
+        .sidebar('attach events', '.toc.item')
+      ;
+
+    })
+  ;
+  </script>
+
   </head>
 
-  <body>
+<body>
 
-    <div class="container">
+<!-- Following Menu -->
+<div class="ui large top fixed hidden menu">
+  <div class="ui container">
+    <a class="active item">Home</a>
+    <a class="item">¿Quien soy?</a>
+    <a class="item">Documentos</a>
+    <a class="item">Modelizando sistemas</a>
+  </div>
+</div>
 
-      <div class="masthead">
-        <h3 class="text-muted">Enrique Gabriel Baquela Blog</h3>
-        <ul class="nav nav-justified">
-          <li class="active"><a href="index.html">Inicio</a></li>
-          <li><a href="#">Acerca de mi</a></li>
-          <li><a href="#">Modelizando sistemas</a></li>
-        </ul>
+<!-- Sidebar Menu -->
+<div class="ui vertical inverted sidebar menu">
+    <a class="active item">Home</a>
+    <a class="item">¿Quien soy?</a>
+    <a class="item">Documentos</a>
+    <a class="item">Modelizando sistemas</a>
+</div>
+
+
+<!-- Page Contents -->
+<div class="pusher">
+  <div class="ui violet inverted vertical masthead center aligned segment">
+
+    <div class="ui container">
+      <div class="ui large secondary pointing menu">
+        <a class="toc item">
+          <i class="sidebar icon"></i>
+        </a>
+        <a class="active item">Home</a>
+        <a class="item">¿Quien soy?</a>
+        <a class="item">Documentos</a>
+        <a class="item">Modelizando sistemas</a>
       </div>
+    </div>
 
-      <!-- Jumbotron -->
-      <!--
-      <div class="jumbotron">
-        <h1>XXVII ENDIO / XXV EPIO</h1>
-        <p class="lead">XXVII Encuentro Nacional de Docentes en Investigaci&oacuten Operativa (ENDIO) y XXV Escuela de Perfeccionamiento en Investigaci&oacuten Operatiova (EPIO).</p>
+    <div class="ui text container">
+      <h1 class="ui inverted header">
+        Enrique Gabriel Baquela
+      </h1>
+      <h2>Ideas que salen y entran de mi cabeza.</h2>
+    </div>
+  </div>
 
-        <p class="lead">Anales XXVII Encuentro Nacional de Docentes en Investigación Operativa y XXV Escuela de
-Perfeccionamiento en Investigación Operativa / José Luis Vivas ... [et.al.] ; compilado por Enrique
-Gabriel Baquela; coordinado por Patricia A. Iñiguez y Silvia Adriana Ramos. –</p> 
-        <p class="lead">1a ed. - Tandil: Escuela de Perfeccionamiento en Investigación Operativa, 2014. E-Book.</p>
-        <p class="lead">ISBN 978-987-24267-5-0</p>
-        <p class="lead">1. Investigación. 2. Administración de Empresas. I. Vivas, José Luis II. Baquela, Enrique Gabriel,
-comp. III. Iñiguez, Patricia A., coord. IV. Ramos, Silvia Adriana, coord.
-CDD 658</p>
+  <div class="ui vertical stripe segment">
+    <div class="ui middle aligned stackable grid container">
+      <div class="row">
+        <div class="eight wide column">
+          <h3 class="ui header">Ayudamos a pequeñas y medianas empresas a ser cada vez mejores...</h3>
+          <p>Podemos darles superpoderes a tu empresa. Imaginate fabricar mas con menos material, ver el futuro para saber que pasaría en tu empresa si haces algún cambio, anticiparte a tus necesidades.</p>
+        </div>
+        <div class="six wide right floated column">
+          <img src="img/figura01.png" class="ui large bordered rounded image">
+        </div>
       </div>
-      -->
-      <!--
-		<div class="text-center">
-    		<img src="img/bannerENDIO.PNG" alt="XXVII ENDIO / XXV EPIO - Universidad Tecnológica Nacional - Facultad Regional San Nicolás - San Nicolás de los Arroyos - Mayo 2014"/>
-		</div>
-      -->
+      <a class="ui large button">Leer mas...</a>
+    </div>
+  </div>
 
-      <!-- Site footer -->
-      <div class="footer">
-        <p>&copy; egbaquela 2015</p>
+  <div class="ui vertical stripe segment">
+    <div class="ui middle aligned stackable grid container">
+      <div class="row">
+        <div class="six wide right floated column">
+          <img src="img/figura01.png" class="ui large bordered rounded image">
+        </div>
+        <div class="eight wide column">
+          <h3 class="ui header">Ayudamos a pequeñas y medianas empresas a ser cada vez mejores...</h3>
+          <p>Podemos darles superpoderes a tu empresa. Imaginate fabricar mas con menos material, ver el futuro para saber que pasaría en tu empresa si haces algún cambio, anticiparte a tus necesidades.</p>
+          <a class="ui large button">Leer mas...</a>
+        </div>
       </div>
+    </div>
+  </div>
 
-    </div> <!-- /container -->
 
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-  </body>
+  <div class="ui inverted vertical footer segment">
+    <div class="ui center aligned container">
+      <h3><a href="https://es.wikipedia.org/wiki/Cthulhu">Ph´nglui mglw´nafh Cthulhu R´lyeh wgah´nagl fhtagn</a></h3>
+      <p>Copyright egbaquela</p>
+    </div>
+  </div>
+</div>
+
+</body>
+
 </html>
