@@ -1,3 +1,7 @@
+example();
+
+function example() {
+
 var tasks = [
 {"startDate":new Date("Wed Aug 19 08:10:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 08:30:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02"},
 {"startDate":new Date("Wed Aug 19 07:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 07:15:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
@@ -59,17 +63,17 @@ var tasks = [
 {"startDate":new Date("Tue Aug 25 09:05:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 09:25:00 GMT-0300 2015"),"taskName":"DEM03","status":"DEMORA","taskType": "delay", "element": "DEM03"},
 {"startDate":new Date("Tue Aug 25 10:40:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 11:20:00 GMT-0300 2015"),"taskName":"DEM03","status":"DEMORA","taskType": "delay", "element": "DEM03"},
 {"startDate":new Date("Tue Aug 25 13:35:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
-{"startDate":new Date("Wed Aug 26 06:45:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 07:10:00 GMT-0300 2015"),"taskName":"LF01","status":"TAREA","taskType": "task", "element": "LF01"},
-{"startDate":new Date("Wed Aug 26 09:45:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 10:30:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02"},
-{"startDate":new Date("Wed Aug 26 10:40:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 11:00:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
-{"startDate":new Date("Wed Aug 26 07:35:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 08:00:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
-{"startDate":new Date("Wed Aug 26 08:40:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 09:00:00 GMT-0300 2015"),"taskName":"CCD02","status":"TAREA","taskType": "task", "element": "CCD02"},
-{"startDate":new Date("Wed Aug 26 08:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 08:30:00 GMT-0300 2015"),"taskName":"CCD03","status":"TAREA","taskType": "task", "element": "CCD03"},
-{"startDate":new Date("Wed Aug 26 06:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 06:40:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
-{"startDate":new Date("Wed Aug 26 08:30:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 08:40:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Wed Aug 26 09:20:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 09:45:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Wed Aug 26 11:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 11:45:00 GMT-0300 2015"),"taskName":"DEM05","status":"DEMORA","taskType": "delay", "element": "DEM05"},
-{"startDate":new Date("Wed Aug 26 13:20:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
+{"startDate":new Date("Tue Aug 26 06:45:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 07:10:00 GMT-0300 2015"),"taskName":"LF01","status":"TAREA","taskType": "task", "element": "LF01"},
+{"startDate":new Date("Tue Aug 26 09:45:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 10:30:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02"},
+{"startDate":new Date("Tue Aug 26 10:40:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 11:00:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
+{"startDate":new Date("Tue Aug 26 07:35:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 08:00:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
+{"startDate":new Date("Tue Aug 26 08:40:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 09:00:00 GMT-0300 2015"),"taskName":"CCD02","status":"TAREA","taskType": "task", "element": "CCD02"},
+{"startDate":new Date("Tue Aug 26 08:00:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 08:30:00 GMT-0300 2015"),"taskName":"CCD03","status":"TAREA","taskType": "task", "element": "CCD03"},
+{"startDate":new Date("Tue Aug 26 06:00:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 06:40:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
+{"startDate":new Date("Tue Aug 26 08:30:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 08:40:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
+{"startDate":new Date("Tue Aug 26 09:20:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 09:45:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
+{"startDate":new Date("Tue Aug 26 11:00:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 11:45:00 GMT-0300 2015"),"taskName":"DEM05","status":"DEMORA","taskType": "delay", "element": "DEM05"},
+{"startDate":new Date("Tue Aug 26 13:20:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 26 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
 
 
 ];
@@ -98,98 +102,9 @@ tasks.sort(function(a, b) {
 var minDate = tasks[0].startDate;
 
 var format = "%H:%M";
-var timeDomainString = "1day";
 
 var gantt = d3.gantt().taskTypes(taskNames).taskStatus(taskStatus).tickFormat(format);
-
-var margin = {
-     top : 20,
-     right : 40,
-     bottom : 20,
-     left : 80
-};
-gantt.margin(margin);
-
-gantt.timeDomainMode("fixed");
-changeTimeDomain(timeDomainString);
-
 gantt(tasks);
 
-function changeTimeDomain(timeDomainString) {
-    this.timeDomainString = timeDomainString;
-    switch (timeDomainString) {
-    case "20150819":
-	format = "%H:%M:";
-	//gantt.timeDomain([ d3.time.hour.offset(getEndDate(), -1), getEndDate() ]);	
-	gantt.timeDomain([ new Date("Wed Aug 19 06:00:00 GMT-0300 2015"), new Date("Wed Aug 19 14:00:00 GMT-0300 2015")]);
-	break;
-    case "20150820":
-	format = "%H:%M";
-	gantt.timeDomain([ new Date("Thu Aug 20 06:00:00 GMT-0300 2015"), new Date("Thu Aug 20 14:00:00 GMT-0300 2015")]);
-	break;
-
-    case "20150821":
-	format = "%H:%M";
-	gantt.timeDomain([ new Date("Fri Aug 21 06:00:00 GMT-0300 2015"), new Date("Fri Aug 21 14:00:00 GMT-0300 2015")]);
-	break;
-
-    case "20150824":
-	format = "%H:%M";
-	gantt.timeDomain([ new Date("Mon Aug 24 06:00:00 GMT-0300 2015"), new Date("Mon Aug 24 14:00:00 GMT-0300 2015")]);
-	break;
-
-    case "20150825":
-	format = "%H:%M";
-	gantt.timeDomain([ new Date("Tue Aug 25 06:00:00 GMT-0300 2015"), new Date("Tue Aug 25 14:00:00 GMT-0300 2015")]);
-	break;
-	
-    case "20150826":
-	format = "%H:%M";
-	gantt.timeDomain([ new Date("Wed Aug 26 06:00:00 GMT-0300 2015"), new Date("Wed Aug 26 14:00:00 GMT-0300 2015")]);
-	break;
-	
-    case "ultimaSemana":
-	format = "%a %H:%M";
-	gantt.timeDomain([ d3.time.day.offset(getEndDate(), -7), getEndDate() ]);
-	break;	
-	
-    default:
-	format = "%H:%M"
-
-    }
-    gantt.tickFormat(format);
-    gantt.redraw(tasks);
-}
-
-function getEndDate() {
-    var lastEndDate = Date.now();
-    if (tasks.length > 0) {
-	lastEndDate = tasks[tasks.length - 1].endDate;
-    }
-
-    return lastEndDate;
-}
-
-function addTask() {
-
-    var lastEndDate = getEndDate();
-    var taskStatusKeys = Object.keys(taskStatus);
-    var taskStatusName = taskStatusKeys[Math.floor(Math.random() * taskStatusKeys.length)];
-    var taskName = taskNames[Math.floor(Math.random() * taskNames.length)];
-
-    tasks.push({
-	"startDate" : d3.time.hour.offset(lastEndDate, Math.ceil(1 * Math.random())),
-	"endDate" : d3.time.hour.offset(lastEndDate, (Math.ceil(Math.random() * 3)) + 1),
-	"taskName" : taskName,
-	"status" : taskStatusName
-    });
-
-    changeTimeDomain(timeDomainString);
-    gantt.redraw(tasks);
 };
 
-function removeTask() {
-    tasks.pop();
-    changeTimeDomain(timeDomainString);
-    gantt.redraw(tasks);
-};

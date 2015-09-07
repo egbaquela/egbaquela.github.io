@@ -148,7 +148,7 @@ function changeTimeDomain(timeDomainString) {
 	gantt.timeDomain([ new Date("Wed Aug 26 06:00:00 GMT-0300 2015"), new Date("Wed Aug 26 14:00:00 GMT-0300 2015")]);
 	break;
 	
-    case "ultimaSemana":
+    case "unaSemana":
 	format = "%a %H:%M";
 	gantt.timeDomain([ d3.time.day.offset(getEndDate(), -7), getEndDate() ]);
 	break;	
