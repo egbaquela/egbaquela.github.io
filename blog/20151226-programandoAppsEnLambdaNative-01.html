@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="description" content=""/><meta name="author" content="Enrique Gabriel Baquela"/><title>Modelizando Sistemas</title><script src="../js/jquery-1.10.2.min.js"></script><link rel="stylesheet" type="text/css" href="../semantic/dist/semantic.min.css"/><script src="../semantic/dist/semantic.min.js"></script><link rel="stylesheet" type="text/css" href="../css/prism.css"/><script src="../js/prism.js"></script><script src="../js/angular.min.js"></script><style type="text/css">
+    .hidden.menu {
+      display: none;
+    }
+
+    #firstPage .masthead {
+      background: rgba(142,5,247,1);
+      background: -moz-linear-gradient(top, rgba(142,5,247,1) 0%, rgba(165,73,235,1) 50%, rgba(206,165,232,1) 87%, rgba(223,214,227,1) 100%);
+      background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(142,5,247,1)), color-stop(50%, rgba(165,73,235,1)), color-stop(87%, rgba(206,165,232,1)), color-stop(100%, rgba(223,214,227,1)));
+      background: -webkit-linear-gradient(top, rgba(142,5,247,1) 0%, rgba(165,73,235,1) 50%, rgba(206,165,232,1) 87%, rgba(223,214,227,1) 100%);
+      background: -o-linear-gradient(top, rgba(142,5,247,1) 0%, rgba(165,73,235,1) 50%, rgba(206,165,232,1) 87%, rgba(223,214,227,1) 100%);
+      background: -ms-linear-gradient(top, rgba(142,5,247,1) 0%, rgba(165,73,235,1) 50%, rgba(206,165,232,1) 87%, rgba(223,214,227,1) 100%);
+      background: linear-gradient(to bottom, rgba(142,5,247,1) 0%, rgba(165,73,235,1) 50%, rgba(206,165,232,1) 87%, rgba(223,214,227,1) 100%);
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#8e05f7', endColorstr='#dfd6e3', GradientType=0 );
+    }
+
+    .masthead.segment {
+      min-height: 700px;
+      padding: 1em 0em;
+    }
+    .masthead .logo.item img {
+      margin-right: 1em;
+    }
+    .masthead .ui.menu .ui.button {
+      margin-left: 0.5em;
+    }
+    .masthead h1.ui.header {
+      margin-top: 3em;
+      margin-bottom: 0em;
+      font-size: 4em;
+      font-weight: normal;
+    }
+    .masthead h2 {
+      font-size: 1.7em;
+      font-weight: normal;
+    }
+
+    .ui.vertical.stripe {
+      padding: 8em 0em;
+    }
+    .ui.vertical.stripe h3 {
+      font-size: 2em;
+    }
+    .ui.vertical.stripe .button + h3,
+    .ui.vertical.stripe p + h3 {
+      margin-top: 3em;
+    }
+    .ui.vertical.stripe .floated.image {
+      clear: both;
+    }
+    .ui.vertical.stripe p {
+      font-size: 1.33em;
+    }
+    .ui.vertical.stripe .horizontal.divider {
+      margin: 3em 0em;
+    }
+
+    .quote.stripe.segment {
+      padding: 0em;
+    }
+    .quote.stripe.segment .grid .column {
+      padding-top: 5em;
+      padding-bottom: 5em;
+    }
+
+    .footer.segment {
+      padding: 2em 0em;
+    }
+
+    .secondary.pointing.menu .toc.item {
+      display: none;
+    }
+
+
+    @media only screen and (max-width: 700px) {
+      .ui.fixed.menu {
+        display: none !important;
+      }
+      .secondary.pointing.menu .item,
+      .secondary.pointing.menu .menu {
+        display: none;
+      }
+      .secondary.pointing.menu .toc.item {
+        display: block;
+      }
+
+      .masthead.segment {
+        min-height: 350px;
+      }
+      .masthead h1.ui.header {
+        font-size: 2em;
+        margin-top: 1.5em;
+      }
+      .masthead h2 {
+        margin-top: 0.5em;
+        font-size: 1.5em;
+      }
+    }</style><script>
+    $(document)
+      .ready(function() {
+         // fix menu when passed
+        $('.masthead')
+          .visibility({
+             once: false,
+            onBottomPassed: function() {
+              $('.fixed.menu').transition('fade in');
+            },
+            onBottomPassedReverse: function() {
+              $('.fixed.menu').transition('fade out');
+            }
+          })
+        ;
+      })
+    ;</script><script>
+    $(document)
+      .ready(function() {
+        // create sidebar and attach to menu open
+        $('.ui.sidebar')
+          .sidebar('attach events', '.toc.item')
+        ;
+      })
+    ;</script></head><body><div class="ui large top fixed menu"><div class="ui container"><a class="item" href="../index.html">Home</a><a class="item" href="../p/quienSoy.html">¿Quien soy?</a><a class="active item" href="indexBlog.html">Blog</a><a class="item">Documentos</a><a class="item" href="http://egbaquela.blogspot.com">Mi viejo blog</a><a class="item" href="http://modelizandosistemas.blogspot.com">Modelizando sistemas</a></div></div><div class="ui vertical inverted sidebar menu"><a class="item" href="../index.html">Home</a><a class="item" href="../p/quienSoy.html">¿Quien soy?</a><a class="active item" href="indexBlog.html">Blog</a><a class="item">Documentos</a><a class="item" href="http://egbaquela.blogspot.com">Mi viejo blog</a><a class="item" href="http://modelizandosistemas.blogspot.com">Modelizando sistemas</a></div><div class="pusher"><div class="ui container"><div class="ui large secondary pointing menu"><a class="toc item"><i class="sidebar icon"></i></a><a class="item" href="../index.html">Home</a><a class="item" href="../p/quienSoy.html">¿Quien soy?</a><a class="active item" href="indexBlog.html">Blog</a><a class="item">Documentos</a><a class="item" href="http://egbaquela.blogspot.com">Mi viejo blog</a><a class="item" href="http://modelizandosistemas.blogspot.com">Modelizando sistemas</a></div></div><div class="ui vertical stripe segment"><div class="ui middle aligned stackable grid container"><div class="row"><div class="eight wide column"><h3 class="ui header">Programando Apps en LambdaNative (01)</h3><p>En estos dos meses estuve trabajando junto a un amigo desarrollando una App para Android para una mutual. La armamos utilizando <a href="http://ionicframework.com/">IONIC</a>, ya que los dos tenemos experiencia en la programación de páginas web. IONIC/Cordoba/PhoneGap es una excelente idea, ya que reduce a casi cero la curva de aprendizaje necesaria para desarrollar aplicaciones móbiles en el caso que seas desarrollador web. Y además es multiplataforma. En general, creo que en mis próximos desarrollos usaré IONIC. Pero la contra que tiene es que en realidad, la App generada no deja de ser un navegador corriendo la página web que diseñamos, lo cual afecta a las aplicaciones que necesiten mucha performance. Así que se me ocurrió ver que mas había en el panorama de la generación de Apps multiplataforma, y encontre a <a href="http://www.lambdanative.org/">lambdaNative</a></p><p>LambdaNative es un framework de desarrollo basado en Scheme (<a href="http://gambitscheme.org">Gambit-C</a> para ser precisos) que genera código nativo multiplataforma. Gambit-C es a Scheme lo que ECL es a Common Lisp: puedo generar código fuente de C a partir de código en Scheme y compilarlo, leer bibliotecas de C, y generar bibliotecas que puedan ser llamandas desde C. Teniendo el NDK instalado, por ejemplo, nos permite generar una aplicación en C nativo para Android.</p><p>Mas allá de Gambit-C, lambdaNative aporta un montón de módulos para acceder a las funcionalidades del celular por un lado, y obviarnos de realizar todo el acceso y configuración a bajo nivel. Y también viene con un conjunto de scripts que estructura y facilitan la configuración de la App, su código fuente y el resto de los archivos de trabajo. Una contra que tiene son los tiempos de compilación (un poco altos) que hacen que el desarrollo no sea tan fluido como con IONIC, pero es el precio a pagar por una aplicación nativa.</p></div><div class="six wide right floated column"><img src="#" class="ui medium bordered rounded image"/></div></div></div></div><div class="ui inverted vertical footer segment"><div class="ui center aligned container"><h3><a href="https://es.wikipedia.org/wiki/Cthulhu">Ph´nglui mglw´nafh Cthulhu R´lyeh wgah´nagl fhtagn</a></h3><p>Copyright egbaquela</p></div></div></div></body></html>
