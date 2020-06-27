@@ -1,78 +1,101 @@
 var tasks = [
-{"startDate":new Date("Wed Aug 19 08:10:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 08:30:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02"},
-{"startDate":new Date("Wed Aug 19 07:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 07:15:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
-{"startDate":new Date("Wed Aug 19 08:35:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 09:00:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
-{"startDate":new Date("Wed Aug 19 12:35:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 13:00:00 GMT-0300 2015"),"taskName":"CCD03","status":"TAREA","taskType": "task", "element": "CCD03"},
-{"startDate":new Date("Wed Aug 19 11:40:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 12:30:00 GMT-0300 2015"),"taskName":"CCD04","status":"TAREA", "progress": 0.75,"taskType": "task", "element": "CCD04"},
-{"startDate":new Date("Wed Aug 19 13:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 13:40:00 GMT-0300 2015"),"taskName":"CCD04","status":"TAREA", "progress": 0.25,"taskType": "task", "element": "CCD04"},
-{"startDate":new Date("Wed Aug 19 06:35:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 07:00:00 GMT-0300 2015"),"taskName":"ALMA05","status":"TAREA","taskType": "task", "element": "ALMA05"},
-{"startDate":new Date("Wed Aug 19 09:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 10:00:00 GMT-0300 2015"),"taskName":"ALMA06","status":"TAREA","taskType": "task", "element": "ALMA06"},
-{"startDate":new Date("Wed Aug 19 06:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 06:35:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
-{"startDate":new Date("Wed Aug 19 07:15:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 08:10:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Wed Aug 19 08:35:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 10:00:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Wed Aug 19 10:30:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 11:00:00 GMT-0300 2015"),"taskName":"DEM04","status":"DEMORA","taskType": "delay", "element": "DEM04"},
-{"startDate":new Date("Wed Aug 19 10:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 10:30:00 GMT-0300 2015"),"taskName":"DEM05","status":"DEMORA","taskType": "delay", "element": "DEM05"},
-{"startDate":new Date("Wed Aug 19 13:40:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 19 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
-{"startDate":new Date("Thu Aug 20 09:30:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 10:00:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
-{"startDate":new Date("Thu Aug 20 12:00:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 12:15:00 GMT-0300 2015"),"taskName":"CCD04","status":"TAREA","taskType": "task", "element": "CCD04"},
-{"startDate":new Date("Thu Aug 20 07:20:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 07:30:00 GMT-0300 2015"),"taskName":"ALMA01","status":"TAREA","taskType": "task", "element": "ALMA01"},
-{"startDate":new Date("Thu Aug 20 08:10:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 09:20:00 GMT-0300 2015"),"taskName":"ALMA04","status":"TAREA","taskType": "task", "element": "ALMA04"},
-{"startDate":new Date("Thu Aug 20 10:45:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 11:20:00 GMT-0300 2015"),"taskName":"ALMA04","status":"TAREA","taskType": "task", "element": "ALMA04"},
-{"startDate":new Date("Thu Aug 20 06:50:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 07:20:00 GMT-0300 2015"),"taskName":"ALMA05","status":"TAREA","taskType": "task", "element": "ALMA05"},
-{"startDate":new Date("Thu Aug 20 07:30:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 07:50:00 GMT-0300 2015"),"taskName":"CONV01","status":"TAREA","taskType": "task", "element": "CONV01"},
-{"startDate":new Date("Thu Aug 20 10:10:00 GMT-0300 2015"),"endDate":new Date("Thu Aug 20 10:45:00 GMT-0300 2015"),"taskName":"DEM03","status":"DEMORA","taskType": "delay", "element": "DEM03"},
-{"startDate":new Date("Fri Aug 21 07:00:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 07:25:00 GMT-0300 2015"),"taskName":"LF01","status":"TAREA","taskType": "task", "element": "LF01"},
-{"startDate":new Date("Fri Aug 21 07:50:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 08:15:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02"},
-{"startDate":new Date("Fri Aug 21 08:20:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 08:30:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
-{"startDate":new Date("Fri Aug 21 09:50:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 10:05:00 GMT-0300 2015"),"taskName":"CCD02","status":"TAREA","taskType": "task", "element": "CCD02"},
-{"startDate":new Date("Fri Aug 21 10:05:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 10:40:00 GMT-0300 2015"),"taskName":"CCD04","status":"TAREA","taskType": "task", "element": "CCD04"},
-{"startDate":new Date("Fri Aug 21 12:00:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 12:15:00 GMT-0300 2015"),"taskName":"ALMA03","status":"TAREA","taskType": "task", "element": "ALMA03"},
-{"startDate":new Date("Fri Aug 21 11:35:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 13:40:00 GMT-0300 2015"),"taskName":"ALMA06","status":"TAREA","taskType": "task", "element": "ALMA06"},
-{"startDate":new Date("Fri Aug 21 06:00:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 06:40:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
-{"startDate":new Date("Fri Aug 21 07:25:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 07:50:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Fri Aug 21 08:30:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 09:50:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Fri Aug 21 10:45:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 11:15:00 GMT-0300 2015"),"taskName":"DEM05","status":"DEMORA","taskType": "delay", "element": "DEM05"},
-{"startDate":new Date("Fri Aug 21 13:40:00 GMT-0300 2015"),"endDate":new Date("Fri Aug 21 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
-{"startDate":new Date("Mon Aug 24 06:45:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 07:10:00 GMT-0300 2015"),"taskName":"LF01","status":"TAREA","taskType": "task", "element": "LF01"},
-{"startDate":new Date("Mon Aug 24 07:20:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 07:30:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02", "progress":0.25},
-{"startDate":new Date("Mon Aug 24 07:10:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 07:20:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03", "progress":0.50},
-{"startDate":new Date("Mon Aug 24 09:45:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 10:00:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03", "progress":0.50},
-{"startDate":new Date("Mon Aug 24 07:30:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 07:50:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
-{"startDate":new Date("Mon Aug 24 08:50:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 09:15:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
-{"startDate":new Date("Mon Aug 24 08:10:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 08:40:00 GMT-0300 2015"),"taskName":"CCD02","status":"TAREA","taskType": "task", "element": "CCD02"},
-{"startDate":new Date("Mon Aug 24 09:15:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 09:35:00 GMT-0300 2015"),"taskName":"CCD03","status":"TAREA","taskType": "task", "element": "CCD03"},
-{"startDate":new Date("Mon Aug 24 06:00:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 06:35:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
-{"startDate":new Date("Mon Aug 24 07:50:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 08:10:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Mon Aug 24 10:30:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 11:45:00 GMT-0300 2015"),"taskName":"DEM04","status":"DEMORA","taskType": "delay", "element": "DEM04"},
-{"startDate":new Date("Mon Aug 24 10:40:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 10:30:00 GMT-0300 2015"),"taskName":"DEM05","status":"DEMORA","taskType": "delay", "element": "DEM05"},
-{"startDate":new Date("Mon Aug 24 13:35:00 GMT-0300 2015"),"endDate":new Date("Mon Aug 24 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
-{"startDate":new Date("Tue Aug 25 11:20:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 12:00:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
-{"startDate":new Date("Tue Aug 25 07:50:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 08:00:00 GMT-0300 2015"),"taskName":"ALMA01","status":"TAREA","taskType": "task", "element": "ALMA01"},
-{"startDate":new Date("Tue Aug 25 10:30:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 10:40:00 GMT-0300 2015"),"taskName":"ALMA02","status":"TAREA","taskType": "task", "element": "ALMA02"},
-{"startDate":new Date("Tue Aug 25 09:25:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 10:30:00 GMT-0300 2015"),"taskName":"ALMA04","status":"TAREA","taskType": "task", "element": "ALMA04"},
-{"startDate":new Date("Tue Aug 25 12:40:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 13:20:00 GMT-0300 2015"),"taskName":"ALMA04","status":"TAREA","taskType": "task", "element": "ALMA04"},
-{"startDate":new Date("Tue Aug 25 06:55:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 07:50:00 GMT-0300 2015"),"taskName":"ALMA05","status":"TAREA","taskType": "task", "element": "ALMA05"},
-{"startDate":new Date("Tue Aug 25 13:20:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 13:35:00 GMT-0300 2015"),"taskName":"ALMA05","status":"TAREA","taskType": "task", "element": "ALMA05"},
-{"startDate":new Date("Tue Aug 25 08:25:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 08:50:00 GMT-0300 2015"),"taskName":"CONV01","status":"TAREA","taskType": "task", "element": "CONV01"},
-{"startDate":new Date("Tue Aug 25 06:00:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 06:55:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
-{"startDate":new Date("Tue Aug 25 08:00:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 08:25:00 GMT-0300 2015"),"taskName":"DEM03","status":"DEMORA","taskType": "delay", "element": "DEM03"},
-{"startDate":new Date("Tue Aug 25 09:05:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 09:25:00 GMT-0300 2015"),"taskName":"DEM03","status":"DEMORA","taskType": "delay", "element": "DEM03"},
-{"startDate":new Date("Tue Aug 25 10:40:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 11:20:00 GMT-0300 2015"),"taskName":"DEM03","status":"DEMORA","taskType": "delay", "element": "DEM03"},
-{"startDate":new Date("Tue Aug 25 13:35:00 GMT-0300 2015"),"endDate":new Date("Tue Aug 25 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
-{"startDate":new Date("Wed Aug 26 06:45:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 07:10:00 GMT-0300 2015"),"taskName":"LF01","status":"TAREA","taskType": "task", "element": "LF01"},
-{"startDate":new Date("Wed Aug 26 09:45:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 10:30:00 GMT-0300 2015"),"taskName":"LF02","status":"TAREA","taskType": "task", "element": "LF02"},
-{"startDate":new Date("Wed Aug 26 10:40:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 11:00:00 GMT-0300 2015"),"taskName":"LF03","status":"TAREA","taskType": "task", "element": "LF03"},
-{"startDate":new Date("Wed Aug 26 07:35:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 08:00:00 GMT-0300 2015"),"taskName":"CCD01","status":"TAREA","taskType": "task", "element": "CCD01"},
-{"startDate":new Date("Wed Aug 26 08:40:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 09:00:00 GMT-0300 2015"),"taskName":"CCD02","status":"TAREA","taskType": "task", "element": "CCD02"},
-{"startDate":new Date("Wed Aug 26 08:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 08:30:00 GMT-0300 2015"),"taskName":"CCD03","status":"TAREA","taskType": "task", "element": "CCD03"},
-{"startDate":new Date("Wed Aug 26 06:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 06:40:00 GMT-0300 2015"),"taskName":"DEM01","status":"DEMORA","taskType": "delay", "element": "DEM01"},
-{"startDate":new Date("Wed Aug 26 08:30:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 08:40:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Wed Aug 26 09:20:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 09:45:00 GMT-0300 2015"),"taskName":"DEM02","status":"DEMORATERNIUM","taskType": "delay", "element": "DEM02"},
-{"startDate":new Date("Wed Aug 26 11:00:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 11:45:00 GMT-0300 2015"),"taskName":"DEM05","status":"DEMORA","taskType": "delay", "element": "DEM05"},
-{"startDate":new Date("Wed Aug 26 13:20:00 GMT-0300 2015"),"endDate":new Date("Wed Aug 26 14:00:00 GMT-0300 2015"),"taskName":"DEM07","status":"DEMORA","taskType": "delay", "element": "DEM07"},
+{'startDate': new Date('Sep 2 06:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 06:15:00 GMT-0300 2015'), 'taskName':'Ingreso', 'status':'DEMORA', 'taskType':'task', 'element':'Ingreso'},
+{'startDate': new Date('Sep 2 06:35:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 09:30:00 GMT-0300 2015'), 'taskName':'No hay autoriz de calc para abrir tolva o cargar horno', 'status':'DEMORATERNIUM', 'taskType':'task', 'element':'No hay autoriz de calc para abrir tolva o cargar horno'},
+{'startDate': new Date('Sep 2 09:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 10:00:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 2 10:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 10:30:00 GMT-0300 2015'), 'taskName':'Refrigerio', 'status':'DEMORA', 'taskType':'task', 'element':'Refrigerio'},
+{'startDate': new Date('Sep 2 10:55:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 11:05:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 2 11:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 12:20:00 GMT-0300 2015'), 'taskName':'Descarga de camion', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de camion'},
+{'startDate': new Date('Sep 2 12:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 13:00:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 2 12:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 13:25:00 GMT-0300 2015'), 'taskName':'Apertura de bolsones en Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Apertura de bolsones en Receptora'},
+{'startDate': new Date('Sep 2 13:20:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 13:30:00 GMT-0300 2015'), 'taskName':'Limpieza de zarandas', 'status':'TAREA', 'taskType':'task', 'element':'Limpieza de zarandas'},
+{'startDate': new Date('Sep 2 13:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 2 14:00:00 GMT-0300 2015'), 'taskName':'Egreso', 'status':'DEMORA', 'taskType':'task', 'element':'Egreso'},
+{'startDate': new Date('Sep 3 06:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 06:15:00 GMT-0300 2015'), 'taskName':'Ingreso', 'status':'DEMORA', 'taskType':'task', 'element':'Ingreso'},
+{'startDate': new Date('Sep 3 06:50:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 07:10:00 GMT-0300 2015'), 'taskName':'Limpieza en Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Limpieza en Receptora'},
+{'startDate': new Date('Sep 3 07:15:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 07:30:00 GMT-0300 2015'), 'taskName':'Fundentes', 'status':'TAREA', 'taskType':'task', 'element':'Fundentes'},
+{'startDate': new Date('Sep 3 07:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 07:50:00 GMT-0300 2015'), 'taskName':'Apile en Silos', 'status':'TAREA', 'taskType':'task', 'element':'Apile en Silos'},
+{'startDate': new Date('Sep 3 07:50:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 10:00:00 GMT-0300 2015'), 'taskName':'Apertura de bolsones en Silos de Calcinacion', 'status':'TAREA', 'taskType':'task', 'element':'Apertura de bolsones en Silos de Calcinacion'},
+{'startDate': new Date('Sep 3 08:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 10:00:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 3 10:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 10:30:00 GMT-0300 2015'), 'taskName':'Refrigerio', 'status':'DEMORA', 'taskType':'task', 'element':'Refrigerio'},
+{'startDate': new Date('Sep 3 11:15:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 11:25:00 GMT-0300 2015'), 'taskName':'Fundentes', 'status':'TAREA', 'taskType':'task', 'element':'Fundentes'},
+{'startDate': new Date('Sep 3 11:25:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 12:15:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 3 12:20:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 13:30:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 3 13:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 3 14:00:00 GMT-0300 2015'), 'taskName':'Egreso', 'status':'DEMORA', 'taskType':'task', 'element':'Egreso'},
+{'startDate': new Date('Sep 10 14:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 14:15:00 GMT-0300 2015'), 'taskName':'Ingreso', 'status':'DEMORA', 'taskType':'task', 'element':'Ingreso'},
+{'startDate': new Date('Sep 10 16:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 16:30:00 GMT-0300 2015'), 'taskName':'Descarga de camion', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de camion'},
+{'startDate': new Date('Sep 10 16:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 16:50:00 GMT-0300 2015'), 'taskName':'Limpieza en Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Limpieza en Receptora'},
+{'startDate': new Date('Sep 10 16:50:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 18:00:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 10 18:05:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 18:35:00 GMT-0300 2015'), 'taskName':'Refrigerio', 'status':'DEMORA', 'taskType':'task', 'element':'Refrigerio'},
+{'startDate': new Date('Sep 10 18:50:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 19:30:00 GMT-0300 2015'), 'taskName':'No hay autoriz de calc para abrir tolva o cargar horno', 'status':'DEMORATERNIUM', 'taskType':'task', 'element':'No hay autoriz de calc para abrir tolva o cargar horno'},
+{'startDate': new Date('Sep 10 19:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 21:00:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 10 20:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 20:30:00 GMT-0300 2015'), 'taskName':'Fundentes', 'status':'TAREA', 'taskType':'task', 'element':'Fundentes'},
+{'startDate': new Date('Sep 10 20:40:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 20:55:00 GMT-0300 2015'), 'taskName':'Fundentes', 'status':'TAREA', 'taskType':'task', 'element':'Fundentes'},
+{'startDate': new Date('Sep 10 21:10:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 21:25:00 GMT-0300 2015'), 'taskName':'Descarga de camion', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de camion'},
+{'startDate': new Date('Sep 10 21:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 10 22:00:00 GMT-0300 2015'), 'taskName':'Egreso', 'status':'DEMORA', 'taskType':'task', 'element':'Egreso'},
+{'startDate': new Date('Sep 13 22:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 13 22:15:00 GMT-0300 2015'), 'taskName':'Ingreso', 'status':'DEMORA', 'taskType':'task', 'element':'Ingreso'},
+{'startDate': new Date('Sep 13 23:05:00 GMT-0300 2015'), 'endDate': new Date('Sep 13 23:20:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 13 23:20:00 GMT-0300 2015'), 'endDate': new Date('Sep 13 23:55:00 GMT-0300 2015'), 'taskName':'Limpieza en Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Limpieza en Receptora'},
+{'startDate': new Date('Sep 14 00:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 01:00:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 14 01:05:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 01:25:00 GMT-0300 2015'), 'taskName':'Carga de camion en Silos de Calcinacion', 'status':'TAREA', 'taskType':'task', 'element':'Carga de camion en Silos de Calcinacion'},
+{'startDate': new Date('Sep 14 01:25:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 02:15:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 14 02:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 02:30:00 GMT-0300 2015'), 'taskName':'Refrigerio', 'status':'DEMORA', 'taskType':'task', 'element':'Refrigerio'},
+{'startDate': new Date('Sep 14 02:10:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 03:20:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 14 02:35:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 02:55:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 14 03:35:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 04:05:00 GMT-0300 2015'), 'taskName':'Apertura de bolsones en Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Apertura de bolsones en Receptora'},
+{'startDate': new Date('Sep 14 04:25:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 04:50:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 14 05:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 14 06:00:00 GMT-0300 2015'), 'taskName':'Egreso', 'status':'DEMORA', 'taskType':'task', 'element':'Egreso'},
+{'startDate': new Date('Sep 15 22:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 15 22:15:00 GMT-0300 2015'), 'taskName':'Ingreso', 'status':'DEMORA', 'taskType':'task', 'element':'Ingreso'},
+{'startDate': new Date('Sep 15 22:40:00 GMT-0300 2015'), 'endDate': new Date('Sep 15 22:50:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 15 23:05:00 GMT-0300 2015'), 'endDate': new Date('Sep 15 23:20:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 15 23:30:00 GMT-0300 2015'), 'endDate': new Date('Sep 15 23:45:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 15 23:50:00 GMT-0300 2015'), 'endDate': new Date('Sep 15 00:05:00 GMT-0300 2015'), 'taskName':'Descarga de Tolvas En Receptora', 'status':'TAREA', 'taskType':'task', 'element':'Descarga de Tolvas En Receptora'},
+{'startDate': new Date('Sep 16 00:05:00 GMT-0300 2015'), 'endDate': new Date('Sep 16 01:20:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 16 02:00:00 GMT-0300 2015'), 'endDate': new Date('Sep 16 02:30:00 GMT-0300 2015'), 'taskName':'Refrigerio', 'status':'DEMORA', 'taskType':'task', 'element':'Refrigerio'},
+{'startDate': new Date('Sep 16 03:15:00 GMT-0300 2015'), 'endDate': new Date('Sep 16 04:45:00 GMT-0300 2015'), 'taskName':'Carga de Hornos de Calcinacion desde playa', 'status':'TAREA', 'taskType':'task', 'element':'Carga de Hornos de Calcinacion desde playa'},
+{'startDate': new Date('Sep 16 05:45:00 GMT-0300 2015'), 'endDate': new Date('Sep 16 06:00:00 GMT-0300 2015'), 'taskName':'Egreso', 'status':'DEMORA', 'taskType':'task', 'element':'Egreso'},
+
 
 
 ];
+
+
+
+jsonData = [
+{"date": "Wed Aug 19 08:10:00 GMT-0300 2015", "taskName":"LF02","elementType": "tarea", "element": "LF02", "type":"startDate"},
+{"date": "Wed Aug 19 08:30:00 GMT-0300 2015", "taskName":"LF02","elementType": "tarea", "element": "LF02", "type":"endDate"},
+{"date": "Wed Aug 19 08:10:00 GMT-0300 2015", "taskName":"LF02","elementType": "operario", "element": "operario01", "type":"startDate"},
+{"date": "Wed Aug 19 08:30:00 GMT-0300 2015", "taskName":"LF02","elementType": "operario", "element": "operario01", "type":"endDate"},
+{"date": "Wed Aug 19 08:10:00 GMT-0300 2015", "taskName":"LF02","elementType": "maquinaria", "element": "autoelevador01", "type":"startDate"},
+{"date": "Wed Aug 19 08:30:00 GMT-0300 2015", "taskName":"LF02","elementType": "maquinaria", "element": "autoelevador01", "type":"endDate"},
+{"date": "Wed Aug 19 08:10:00 GMT-0300 2015", "taskName":"LF02","elementType": "delay", "element": "DEM01", "type":"startDate"},
+{"date": "Wed Aug 19 08:30:00 GMT-0300 2015", "taskName":"LF02","elementType": "delay", "element": "DEM01", "type":"endDate"}
+]
+
+var i;
+var jsonDataStart = [];
+var jsonDataEnd = [];
+var jsonDataFinal = [];
+
+for (i=0; i<jsonData.length; i++){
+  jsonData[i].date = new Date(jsonData[i].date);
+  if (jsonData[i].type == "startDate"){
+    jsonDataStart.push(jsonData[i]);
+  }else{
+    jsonDataEnd.push(jsonData[i]);
+  } 
+}
+
+var temp
+for (i=0; i<jsonData.length/2; i++){
+  temp = {startDate: jsonDataStart[i].date,
+    endDate: jsonDataEnd[i].date,
+    taskName: jsonDataEnd[i].element,
+    elementType: jsonDataEnd[i].elementType,
+    element: jsonDataEnd[i].element
+  }
+  jsonDataFinal.push(temp);
+}
+
+//var tasks = jsonDataFinal
 
 
 var taskStatus = {
@@ -84,9 +107,24 @@ var taskStatus = {
     "NI" : "bar-ni"
 };
 
-var taskNames = [ "LF01", "LF02", "LF03", "CCD01", "CCD02", "CCD03", "CCD04", "ALMA01", "ALMA02", 
-"ALMA03","ALMA04","ALMA05","ALMA06","ALMA07", "CONV01", "DEM01","DEM02","DEM03","DEM04","DEM05",
-"DEM06","DEM07" ];
+
+
+var taskNames = ["Ingreso", 
+"Refrigerio",
+"Egreso",
+"No hay autoriz de calc para abrir tolva o cargar horno",
+"Apertura de bolsones en Receptora",
+"Apertura de bolsones en Silos de Calcinacion",
+"Apile en Silos",
+"Carga de camion en Silos de Calcinacion",
+"Carga de Hornos de Calcinacion desde playa",
+"Descarga de camion",
+"Descarga de Tolvas En Receptora",,
+"Fundentes",
+"Limpieza de zarandas",
+"Limpieza en Receptora",
+
+ ];
 
 tasks.sort(function(a, b) {
     return a.endDate - b.endDate;
@@ -118,40 +156,30 @@ gantt(tasks);
 function changeTimeDomain(timeDomainString) {
     this.timeDomainString = timeDomainString;
     switch (timeDomainString) {
-    case "20150819":
+    case "20150902":
+        alert("aca");
 	format = "%H:%M:";
-	//gantt.timeDomain([ d3.time.hour.offset(getEndDate(), -1), getEndDate() ]);	
-	gantt.timeDomain([ new Date("Wed Aug 19 06:00:00 GMT-0300 2015"), new Date("Wed Aug 19 14:00:00 GMT-0300 2015")]);
+	gantt.timeDomain([ new Date("Sep 2 06:00:00 GMT-0300 2015"), new Date("Sep 2 14:00:00 GMT-0300 2015")]);
 	break;
-    case "20150820":
+    case "20150903":
 	format = "%H:%M";
-	gantt.timeDomain([ new Date("Thu Aug 20 06:00:00 GMT-0300 2015"), new Date("Thu Aug 20 14:00:00 GMT-0300 2015")]);
+	gantt.timeDomain([ new Date("Sep 3 06:00:00 GMT-0300 2015"), new Date("Sep 3 14:00:00 GMT-0300 2015")]);
 	break;
 
-    case "20150821":
+    case "20150910":
 	format = "%H:%M";
-	gantt.timeDomain([ new Date("Fri Aug 21 06:00:00 GMT-0300 2015"), new Date("Fri Aug 21 14:00:00 GMT-0300 2015")]);
+	gantt.timeDomain([ new Date("Sep 10 14:00:00 GMT-0300 2015"), new Date("Sep 10 22:00:00 GMT-0300 2015")]);
 	break;
 
-    case "20150824":
+    case "20150913":
 	format = "%H:%M";
-	gantt.timeDomain([ new Date("Mon Aug 24 06:00:00 GMT-0300 2015"), new Date("Mon Aug 24 14:00:00 GMT-0300 2015")]);
+	gantt.timeDomain([ new Date("Sep 13 22:00:00 GMT-0300 2015"), new Date("Sep 14 06:00:00 GMT-0300 2015")]);
 	break;
 
-    case "20150825":
+    case "20150915":
 	format = "%H:%M";
-	gantt.timeDomain([ new Date("Tue Aug 25 06:00:00 GMT-0300 2015"), new Date("Tue Aug 25 14:00:00 GMT-0300 2015")]);
+	gantt.timeDomain([ new Date("Sep 15 22:00:00 GMT-0300 2015"), new Date("Sep 16 06:00:00 GMT-0300 2015")]);
 	break;
-	
-    case "20150826":
-	format = "%H:%M";
-	gantt.timeDomain([ new Date("Wed Aug 26 06:00:00 GMT-0300 2015"), new Date("Wed Aug 26 14:00:00 GMT-0300 2015")]);
-	break;
-	
-    case "unaSemana":
-	format = "%a %H:%M";
-	gantt.timeDomain([ d3.time.day.offset(getEndDate(), -7), getEndDate() ]);
-	break;	
 	
     default:
 	format = "%H:%M"
