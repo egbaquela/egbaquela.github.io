@@ -1,15 +1,15 @@
 ---
 layout: page
-title: About
+title: Acerca de mi
 permalink: /about/
 ---
 
-Some information about you!
+Cuando termine de actualizar todo, acá va a haber algo de información sobre mi.
 
-### More Information
+### Mas información
 
-A place to include any other types of information that you'd like to include about yourself.
+Si. Como seguro adivinaste, acá va a haber algo mas de info.
 
-### Contact me
+### Contacto
 
-[email@domain.com](mailto:email@domain.com)
+Podes contactarme por [Linkedin](https://ar.linkedin.com/in/egbaquela) cuando quieras.
