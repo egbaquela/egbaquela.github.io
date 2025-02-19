@@ -19,7 +19,7 @@ ignore = ["node_modules/"]
 generate_rss = true
 website_title = "Modelizando sistemas"
 website_descr = "Un blog de muchas cosas, o quizas solo unas pocas, de Enrique Gabriel Baquela"
-website_url   = "https://tlienart.github.io/FranklinTemplates.jl/"
+website_url   = "https://www.egbaquela.com.ar/"
 +++
 
 <!--
