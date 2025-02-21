@@ -22,7 +22,7 @@ Presenté varios trabajos a revistas internacionales y congresos, participé com
 
 Dirijo tesis de doctorado y maestría, en temáticas relacionadas a la Investigación Operativa, la Ciencia de Datos y la Ingeniería Industrial.
 
-Llevo más de dos décadas de actividad profesional ininterrumpida, en empresas PYMES y multinacionales, estando los últimos diez años focalizado al desarrollo de modelos y algoritmos de optimización y aprendizaje automático, principalmente en empresas de los continentes europeo y asiático. Brindo consultoría a través de [Furgens Research](https://furgensresearch.com/).
+Llevo más de dos décadas de actividad profesional ininterrumpida, en empresas PYMES y multinacionales, estando los últimos diez años focalizado al desarrollo de modelos y algoritmos de optimización y aprendizaje automático, principalmente en empresas de los continentes europeo y asiático. Entre otros, desarrollé el algoritmo de scheduling de prácticos de puertos y barcazas para [Innovez One](https://www.innovez-one.com/) y ejerzo como _Lead Data Scientist_ en [V2T](https://www.v2t.io/), donde tengo a cargo la construcción de modelos de optimización para sistemas logísticos y de manufactura, así como modelos de aprendizaje automático. Brindo consultoría a través de [Furgens Research](https://furgensresearch.com/).
 
 ## Formas de contacto
 
