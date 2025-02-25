@@ -2,12 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
-    <loc>https://www.egbaquela.com.ar/original_templates/menu1/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/original_templates/menu2/index.html</loc>
     <lastmod>2024-06-28</lastmod>
     <changefreq>monthly</changefreq>
@@ -21,6 +15,42 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
+    <lastmod>2025-02-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/original_templates/index_old/index.html</loc>
+    <lastmod>2024-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/menu3/index.html</loc>
+    <lastmod>2024-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250225_links_licencias/index.html</loc>
+    <lastmod>2025-02-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/menu4/index.html</loc>
+    <lastmod>2024-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/original_templates/menu3/index.html</loc>
+    <lastmod>2024-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/original_templates/menu1/index.html</loc>
     <lastmod>2024-06-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -33,24 +63,6 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu2/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/menu3/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/original_templates/index_old/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/original_templates/menu3/index.html</loc>
     <lastmod>2024-06-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
