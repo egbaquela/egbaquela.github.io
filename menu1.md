@@ -14,13 +14,9 @@ tags = ["syntax", "code"]
 
 ## Julia
 
-\toc
-
 * [Como usar Julia en Google Colab](../posts/20250226_julia_en_google_colab)
 
 
 ## Libros, escritura, etc
-
-\toc
 
 * [Links acerca de licencias para libros y blogs](../posts/20250225_links_licencias)
