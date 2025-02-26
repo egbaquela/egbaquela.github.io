@@ -3,7 +3,7 @@
 
 <url>
     <loc>https://www.egbaquela.com.ar/original_templates/menu2/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
+    <lastmod>2025-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -15,7 +15,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
-    <lastmod>2025-02-25</lastmod>
+    <lastmod>2025-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -33,7 +33,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250225_links_licencias/index.html</loc>
-    <lastmod>2025-02-25</lastmod>
+    <lastmod>2025-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -64,6 +64,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/menu2/index.html</loc>
     <lastmod>2024-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250226_julia_en_google_colab/index.html</loc>
+    <lastmod>2025-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
