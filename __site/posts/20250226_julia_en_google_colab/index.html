@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+   <link rel="stylesheet" href="/libs/highlight/styles/github.min.css">
+   
+  <link rel="stylesheet" href="/css/franklin.css">
+<link rel="stylesheet" href="/css/poole_hyde.css">
+<!-- style adjustments -->
+<style>
+  html {font-size: 17px;}
+  .franklin-content {position: relative; padding-left: 8%; padding-right: 5%; line-height: 1.35em;}
+  @media (min-width: 940px) {
+    .franklin-content {width: 100%; margin-left: auto; margin-right: auto;}
+  }
+  @media (max-width: 768px) {
+    .franklin-content {padding-left: 6%; padding-right: 6%;}
+  }
+</style>
+<link rel="icon" href="/assets/favicon.png">
+
+   <title>Como usar Julia en Google Colab</title>  
+</head>
+<body>
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h2><a href="/">Modelizando sistemas</a></h2>
+      <p class="lead">Un blog personal-profesional de Enrique Gabriel Baquela</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item " href="/">Inicio</a>
+      <a class="sidebar-nav-item " href="/sobre_mi/">Sobre mi</a>
+      <a class="sidebar-nav-item " href="/menu1/">Posts</a>
+    </nav>
+    <p>&copy; Enrique Gabriel Baquela.</p>
+  </div>
+</div>
+<div class="content container">
+
+<!-- Content appended here -->
+<div class="franklin-content">
+<h1 id="como_usar_julia_en_google_colab"><a href="#como_usar_julia_en_google_colab" class="header-anchor">Como usar Julia en Google Colab</a></h1>
+<p>Por alguna razón, Google todavía no ofrece soporte para Julia en Google Colab, pero eso no impide que se pueda ejecutar este lenguaje en dicha plataforma. Buscando en Internet, encontré dos formas:</p>
+<ul>
+<li><p>La primera, referenciada en <a href="https://github.com/ageron/julia_notebooks">este repo de <em>ageron</em></a> consiste en ejecutar la siguiente plantilla: <a href="https://colab.research.google.com/github/ageron/julia_notebooks/blob/master/Julia_Colab_Notebook_Template.ipynb">https://colab.research.google.com/github/ageron/julia<em>notebooks/blob/master/Julia</em>Colab<em>Notebook</em>Template.ipynb</a> . La misma se ejecutar un script de bash que se encarga de descargar e instalar <em>Julia</em>. Requiere, luego, recargar la página.</p>
+</li>
+<li><p>La segunda, consiste en utilizar esta plantilla: <a href="https://colab.research.google.com/drive/1_4Yz3FKO5_uuYvamEfHqwtFT9WpCuSbm?usp&#61;sharing">https://colab.research.google.com/drive/1<em>4Yz3FKO5</em>uuYvamEfHqwtFT9WpCuSbm?usp&#61;sharing</a> , referenciada en <a href="https://github.com/johnnychen94/colab-julia-bootstrap">este repo de johnnychen94</a>. La misma utiliza <a href="https://github.com/johnnychen94/jill.py"><em>Jill</em></a> para la instalación de <em>Julia</em> mediante <em>Python</em>. También requiere recargar la página.</p>
+</li>
+</ul>
+<p>A los dos enlaces llegué a través de estas dos páginas:</p>
+<ul>
+<li><p><a href="https://discourse.julialang.org/t/google-colab-compatibility-broken/93004">https://discourse.julialang.org/t/google-colab-compatibility-broken/93004</a></p>
+</li>
+<li><p><a href="https://github.com/googlecolab/colabtools/issues/3385">https://github.com/googlecolab/colabtools/issues/3385</a></p>
+</li>
+</ul>
+<p>&#40;si, tendría que haber llegado emdiante mejores páginas, pero todavía una de las deudas pendientes en el ecosistema de <em>Julia</em>&#41;.</p>
+<div class="page-foot">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: February 26, 2025.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div>  <!-- div: content container -->
+    
+    
+        <script src="/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>
+
+    
+  </body>
+</html>

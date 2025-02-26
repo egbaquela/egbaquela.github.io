@@ -23,6 +23,25 @@
 
 <item>
   <title>
+    <![CDATA[  Como usar Julia en Google Colab  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250226_julia_en_google_colab/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250226_julia_en_google_colab/index.html </guid>
+  <description>
+    <![CDATA[  Como configurar Google Colab para poder ejecutar una sesión de Julia  ]]>
+  </description>  
+    
+  <pubDate>Wed, 26 Feb 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Posts List  ]]>
   </title>
   <link> https://www.egbaquela.com.ar/menu1/index.html </link>
@@ -82,8 +101,8 @@
   <title>
     <![CDATA[  More goodies  ]]>
   </title>
-  <link> https://www.egbaquela.com.ar/original_templates/menu2/index.html </link>
-  <guid> https://www.egbaquela.com.ar/original_templates/menu2/index.html </guid>
+  <link>  </link>
+  <guid>  </guid>
   <description>
     <![CDATA[  A short description of the page which would serve as <strong>blurb</strong> in a <code>RSS</code> feed; you can use basic markdown here but the whole description string must be a single line &#40;not a multiline string&#41;. Like this one for instance. Keep in mind that styling is minimal in RSS so for instance don&#39;t expect maths or fancy styling to work; images should be ok though: <img src="https://upload.wikimedia.org/wikipedia/en/b/b0/Rick_and_Morty_characters.jpg" alt="" />  ]]>
   </description>  

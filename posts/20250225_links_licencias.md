@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 2, 25)
 rss = "Listado con links acerca de licencias para obras creativas como libros y blogs."
 
-tags = ["syntax", "code"]
+tags = ["books", "license", "open access"]
 +++
 
 # Links acerca de licencias para libros y blogs
