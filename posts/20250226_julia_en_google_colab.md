@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 2, 26)
 rss = "Como configurar Google Colab para poder ejecutar una sesión de Julia"
 
-tags = ["syntax", "code", "cloud", "colab"]
+tags = ["syntax", "code", "cloud", "colab", "julialang"]
 +++
 
 # Como usar Julia en Google Colab

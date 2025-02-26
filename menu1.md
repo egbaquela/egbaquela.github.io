@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 2, 25)
 rss = "Lista de post del blog."
 
-tags = ["syntax", "code"]
+tags = ["general"]
 +++
 
 
