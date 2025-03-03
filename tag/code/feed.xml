@@ -42,25 +42,6 @@
 
 <item>
   <title>
-    <![CDATA[  Sobre mi  ]]>
-  </title>
-  <link> https://www.egbaquela.com.ar/sobre_mi/index.html </link>
-  <guid> https://www.egbaquela.com.ar/sobre_mi/index.html </guid>
-  <description>
-    <![CDATA[  La típica sección <em>About me</em> en la que me presento, expongo mi CV y dejo mis coordenadas.  ]]>
-  </description>  
-    
-  <pubDate>Wed, 19 Feb 2025 00:00:00 +0000</pubDate>  
-  
-  
-  <atom:author>
-    <atom:name>Enrique Gabriel Baquela</atom:name>
-  </atom:author>
-        
-</item>
-
-<item>
-  <title>
     <![CDATA[  More goodies  ]]>
   </title>
   <link>  </link>
