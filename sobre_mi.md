@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 2, 19)
 rss = "La típica sección _About me_ en la que me presento, expongo mi CV y dejo mis coordenadas."
 
-tags = ["syntax", "code"]
+tags = ["about", "general"]
 +++
 
 

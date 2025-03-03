@@ -1,5 +1,5 @@
 @def title = "Bienvenida"
-@def tags = ["syntax", "code"]
+@def tags = ["general"]
 
 # Bienvenidos a mi espacio
 
