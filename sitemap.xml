@@ -3,7 +3,7 @@
 
 <url>
     <loc>https://www.egbaquela.com.ar/original_templates/menu2/index.html</loc>
-    <lastmod>2025-03-03</lastmod>
+    <lastmod>2025-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -28,6 +28,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/menu3/index.html</loc>
     <lastmod>2024-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html</loc>
+    <lastmod>2025-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
