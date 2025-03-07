@@ -14,6 +14,7 @@ tags = ["general"]
 
 ## Julia
 
+* [Links sobre material de interesante sobre Julia, principalmente para autoaprendizaje](../posts/20250307_links_julia_lang)
 * [Como usar Julia en Google Colab](../posts/20250226_julia_en_google_colab)
 
 

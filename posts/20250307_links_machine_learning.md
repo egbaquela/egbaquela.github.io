@@ -16,8 +16,8 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 ## Fundamentos
 
  * Curso introductorio (en inglés, en video): [https://www.youtube.com/playlist?list=PLOU2XLYxmsII9mzQ-Xxug4l2o04JBrkLV](https://www.youtube.com/playlist?list=PLOU2XLYxmsII9mzQ-Xxug4l2o04JBrkLV)
- * Curso introductorio, de Bloomberg (en inglés, blog): [https://bloomberg.github.io/foml/#home](https://bloomberg.github.io/foml/#home)
- * _Made with ML_. Otro curso introductorio (en ingles, blog): [https://madewithml.com/#course](https://madewithml.com/#course)
+ * Curso introductorio, de Bloomberg (en inglés, libro web): [https://bloomberg.github.io/foml/#home](https://bloomberg.github.io/foml/#home)
+ * _Made with ML_. Otro curso introductorio (en ingles, libro web): [https://madewithml.com/#course](https://madewithml.com/#course)
  * Repositorio de _Made with ML_ (en inglés, repo): [https://github.com/GokuMohandas/Made-With-ML](https://github.com/GokuMohandas/Made-With-ML)
 
 ## Ciencia de datos con Julia
