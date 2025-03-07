@@ -23,6 +23,25 @@
 
 <item>
   <title>
+    <![CDATA[  Links sobre matemática  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre matemática. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+  </description>  
+    
+  <pubDate>Fri, 07 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Como usar Julia en Google Colab  ]]>
   </title>
   <link> https://www.egbaquela.com.ar/posts/20250226_julia_en_google_colab/index.html </link>

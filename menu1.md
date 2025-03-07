@@ -20,3 +20,11 @@ tags = ["general"]
 ## Libros, escritura, etc
 
 * [Links acerca de licencias para libros y blogs](../posts/20250225_links_licencias)
+
+## Matemática
+
+* [Links sobre material de autoaprendizaje](../posts/20250307_links_matematica)
+
+## Machine Learning
+
+* [Links sobre material de autoaprendizaje](../posts/20250307_links_machine_learning)
