@@ -43,4 +43,9 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 * PLext repo (en ingles, repositorio): [https://github.com/mlxd/PLext](https://github.com/mlxd/PLext)
 * PLext slides (en ingles, documentación): [https://github.com/mlxd/PLext/blob/main/pres/PLext.pdf](https://github.com/mlxd/PLext/blob/main/pres/PLext.pdf)
 * Conversaciones en Discourse acerca del tema (en inglés, foro): [https://discourse.julialang.org/t/efficiency-for-calling-julia-from-python-and-purely-run-julia/81484/4](https://discourse.julialang.org/t/efficiency-for-calling-julia-from-python-and-purely-run-julia/81484/4)
-* Post en Stack Overflow acerca del tema (en inglés, foro): [https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall](https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall) 
+* Post en Stack Overflow acerca del tema (en inglés, foro): [https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall](https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall)
+
+## Static compilation
+
+* Repo de _StaticCompiler.jl_ (en inglés, repo): [https://github.com/tshort/StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
+* Discusión en Discourse sobre el tema (en inglés, foro): [https://discourse.julialang.org/t/static-compilation-in-julia/124416/8](https://discourse.julialang.org/t/static-compilation-in-julia/124416/8) 
