@@ -20,6 +20,11 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 * Discusión en Discourse acerca de como iniciarse en la ciencia de datos con Julia (en inglés, foro): [https://discourse.julialang.org/t/whats-the-current-spring-2024-canonical-approach-to-data-science-in-julia/112427](https://discourse.julialang.org/t/whats-the-current-spring-2024-canonical-approach-to-data-science-in-julia/112427)
 * Repo de un curso de _Julia Academy_ sobre Julia para Machine Learning (en ingles, repo): [https://github.com/JuliaAcademy/DataScience](https://github.com/JuliaAcademy/DataScience)
 
+## Buenas prácticas
+
+* Flujo de trabajo con _Julia_ (en ingles, libro web): [https://modernjuliaworkflows.org/](https://modernjuliaworkflows.org/)
+* Creación de paquetes (en ingles, documentación web): [https://pkgdocs.julialang.org/v1/creating-packages/](https://pkgdocs.julialang.org/v1/creating-packages/)
+
 ## Performance
 
 * Tips generales de performance (en inglés, blog): [https://www.juliafordatascience.com/performance-tips/](https://www.juliafordatascience.com/performance-tips/)
@@ -28,3 +33,14 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 * _Books.jl_, paquete utilizado para crear el libro _Julia Data Science_ (en ingles, repo): [https://github.com/JuliaBooks/Books.jl](https://github.com/JuliaBooks/Books.jl)
 * Manual de _Books.jl_ (en ingles, libro web): [https://huijzer.xyz/Books.jl/config](https://huijzer.xyz/Books.jl/config) 
+
+## Interface Julia-Python
+
+* PyJulia (en inglés, documentación): [https://pyjulia.readthedocs.io/en/latest/index.html](https://pyjulia.readthedocs.io/en/latest/index.html)
+* Repo de PyJulia (en inglés, repositorio): [https://github.com/JuliaPy/pyjulia](https://github.com/JuliaPy/pyjulia)
+* PythonCall y JuliaCall (en inglés, documentación): [https://juliapy.github.io/PythonCall.jl/stable/](https://juliapy.github.io/PythonCall.jl/stable/)
+* Repo de PythonCall y JuliaCall (en inglés, repositorio): [https://github.com/JuliaPy/PythonCall.jl](https://github.com/JuliaPy/PythonCall.jl)
+* PLext repo (en ingles, repositorio): [https://github.com/mlxd/PLext](https://github.com/mlxd/PLext)
+* PLext slides (en ingles, documentación): [https://github.com/mlxd/PLext/blob/main/pres/PLext.pdf](https://github.com/mlxd/PLext/blob/main/pres/PLext.pdf)
+* Conversaciones en Discourse acerca del tema (en inglés, foro): [https://discourse.julialang.org/t/efficiency-for-calling-julia-from-python-and-purely-run-julia/81484/4](https://discourse.julialang.org/t/efficiency-for-calling-julia-from-python-and-purely-run-julia/81484/4)
+* Post en Stack Overflow acerca del tema (en inglés, foro): [https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall](https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall) 
