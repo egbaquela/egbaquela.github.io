@@ -24,6 +24,7 @@ tags = ["general"]
 
 ## Matemática
 
+* [Acerca de la Open Source Society University (OSSU)](../posts/20250310_ossu)
 * [Links sobre material de autoaprendizaje](../posts/20250307_links_matematica)
 
 ## Machine Learning

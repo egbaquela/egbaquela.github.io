@@ -4,13 +4,16 @@ hascode = true
 date = Date(2025, 3, 7)
 rss = "Links sobre matemática. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 
-tags = ["matematica"]
+tags = ["autoaprendizaje", "matematica"]
 +++
 
 # Links sobre matemática
 El objetivo de este post es ir recolectando links útiles para el auto-aprendizaje de matemática. No solo para aprender cosas que todavía no se, sinó también para mis clases, siempre hay material interesante que aporta una nueva visión sobre algo que uno ya conoce. A medida que encuentre nuevo material lo voy a ir subiendo.
 
 \toc
+
+## General
+ * OSSU (en inglés, repositorio): [https://github.com/ossu](https://github.com/ossu)
 
 ## Álgebra
 

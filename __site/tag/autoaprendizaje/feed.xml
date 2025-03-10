@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rss version="2.0"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:media="http://search.yahoo.com/mrss/"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:georss="http://www.georss.org/georss">
+
+  <channel>
+    <title>
+      <![CDATA[  Modelizando sistemas  ]]>
+    </title>
+    <link> https://www.egbaquela.com.ar/ </link>
+    <description>
+      <![CDATA[  Un blog personal-profesional de Enrique Gabriel Baquela  ]]>
+    </description>
+    <atom:link
+      href="https://www.egbaquela.com.ar/feed.xml"
+      rel="self"
+      type="application/rss+xml" />
+
+
+<item>
+  <title>
+    <![CDATA[  Acerca de la Open Source Society University  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250310_ossu/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250310_ossu/index.html </guid>
+  <description>
+    <![CDATA[  Reseña de la Open Source Society University &#40;OSSU&#41;.  ]]>
+  </description>  
+    
+  <pubDate>Mon, 10 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Links sobre matemática  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre matemática. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+  </description>  
+    
+  <pubDate>Fri, 07 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Links sobre machine learning y data science  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250307_links_machine_learning/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250307_links_machine_learning/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre machine learning y data science. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+  </description>  
+    
+  <pubDate>Fri, 07 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Links sobre el lenguaje Julia  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250307_links_julia_lang/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250307_links_julia_lang/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre el lenguaje Julia. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+  </description>  
+    
+  <pubDate>Fri, 07 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+</channel></rss>

@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 3, 7)
 rss = "Links sobre machine learning y data science. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 
-tags = ["machine learning", "julialang", "python", "Rlang"]
+tags = ["autoaprendizaje", "machine learning", "julialang", "python", "Rlang"]
 +++
 
 # Links sobre machine learning
