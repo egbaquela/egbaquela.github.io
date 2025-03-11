@@ -23,6 +23,25 @@
 
 <item>
   <title>
+    <![CDATA[  Tips para el lenguaje de programación Julia  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250311_julialang_tips/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250311_julialang_tips/index.html </guid>
+  <description>
+    <![CDATA[  Un conjunto de tips de tareas frecuentes, aburridas y/o complicadas, que no quiero tener que buscar una y otra vez en la web.  ]]>
+  </description>  
+    
+  <pubDate>Tue, 11 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Como usar Julia en Google Colab  ]]>
   </title>
   <link> https://www.egbaquela.com.ar/posts/20250226_julia_en_google_colab/index.html </link>
