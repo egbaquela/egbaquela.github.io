@@ -8,13 +8,75 @@ tags = ["syntax", "code", "julialang"]
 +++
 
 # Tips para el lenguaje de programación Julia
-En este post voy a incluir todo el código de _Julia_ que busco a cada rato, en general para tareas menores. Principalmente para tener un solo lugar de búsqueda. 
+Código _Julia_ para tareas menores que hago a cada rato y que no quiero tener que andar buscando en la web. Si a alguien le sirve, bienvenido. 
 
 
 ## Escribir un dataframe en un archivo excel
 
 ```julia
+using DataFrames
+using XLSX
+
 XLSX.writetable("new_file.xlsx", "sheet1" => df)
 ```
 
 Extraido de: [https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel](https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel)
+
+## Leer un dataframe desde un archivo excel
+
+```julia
+using DataFrames
+using XLSX
+
+df = DataFrame(XLSX.readtable("new_file.xlsx", "sheet1"))
+```
+
+## Cambiar el tipo de dato de una columna de un dataframe
+
+```julia
+using DataFrames
+
+df.columna = Int64.(df.columna)
+```
+
+Ahora bien, si a los datos del dataframe los queresmo utilizar con algún modelo de _Machine Learning_, con la biblioteca _MLJ_, la transformación debe hacerse mediante la función _coerce_, que no solo cambia el tipo en memoria, sinó que le asocia una interpretación en el contexto del _aprendizaje automático_. Por ejemplo, si queremos convertir una columna a un tipo de data (para _aprendizaje automático_) del tipo categórico:
+
+```julia
+using DataFrames
+using ScientificTypes
+
+coerce!(df, :columna => ScientificTypes.Multiclass)
+```
+
+Y si queremos convetir todas las columnas del tipo _Count_ (el tipo de dato con el cual se asocian los enteros) a _Continuous_ (el tipo de datos asociados a reales), podemos hacer:
+
+```julia
+using DataFrames
+using ScientificTypes
+
+coerce!(df, ScientificTypes.Count => ScientificTypes.Continuous)
+```
+
+_coerce!_ es muy potente porque cambia las dos cosas, la forma de almacenar el dato en memoria, como la interpretación del dato.
+
+## Averiguar que modelos de aprendizaje automático puedo usar con mis datos (usando MLJ)
+Dado un conjunto de predictores _Xtrain_ y una variable a predecir _ytrain_, el siguiente código nos lista (en un dataframe) todos los modelos que permiten el tipo de datos asociado a las features y al target:
+
+```julia
+using MLJ
+
+DataFrame(models(matching(Xtrain,ytrain)))
+```
+
+Ahora bien, si queremos averiguar si, para un modelo particular, los predictores o la variable dependiente son compatibles. Por ejemplo, con un _DecisionTreeClassifier_ del paquete _DecisionTreeInterface_:
+
+```julia
+using MLJ
+using DecisionTreeInterface
+
+println("¿Es el formato del target compatible?: ", 
+	scitype(ytrain) <: target_scitype(DecisionTreeClassifier()))
+
+println("¿Es el formato de las features compatible?: ", 
+	scitype(Xtrain) <: input_scitype(DecisionTreeClassifier()))
+```
