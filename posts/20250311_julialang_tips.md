@@ -10,6 +10,7 @@ tags = ["syntax", "code", "julialang"]
 # Tips para el lenguaje de programación Julia
 Código _Julia_ para tareas menores que hago a cada rato y que no quiero tener que andar buscando en la web. Si a alguien le sirve, bienvenido. 
 
+\toc
 
 ## Escribir un dataframe en un archivo excel
 
