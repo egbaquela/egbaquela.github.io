@@ -32,6 +32,35 @@ using XLSX
 df = DataFrame(XLSX.readtable("new_file.xlsx", "sheet1"))
 ```
 
+## Escribir un dataframe en un archivo CSV
+
+```julia
+using DataFrames
+using CSV
+
+CSV.write("new_file.csv", df)
+```
+
+
+## Leer un dataframe desde un archivo CSV
+
+```julia
+using DataFrames
+using CSV
+
+df = CSV.read("new_file.csv", DataFrame)
+```
+
+## Escribir un dataframe en un archivo CSV usando un pipe
+
+```julia
+using DataFrames
+using CSV
+
+df |> CSV.write("new_file.csv")
+```
+
+
 ## Cambiar el tipo de dato de una columna de un dataframe
 
 ```julia
