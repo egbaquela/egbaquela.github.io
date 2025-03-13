@@ -60,6 +60,22 @@ using CSV
 df |> CSV.write("new_file.csv")
 ```
 
+# Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición
+
+```julia
+using DataFrames
+
+function filter_transform!(df, pred, args...)
+    # See https://stackoverflow.com/questions/66586623/julia-dataframe-preferred-way-to-update-values-in-one-column-based-on-the-valu
+    fdf = filter(pred, df; view=true)
+    fdf .= DataFrames.transform(copy(fdf), (col => f => col for (col,f) in args)...)
+end
+
+# Ejemplo de uso
+# Cambia el valor de 'column2' a 200 en aquellos casos que 'column1' sea mayor a 100
+filter_transform!(df, :column1 => >(100), :column2 => column2->200)
+```
+
 
 ## Cambiar el tipo de dato de una columna de un dataframe
 
