@@ -62,11 +62,12 @@ df |> CSV.write("new_file.csv")
 
 # Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición
 
+Tip extraído de [este post](https://stackoverflow.com/questions/66586623/julia-dataframe-preferred-way-to-update-values-in-one-column-based-on-the-valu) de Stack Overflow.
+
 ```julia
 using DataFrames
 
 function filter_transform!(df, pred, args...)
-    # See https://stackoverflow.com/questions/66586623/julia-dataframe-preferred-way-to-update-values-in-one-column-based-on-the-valu
     fdf = filter(pred, df; view=true)
     fdf .= DataFrames.transform(copy(fdf), (col => f => col for (col,f) in args)...)
 end
