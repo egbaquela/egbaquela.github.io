@@ -71,6 +71,18 @@ df &#61; CSV.read&#40;&quot;new_file.csv&quot;, DataFrame&#41;</code></pre>
 using CSV
 
 df |&gt; CSV.write&#40;&quot;new_file.csv&quot;&#41;</code></pre>
+<h1 id="modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición"><a href="#modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición" class="header-anchor">Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición</a></h1>
+<pre><code class="language-julia">using DataFrames
+
+function filter_transform&#33;&#40;df, pred, args...&#41;
+    # See https://stackoverflow.com/questions/66586623/julia-dataframe-preferred-way-to-update-values-in-one-column-based-on-the-valu
+    fdf &#61; filter&#40;pred, df; view&#61;true&#41;
+    fdf .&#61; DataFrames.transform&#40;copy&#40;fdf&#41;, &#40;col &#61;&gt; f &#61;&gt; col for &#40;col,f&#41; in args&#41;...&#41;
+end
+
+# Ejemplo de uso
+# Cambia el valor de &#39;column2&#39; a 200 en aquellos casos que &#39;column1&#39; sea mayor a 100
+filter_transform&#33;&#40;df, :column1 &#61;&gt; &gt;&#40;100&#41;, :column2 &#61;&gt; column2-&gt;200&#41;</code></pre>
 <h2 id="cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe"><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe" class="header-anchor">Cambiar el tipo de dato de una columna de un dataframe</a></h2>
 <pre><code class="language-julia">using DataFrames
 
@@ -101,7 +113,7 @@ println&#40;&quot;¿Es el formato del target compatible?: &quot;,
 println&#40;&quot;¿Es el formato de las features compatible?: &quot;, 
 	scitype&#40;Xtrain&#41; &lt;: input_scitype&#40;DecisionTreeClassifier&#40;&#41;&#41;&#41;</code></pre>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: March 12, 2025.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: March 13, 2025.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
