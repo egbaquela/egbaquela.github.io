@@ -14,6 +14,7 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 ## General
  * OSSU (en inglés, repositorio): [https://github.com/ossu](https://github.com/ossu)
+ * Matemática a distancia - COMALes (en español, en video): [https://www.mdistancia.com/comales](https://www.mdistancia.com/comales)
 
 ## Álgebra
 
