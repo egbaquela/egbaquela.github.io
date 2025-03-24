@@ -2,12 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
-    <loc>https://www.egbaquela.com.ar/original_templates/menu2/index.html</loc>
-    <lastmod>2025-03-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/index.html</loc>
     <lastmod>2025-03-14</lastmod>
     <changefreq>monthly</changefreq>
@@ -16,12 +10,6 @@
 <url>
     <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
     <lastmod>2025-03-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/original_templates/index_old/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -45,7 +33,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250323_julia_en_google_colab_nativo/index.html</loc>
-    <lastmod>2025-03-23</lastmod>
+    <lastmod>2025-03-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -63,18 +51,6 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu4/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/original_templates/menu3/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/original_templates/menu1/index.html</loc>
     <lastmod>2024-06-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
