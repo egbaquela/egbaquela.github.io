@@ -44,7 +44,7 @@
 <div class="franklin-content">
 <h1 id="tips_para_el_lenguaje_de_programación_julia"><a href="#tips_para_el_lenguaje_de_programación_julia" class="header-anchor">Tips para el lenguaje de programación Julia</a></h1>
 <p>Código <em>Julia</em> para tareas menores que hago a cada rato y que no quiero tener que andar buscando en la web. Si a alguien le sirve, bienvenido. </p>
-<div class="franklin-toc"><ol><li><a href="#escribir_un_dataframe_en_un_archivo_excel">Escribir un dataframe en un archivo excel</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_excel">Leer un dataframe desde un archivo excel</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv">Escribir un dataframe en un archivo CSV</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_csv">Leer un dataframe desde un archivo CSV</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv_usando_un_pipe">Escribir un dataframe en un archivo CSV usando un pipe</a></li><li><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe">Cambiar el tipo de dato de una columna de un dataframe</a></li><li><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#escribir_un_dataframe_en_un_archivo_excel">Escribir un dataframe en un archivo excel</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_excel">Leer un dataframe desde un archivo excel</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv">Escribir un dataframe en un archivo CSV</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_csv">Leer un dataframe desde un archivo CSV</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv_usando_un_pipe">Escribir un dataframe en un archivo CSV usando un pipe</a></li><li><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe">Cambiar el tipo de dato de una columna de un dataframe</a></li><li><a href="#agrupar_un_dataframe">Agrupar un Dataframe</a></li><li><a href="#crear_un_dataframe_vacío_pero_con_nombre_de_columnas">Crear un dataframe vacío pero con nombre de columnas</a></li><li><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></li><li><a href="#convertir_días_a_enteros">Convertir días a enteros</a></li></ol></div>
 <h2 id="escribir_un_dataframe_en_un_archivo_excel"><a href="#escribir_un_dataframe_en_un_archivo_excel" class="header-anchor">Escribir un dataframe en un archivo excel</a></h2>
 <pre><code class="language-julia">using DataFrames
 using XLSX
@@ -98,6 +98,35 @@ using ScientificTypes
 
 coerce&#33;&#40;df, ScientificTypes.Count &#61;&gt; ScientificTypes.Continuous&#41;</code></pre>
 <p><em>coerce&#33;</em> es muy potente porque cambia las dos cosas, la forma de almacenar el dato en memoria, como la interpretación del dato.</p>
+<h2 id="agrupar_un_dataframe"><a href="#agrupar_un_dataframe" class="header-anchor">Agrupar un Dataframe</a></h2>
+<p>Supongamos que tenemos un dataframe con una columna llamada fecha, otra tipo y una última llamada cantidad, donde para cada combinación de fecha y tipo hay un valor de cantidad. Por ejemplo:</p>
+<pre><code class="language-julia">using DataFrames, Dates
+
+fechas &#61; Dates.Date.&#40;&#91;&quot;2025-03-01&quot;, &quot;2025-03-01&quot;, &quot;2025-03-02&quot;, &quot;2025-03-02&quot;&#93;&#41;
+tipos &#61; &#91;&quot;tipo a&quot;, &quot;tipo b&quot;, &quot;tipo c&quot;, &quot;tipo d&quot;&#93;
+cantidades &#61; &#91;1,2,3,4&#93;
+
+df &#61; DataFrame&#40;fecha&#61;fechas, tipo&#61;tipos, cantidad&#61;cantidades&#41;</code></pre>
+<p>Si queremos generar un nuevo dataframe que agrupe por fecha la suma de la columna cantidades para todos los tipos, podemos hacer:</p>
+<pre><code class="language-julia">gdf &#61; groupby&#40;df, &#91;:fecha&#93;&#41;
+summary &#61; combine&#40;gdf, :cantidad &#61;&gt; sum&#41;
+rename&#33;&#40;summary, :cantidad_sum&#61;&gt;:total&#41;</code></pre>
+<p>Esto devuelve un dataframe con las columnas fecha y total.</p>
+<h2 id="crear_un_dataframe_vacío_pero_con_nombre_de_columnas"><a href="#crear_un_dataframe_vacío_pero_con_nombre_de_columnas" class="header-anchor">Crear un dataframe vacío pero con nombre de columnas</a></h2>
+<p>Una forma, si son pocas columnas, es:</p>
+<pre><code class="language-julia">using DataFrames
+
+df &#61; DataFrame&#40;
+	columna1&#61;Int&#91;&#93;,
+	columna2&#61;String&#91;&#93;,
+	columna3&#61;Float64&#91;&#93;
+&#41;</code></pre>
+<p>Ahora, si el número de columnas es muy grande, podemos hacer:</p>
+<pre><code class="language-julia">using DataFrames
+
+nodenames &#61; &#91;&quot;columna1&quot;, &quot;columna2&quot;, &quot;columna3&quot;&#93;
+df &#61; DataFrame&#40;&#91;&#91;&#93; for _ &#61; nodenames&#93; , nodenames&#41;</code></pre>
+<p>Extraido de <a href="https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936">https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936</a>, hay que adaptarlo si queremos definir tipos tambien.</p>
 <h2 id="averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj"><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj" class="header-anchor">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></h2>
 <p>Dado un conjunto de predictores <em>Xtrain</em> y una variable a predecir <em>ytrain</em>, el siguiente código nos lista &#40;en un dataframe&#41; todos los modelos que permiten el tipo de datos asociado a las features y al target:</p>
 <pre><code class="language-julia">using MLJ
@@ -112,8 +141,13 @@ println&#40;&quot;¿Es el formato del target compatible?: &quot;,
 
 println&#40;&quot;¿Es el formato de las features compatible?: &quot;, 
 	scitype&#40;Xtrain&#41; &lt;: input_scitype&#40;DecisionTreeClassifier&#40;&#41;&#41;&#41;</code></pre>
+<h2 id="convertir_días_a_enteros"><a href="#convertir_días_a_enteros" class="header-anchor">Convertir días a enteros</a></h2>
+<p>Cuando restamos dos fechas, el tipo de datos devuelto es el tipo <em>Dates.Day</em>. Para convertirlo en entero, lo cual usualmente se necesita para realizar operaciones sobre diferencias temporales, podemos usar la función <em>Dates.value</em>:</p>
+<pre><code class="language-julia">using Dates
+
+Dates.value&#40;Dates.Date&#40;&quot;2025-03-01&quot;&#41; - Dates.Date&#40;&quot;2025-01-01&quot;&#41;&#41;</code></pre>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: March 14, 2025.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: April 09, 2025.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
