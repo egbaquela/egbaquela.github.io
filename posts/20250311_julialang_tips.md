@@ -106,6 +106,53 @@ coerce!(df, ScientificTypes.Count => ScientificTypes.Continuous)
 
 _coerce!_ es muy potente porque cambia las dos cosas, la forma de almacenar el dato en memoria, como la interpretación del dato.
 
+## Agrupar un Dataframe
+Supongamos que tenemos un dataframe con una columna llamada fecha, otra tipo y una última llamada cantidad, donde para cada combinación de fecha y tipo hay un valor de cantidad. Por ejemplo:
+
+```julia
+using DataFrames, Dates
+
+fechas = Dates.Date.(["2025-03-01", "2025-03-01", "2025-03-02", "2025-03-02"])
+tipos = ["tipo a", "tipo b", "tipo c", "tipo d"]
+cantidades = [1,2,3,4]
+
+df = DataFrame(fecha=fechas, tipo=tipos, cantidad=cantidades)
+```
+
+Si queremos generar un nuevo dataframe que agrupe por fecha la suma de la columna cantidades para todos los tipos, podemos hacer:
+
+```julia
+gdf = groupby(df, [:fecha])
+summary = combine(gdf, :cantidad => sum)
+rename!(summary, :cantidad_sum=>:total)
+```
+
+Esto devuelve un dataframe con las columnas fecha y total.
+
+## Crear un dataframe vacío pero con nombre de columnas
+Una forma, si son pocas columnas, es:
+
+```julia
+using DataFrames
+
+df = DataFrame(
+	columna1=Int[],
+	columna2=String[],
+	columna3=Float64[]
+)
+```
+
+Ahora, si el número de columnas es muy grande, podemos hacer:
+
+```julia
+using DataFrames
+
+nodenames = ["columna1", "columna2", "columna3"]
+df = DataFrame([[] for _ = nodenames] , nodenames)
+```
+
+Extraido de [https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936](https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936), hay que adaptarlo si queremos definir tipos tambien.
+
 ## Averiguar que modelos de aprendizaje automático puedo usar con mis datos (usando MLJ)
 Dado un conjunto de predictores _Xtrain_ y una variable a predecir _ytrain_, el siguiente código nos lista (en un dataframe) todos los modelos que permiten el tipo de datos asociado a las features y al target:
 
@@ -126,4 +173,14 @@ println("¿Es el formato del target compatible?: ",
 
 println("¿Es el formato de las features compatible?: ", 
 	scitype(Xtrain) <: input_scitype(DecisionTreeClassifier()))
+```
+
+## Convertir días a enteros
+
+Cuando restamos dos fechas, el tipo de datos devuelto es el tipo _Dates.Day_. Para convertirlo en entero, lo cual usualmente se necesita para realizar operaciones sobre diferencias temporales, podemos usar la función _Dates.value_:
+
+```julia
+using Dates
+
+Dates.value(Dates.Date("2025-03-01") - Dates.Date("2025-01-01"))
 ```
