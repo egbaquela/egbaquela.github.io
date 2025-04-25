@@ -14,6 +14,7 @@ tags = ["general"]
 
 ## Investigación Operativa
 * [Juegos sobre el problema de la mochila](../posts/20250425_juegos_sobre_el_problema_de_la_mochila)
+* [Links sobre el Knapsack problem](../posts/20250425_links_sobre_el_knapsack_problem)
 
 ## Julia
 

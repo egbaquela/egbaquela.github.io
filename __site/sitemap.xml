@@ -2,6 +2,12 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
+    <loc>https://www.egbaquela.com.ar/posts/20250425_links_sobre_el_knapsack_problem/index.html</loc>
+    <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/index.html</loc>
     <lastmod>2025-03-14</lastmod>
     <changefreq>monthly</changefreq>
@@ -9,7 +15,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
-    <lastmod>2025-03-23</lastmod>
+    <lastmod>2025-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>

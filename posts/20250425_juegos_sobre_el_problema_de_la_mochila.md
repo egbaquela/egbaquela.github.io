@@ -4,7 +4,7 @@ hascode = false
 date = Date(2025, 4, 25)
 rss = "Juegos sobre el problema de la mochila"
 
-tags = ["Knapsack", "Knapsack problem", "Problema de la mochila", "Optimizazión", "Optimización combinatoria", "Juegos serios", "Investigación operativa", "enseñanza", "programacion lineal entero-mixta"]
+tags = ["Knapsack", "Knapsack problem", "Problema de la mochila", "Optimización", "Optimización combinatoria", "Juegos serios", "Investigación operativa", "Enseñanza", "Programacion lineal entero-mixta"]
 +++
 
 # Juegos sobre el problema de la mochila
