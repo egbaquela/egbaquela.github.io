@@ -1,6 +1,6 @@
 +++
 title = "Links sobre matemática"
-hascode = true
+hascode = false
 date = Date(2025, 3, 7)
 rss = "Links sobre matemática. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 

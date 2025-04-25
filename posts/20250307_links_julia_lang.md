@@ -1,6 +1,6 @@
 +++
 title = "Links sobre el lenguaje Julia"
-hascode = true
+hascode = false
 date = Date(2025, 3, 7)
 rss = "Links sobre el lenguaje Julia. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 

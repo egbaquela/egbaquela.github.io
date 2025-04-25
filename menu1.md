@@ -12,13 +12,15 @@ tags = ["general"]
 
 \toc
 
+## Investigación Operativa
+* [Juegos sobre el problema de la mochila](../posts/20250425_juegos_sobre_el_problema_de_la_mochila)
+
 ## Julia
 
 * [Como usar Julia en Google Colab (¡en forma nativa!)](../posts/20250323_julia_en_google_colab_nativo)
 * [Tips para el lenguaje de programación Julia](../posts/20250311_julialang_tips)
 * [Links sobre material de interesante sobre Julia, principalmente para autoaprendizaje](../posts/20250307_links_julia_lang)
 * [Como usar Julia en Google Colab](../posts/20250226_julia_en_google_colab)
-
 
 ## Libros, escritura, etc
 

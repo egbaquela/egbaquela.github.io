@@ -1,6 +1,6 @@
 +++
 title = "Julia en Google Colab (¡en forma nativa!)"
-hascode = true
+hascode = false
 date = Date(2025, 3, 23)
 rss = "¡Julia ahora está diponible en Google Colab en forma nativa!"
 

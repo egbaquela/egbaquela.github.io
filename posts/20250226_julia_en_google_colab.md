@@ -1,6 +1,6 @@
 +++
 title = "Como usar Julia en Google Colab"
-hascode = true
+hascode = false
 date = Date(2025, 2, 26)
 rss = "Como configurar Google Colab para poder ejecutar una sesión de Julia"
 

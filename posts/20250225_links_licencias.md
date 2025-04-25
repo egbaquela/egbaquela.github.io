@@ -1,6 +1,6 @@
 +++
 title = "Links acerca de licencias para libros y blogs"
-hascode = true
+hascode = false
 date = Date(2025, 2, 25)
 rss = "Listado con links acerca de licencias para obras creativas como libros y blogs."
 
