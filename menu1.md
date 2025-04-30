@@ -13,6 +13,7 @@ tags = ["general"]
 \toc
 
 ## Investigación Operativa
+
 * [Juegos sobre el problema de la mochila](../posts/20250425_juegos_sobre_el_problema_de_la_mochila)
 * [Links sobre el Knapsack problem](../posts/20250425_links_sobre_el_knapsack_problem)
 
@@ -35,3 +36,7 @@ tags = ["general"]
 ## Machine Learning
 
 * [Links sobre material de autoaprendizaje](../posts/20250307_links_machine_learning)
+
+## Linux
+
+[¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
