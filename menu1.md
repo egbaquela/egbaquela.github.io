@@ -40,3 +40,7 @@ tags = ["general"]
 ## Linux
 
 [¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
+
+## Docencia
+
+* [Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial](../posts/20250505_inteligencia_artificial_en_ingenieria_industrial)
