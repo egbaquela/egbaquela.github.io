@@ -4,7 +4,7 @@ hascode = false
 date = Date(2025, 4, 25)
 rss = "Links sobre el Knapsack problem"
 
-tags = ["Knapsack", "Knapsack problem", "Problema de la mochila", "Optimización", "Optimización combinatoria", "Investigación operativa", "Enseñanza", "Programacion lineal entero-mixta"]
+tags = ["knapsack", "knapsack problem", "problema de la mochila", "optimización", "optimización combinatoria", "investigación operativa", "enseñanza", "programacion lineal entero-mixta"]
 +++
 
 # Links sobre el Knapsack problem

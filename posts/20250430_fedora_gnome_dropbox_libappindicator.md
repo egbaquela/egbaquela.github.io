@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 4, 30)
 rss = "¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ en _Gnome_ en _Fedora Linux_?"
 
-tags = ["Fedora", "Gnome", "Dropbox"]
+tags = ["fedora", "gnome", "dropbox"]
 +++
 
 # ¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ en _Gnome_ en _Fedora Linux_?

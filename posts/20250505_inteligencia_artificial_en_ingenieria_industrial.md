@@ -4,7 +4,7 @@ hascode = true
 date = Date(2025, 5, 5)
 rss = "Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial"
 
-tags = ["Enseñanza", "Ingeniería Industrial", "Inteligencia Artificial", "machine learning", "julialang", "utn"]
+tags = ["enseñanza", "ingeniería industrial", "inteligencia artificial", "machine learning", "julialang", "utn"]
 +++
 
 # Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial
