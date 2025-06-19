@@ -184,3 +184,26 @@ using Dates
 
 Dates.value(Dates.Date("2025-03-01") - Dates.Date("2025-01-01"))
 ```
+
+## Guardar y leer una estructura en un archivo binario
+
+Para guardar:
+
+```julia
+using JLD2
+
+x = (1, "a")
+save_object("mytuple.jld2", x)
+```
+
+Para leer:
+
+```julia
+using JLD2
+
+x = load_object("mytuple.jld2")
+```
+
+(extraido de [https://stackoverflow.com/questions/67143280/save-data-in-julia](https://stackoverflow.com/questions/67143280/save-data-in-julia)).
+
+

@@ -44,3 +44,7 @@ tags = ["general"]
 ## Docencia
 
 * [Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial](../posts/20250505_inteligencia_artificial_en_ingenieria_industrial)
+
+## Varios
+
+* [Murió Bigote Acosta](../posts/20250526_murio_bigote_acosta)
