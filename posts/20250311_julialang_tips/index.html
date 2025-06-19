@@ -44,7 +44,7 @@
 <div class="franklin-content">
 <h1 id="tips_para_el_lenguaje_de_programación_julia"><a href="#tips_para_el_lenguaje_de_programación_julia" class="header-anchor">Tips para el lenguaje de programación Julia</a></h1>
 <p>Código <em>Julia</em> para tareas menores que hago a cada rato y que no quiero tener que andar buscando en la web. Si a alguien le sirve, bienvenido. </p>
-<div class="franklin-toc"><ol><li><a href="#escribir_un_dataframe_en_un_archivo_excel">Escribir un dataframe en un archivo excel</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_excel">Leer un dataframe desde un archivo excel</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv">Escribir un dataframe en un archivo CSV</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_csv">Leer un dataframe desde un archivo CSV</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv_usando_un_pipe">Escribir un dataframe en un archivo CSV usando un pipe</a></li><li><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe">Cambiar el tipo de dato de una columna de un dataframe</a></li><li><a href="#agrupar_un_dataframe">Agrupar un Dataframe</a></li><li><a href="#crear_un_dataframe_vacío_pero_con_nombre_de_columnas">Crear un dataframe vacío pero con nombre de columnas</a></li><li><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></li><li><a href="#convertir_días_a_enteros">Convertir días a enteros</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#escribir_un_dataframe_en_un_archivo_excel">Escribir un dataframe en un archivo excel</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_excel">Leer un dataframe desde un archivo excel</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv">Escribir un dataframe en un archivo CSV</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_csv">Leer un dataframe desde un archivo CSV</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv_usando_un_pipe">Escribir un dataframe en un archivo CSV usando un pipe</a></li><li><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe">Cambiar el tipo de dato de una columna de un dataframe</a></li><li><a href="#agrupar_un_dataframe">Agrupar un Dataframe</a></li><li><a href="#crear_un_dataframe_vacío_pero_con_nombre_de_columnas">Crear un dataframe vacío pero con nombre de columnas</a></li><li><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></li><li><a href="#convertir_días_a_enteros">Convertir días a enteros</a></li><li><a href="#guardar_y_leer_una_estructura_en_un_archivo_binario">Guardar y leer una estructura en un archivo binario</a></li></ol></div>
 <h2 id="escribir_un_dataframe_en_un_archivo_excel"><a href="#escribir_un_dataframe_en_un_archivo_excel" class="header-anchor">Escribir un dataframe en un archivo excel</a></h2>
 <pre><code class="language-julia">using DataFrames
 using XLSX
@@ -146,8 +146,19 @@ println&#40;&quot;¿Es el formato de las features compatible?: &quot;,
 <pre><code class="language-julia">using Dates
 
 Dates.value&#40;Dates.Date&#40;&quot;2025-03-01&quot;&#41; - Dates.Date&#40;&quot;2025-01-01&quot;&#41;&#41;</code></pre>
+<h2 id="guardar_y_leer_una_estructura_en_un_archivo_binario"><a href="#guardar_y_leer_una_estructura_en_un_archivo_binario" class="header-anchor">Guardar y leer una estructura en un archivo binario</a></h2>
+<p>Para guardar:</p>
+<pre><code class="language-julia">using JLD2
+
+x &#61; &#40;1, &quot;a&quot;&#41;
+save_object&#40;&quot;mytuple.jld2&quot;, x&#41;</code></pre>
+<p>Para leer:</p>
+<pre><code class="language-julia">using JLD2
+
+x &#61; load_object&#40;&quot;mytuple.jld2&quot;&#41;</code></pre>
+<p>&#40;extraido de <a href="https://stackoverflow.com/questions/67143280/save-data-in-julia">https://stackoverflow.com/questions/67143280/save-data-in-julia</a>&#41;.</p>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: April 09, 2025.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: May 26, 2025.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

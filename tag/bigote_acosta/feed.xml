@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rss version="2.0"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:media="http://search.yahoo.com/mrss/"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:georss="http://www.georss.org/georss">
+
+  <channel>
+    <title>
+      <![CDATA[  Modelizando sistemas  ]]>
+    </title>
+    <link> https://www.egbaquela.com.ar/ </link>
+    <description>
+      <![CDATA[  Un blog personal-profesional de Enrique Gabriel Baquela  ]]>
+    </description>
+    <atom:link
+      href="https://www.egbaquela.com.ar/feed.xml"
+      rel="self"
+      type="application/rss+xml" />
+
+
+<item>
+  <title>
+    <![CDATA[  Murió Bigote Acosta  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250526_murio_bigote_acosta/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250526_murio_bigote_acosta/index.html </guid>
+  <description>
+    <![CDATA[  Murió Bigote Acosta  ]]>
+  </description>  
+    
+  <pubDate>Mon, 26 May 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+</channel></rss>
