@@ -21,7 +21,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
-    <lastmod>2025-05-26</lastmod>
+    <lastmod>2025-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -32,8 +32,20 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/en_los_medios/index.html</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/posts/20250505_inteligencia_artificial_en_ingenieria_industrial/index.html</loc>
     <lastmod>2025-05-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250602_tablas_markdown/index.html</loc>
+    <lastmod>2025-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
