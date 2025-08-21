@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Investigación operativa en una página</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --accent:#7dd3fc; --accent2:#a78bfa; --ok:#22c55e; --warn:#fbbf24; --ink:#eaf2ff; --muted:#9fb0cc;
+      --bg1:#0b1220; --bg2:#0a0f19; --card-bg:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      --card-b:#223; --br:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0; padding:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:var(--ink); font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+    .container{max-width:1100px; margin:0 auto; padding: 16px 16px 60px}
+    .hero{
+      padding: 56px 16px 28px; text-align:center;
+    }
+    .hero-title{ font-size: clamp(34px, 6vw, 56px); line-height:1.05; font-weight:800; letter-spacing:.2px; margin:0 }
+    .hero-sub{ color:var(--muted); margin-top:.5rem; font-size: clamp(16px, 2.4vw, 20px) }
+    .hero-badges{ margin-top:1rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap }
+    .pill{ display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .75rem; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.2); color:#cfe0ff }
+    .section{ margin-top: 62px }
+    .card{
+      padding:1rem; border-radius:var(--br); background:var(--card-bg);
+      border:1px solid rgba(255,255,255,.15); box-shadow:0 16px 50px rgba(0,0,0,.28);
+    }
+    h2{ font-weight:800; letter-spacing:.2px; font-size: clamp(22px, 3vw, 28px); margin:10 0 .6rem }
+    h3{ font-weight:800; font-size: clamp(18px, 2.4vw, 20px); margin:.2rem 0 .4rem }
+    .muted{ color:var(--muted) }
+    .grid-2{ display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; align-items:stretch }
+    .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:1rem }
+    .flex{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center }
+    input[type="text"], input[type="url"]{
+      flex:1; padding:.6rem .75rem; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:#0f1829; color:#eaf2ff
+    }
+    .btn{ display:inline-block; padding:.6rem 1rem; background:linear-gradient(180deg,#203049,#18273c); border:1px solid rgba(255,255,255,.2); border-radius:10px; color:#eaf2ff; cursor:pointer }
+    .btn:hover{ filter:brightness(1.1) }
+    iframe{ width:100%; height:320px; border-radius:12px; border:1px solid rgba(255,255,255,.2) }
+    .tag{ display:inline-block; padding:.35rem .7rem; border-radius:999px; border:1px solid rgba(255,255,255,.2); color:#cfe0ff; margin:.2rem; background:rgba(255,255,255,.06); font-size:.95rem }
+    .mini{ font-size:.9rem }
+    .chips{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem }
+    .chip{ padding:.5rem .75rem; border-radius:999px; background:#101b2b; border:1px solid rgba(255,255,255,.18); cursor:pointer; transition:transform .05s ease }
+    .chip:hover{ transform:translateY(-1px) }
+    .chip.active{ outline:2px solid var(--accent2) }
+    .fade-in{ animation: fade .35s ease both } @keyframes fade{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+
+    /* Wheel split */
+    .radar{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:center }
+    .wheel{
+      position:relative; width:100%; max-width:380px; aspect-ratio:1/1; margin:0 auto; border-radius:50%;
+      background:conic-gradient(from 0deg, rgba(125,211,252,.22) 0 180deg, rgba(167,139,250,.22) 180deg 360deg);
+      border:2px solid rgba(255,255,255,.15); box-shadow:0 10px 50px rgba(0,0,0,.35);
+    }
+    .wheel::after{ content:''; position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.06), transparent 60%) }
+    .wheel-label{ position:absolute; width:50%; top:50%; transform:translateY(-50%); text-align:center; font-weight:800; color:#eaf2ff; font-size: clamp(14px, 2.4vw, 20px) }
+    .wheel-label.left{ left:0 }
+    .wheel-label.right{ right:0 }
+
+    /* Footer */
+    footer{ margin-top:40px; padding:18px 16px; color:#a7b6d4; text-align:center; font-size:.9rem; border-top:1px solid rgba(255,255,255,.12) }
+    @media (max-width: 960px){
+      .grid-2{ grid-template-columns:1fr; }
+      .radar{ grid-template-columns:1fr; }
+      iframe{ height:240px }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Encabezado -->
+    <section class="hero section">
+      <h1 class="hero-title">Investigación Operativa (IO)</h1>
+    </section>
+
+    <!-- Video -->
+    <section class="section">
+      <div class="grid-1">
+        <div class="card">
+          <!--<iframe id="ytFrame" src="https://www.youtube.com/embed/Yaz4budxYSY?si=mCsin2Fa6hoI05qc" allowfullscreen></iframe>-->
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/P6VHgZyNTlw?si=dvD4oPoQ0zccugYH" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- Descripcion -->
+    <section class="section">
+      <h2>¿Que estudiamos cuando estudiamos IO?</h2>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Nuestro objeto de estudio son las <b>decisiones</b>, puntualmente la <b>toma de decisión</b> en si misma.</p>
+      <div class="grid-3">
+        <div class="card">Estudiamos como identificar las características principales de un problema.</div>
+        <div class="card">Aprendemos como crear modelos y usar datos para poder seleccionar una de muchas <b>alternativas</b>.</div>
+        <div class="card">Usamos herramientas para <b>exprimir</b> los modelos y que nos ayuden a <b>decidir mejor</b>.</div>
+      </div>
+    </section> 
+
+    <!-- Decisiones -->
+    <section class="section">
+      <h2>¿Pero que significa tomar una decisión?</h2>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Es seleccionar una alternativa en un conjunto de mas de una alternativa (a veces, infinitas) con el fin de alcanzar una meta.</p>
+
+      <div class="grid-3">
+        <div class="card">Las alternativas pueden ser planes o políticas. Los primeros son valores, los segundos reglas.</div>
+        <div class="card">A veces podemos tener certeza de los resultados de las decisiones, a veces no.</div>
+        <div class="card">Pueden ser una decisión de una única vez. O repetirse frecuentemente.</div>
+      </div>
+  
+      <p class="muted" style="margin-top:.6rem; text-align:center">Un problema de decisión se compone, como mínimo, de:</p>
+      <ul>
+        <li>Alternativas (incluyendo el status quo)</li>
+        <li>Objetivos</li>
+        <li>Restricciones o impedimentos</li>
+        <li>Información e incertidumbre</li>
+        <li>Horizonte y frecuencia</li>
+        <li>Stakeholders y criterios de aceptación</li>
+        <li>Plan de validación</li>
+      </ul>
+
+    </section> 
+
+    <!-- Pilares y herramientas -->
+    <section class="section">
+      <h2>Pilares y herramientas de la IO</h2>
+      <div class="radar">
+
+
+        <div class="grid-2">
+          <div class="card"><b>Herramientas descriptivas/predictivas</b>: nos permiten saber que pasaría si selecciono una determinada alternativa.</div>
+          <div class="card"><b>Herramientas prescriptivas o normativas</b>: nos permiten saber que pasaría si selecciono una determinada alternativa.</div>
+        </div>
+
+
+        <div class="card">
+          <div class="flex">
+            <button class="btn" id="btnPred">Ver herramientas predictivo</button>
+            <button class="btn" id="btnNorm">Ver herramientas normativo</button>
+          </div>
+          <div class="chips" id="chipBox"></div>
+          <div id="toolBox" class="fade-in" style="margin-top:.6rem; min-height:80px">
+            <span class="muted">Seleccioná una herramienta para ver un caso y KPIs.</span>
+          </div>
+        </div>
+      </div>
+      <p class="muted mini" style="margin-top:.6rem; text-align:center">Click en los botones para ver <b>casos y métricas</b> concretas.</p>
+    </section>
+
+  </div>
+
+
+
+
+
+  <footer>
+    <!--© 2025 — <b>TU NOMBRE / UDESA</b>. Todos los derechos reservados.-->
+    <b>Enrique Gabriel Baquela</b>
+  </footer>
+
+<script>
+
+
+// ---------- Chips / herramientas ----------
+const tools = {
+  predictivo: [
+    {label:'Teoría de colas', kpis:'W, L, utilización, abandono', caso:'Sucursal / call center', desc:'Dimensionar recursos y tiempos de espera con M/M/1, M/M/c; validar con datos.'},
+    {label:'Simulación discreta', kpis:'fill rate, WIP, lead time, costo', caso:'Inventario (s,Q)', desc:'Evaluar políticas con variabilidad real; warm-up + réplicas + intervalos de confianza.'},
+    {label:'Monte Carlo', kpis:'prob. de stock-out, SLA', caso:'Demanda y plazos', desc:'Propagar incertidumbre y estimar riesgo de incumplir metas.'}
+  ],
+  normativo: [
+    {label:'LP', kpis:'costo/valor, slack', caso:'Transporte / mezcla', desc:'Plan óptimo con variables continuas y restricciones lineales; interpretar precios sombra.'},
+    {label:'MILP', kpis:'valor, cobertura', caso:'Portafolio / turnos', desc:'Decisiones sí/no y lógicas con variables binarias; modelado con big‑M prudente.'},
+    {label:'NLP', kpis:'óptimo local/global', caso:'Costos no lineales', desc:'Optimización suave; importancia de la convexidad y condiciones KKT.'},
+    {label:'Árboles / Matrices', kpis:'VOI, fill rate', caso:'Compra con incertidumbre', desc:'Escenarios con probabilidades y costo de sobre/defecto; decidir cantidad óptima.'}
+  ]
+};
+
+const chipBox = document.getElementById('chipBox');
+const toolBox = document.getElementById('toolBox');
+function renderChips(type){
+  chipBox.innerHTML = '';
+  tools[type].forEach((t, idx) => {
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = t.label;
+    el.addEventListener('click', () => showTool(type, idx, el));
+    chipBox.appendChild(el);
+  });
+  toolBox.innerHTML = '<span class="muted">Seleccioná una herramienta para ver un caso y KPIs.</span>';
+}
+function showTool(type, idx, el){
+  document.querySelectorAll('#chipBox .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const t = tools[type][idx];
+  toolBox.innerHTML = `
+    <div class="card fade-in">
+      <div class="flex">
+        <span class="tag">Caso: ${t.caso}</span>
+        <span class="tag">KPIs: ${t.kpis}</span>
+      </div>
+      <p style="margin:.6rem 0 0">${t.desc}</p>
+    </div>`;
+  toolBox.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+document.getElementById('btnPred').addEventListener('click', ()=>renderChips('predictivo'));
+document.getElementById('btnNorm').addEventListener('click', ()=>renderChips('normativo'));
+renderChips('predictivo');
+</script>
+</body>
+</html>

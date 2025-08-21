@@ -33,7 +33,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/en_los_medios/index.html</loc>
-    <lastmod>2025-08-07</lastmod>
+    <lastmod>2025-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -128,8 +128,20 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/files/simulacion/simulador_produccion/</loc>
+    <lastmod>2025-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/files/knapsack_interactivo/index/</loc>
     <lastmod>2025-05-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/files/IO_tutorial/IO_resumen/</loc>
+    <lastmod>2025-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>

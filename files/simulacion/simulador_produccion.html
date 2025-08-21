@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plan de manufactura — simulador 3 meses / 5 productos / 6 recursos</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+    --ok:#21c07a; --warn:#ffb454; --err:#ef476f;
+    --p0:#8ec5ff; --p1:#ffd166; --p2:#78a6ff; --p3:#21c07a; --p4:#ff9f1c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+  }
+  .container{max-width:1200px; margin:0 auto; padding:28px 16px 60px;}
+  header{display:grid; gap:8px; margin-bottom:18px}
+  h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+  .muted{color:var(--muted)}
+  .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+  .card{
+    grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+  }
+  .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+  @media (max-width: 1100px){ .card,.side{grid-column:1 / -1} }
+  canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+  #plotProd{height:300px} #plotInv{height:300px}
+
+  .controls{display:grid; gap:12px}
+  .row{display:grid; grid-template-columns:minmax(160px,240px) 1fr minmax(58px,76px); gap:10px; align-items:center}
+  .row input[type="range"]{width:100%}
+  .row output{justify-self:end; font-variant-numeric: tabular-nums}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media (max-width:700px){ .row{grid-template-columns:1fr} .cols{grid-template-columns:1fr} }
+
+  .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+  .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+  th:first-child, td:first-child{text-align:left}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:2px 8px; border:1px solid var(--border); border-radius:999px; background:#0e1a3c; font-size:12px; color:var(--muted)}
+  .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+    background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+  }
+  .btn:active{transform:translateY(1px)}
+  details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+  summary{cursor:pointer}
+  .sep{height:6px}
+
+  footer{
+    margin-top:24px; padding:12px 16px; border-top:1px solid #141a33; color:var(--muted);
+    display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04)); border-radius:14px;
+  }
+  .footer-left{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .footer-right{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  input[type="text"]{background:#0d1631; color:var(--ink); border:1px solid var(--border); border-radius:10px; padding:6px 8px;}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Simulador de manufactura — 3 meses / 5 productos / 6 recursos</h1>
+      <div class="muted">
+        Definí la producción mensual por producto y la compra extra de recursos. Se calcula inventario, consumo de recursos y beneficio.
+        <br/>Reglas: <strong>Horas de producción</strong> se consumen y limitan por mes; los demás recursos son <em>globales</em> (disponibles desde el inicio, se pueden usar en cualquier mes).
+      </div>
+      <div class="legend" style="margin-top:8px">
+        <span class="pill"><span class="box" style="background:var(--p0)"></span> Alpha</span>
+        <span class="pill"><span class="box" style="background:var(--p1)"></span> Beta</span>
+        <span class="pill"><span class="box" style="background:var(--p2)"></span> Gamma</span>
+        <span class="pill"><span class="box" style="background:var(--p3)"></span> Delta</span>
+        <span class="pill"><span class="box" style="background:var(--p4)"></span> Épsilon</span>
+      </div>
+    </header>
+
+    <section class="grid-1">
+      <div class="card">
+        <canvas id="plotProd" aria-label="Producción por mes y producto"></canvas>
+        <div class="sep"></div>
+        <canvas id="plotInv" aria-label="Inventario por producto"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="panel controls" id="controls"></div>
+
+        <div class="panel mono" id="profit">
+          <div><strong>Ingresos ventas:</strong> $<span id="rev">–</span></div>
+          <div><strong>Costos variables:</strong> $<span id="vc">–</span></div>
+          <div><strong>Almacenaje:</strong> $<span id="hold">–</span></div>
+          <div><strong>Recursos extra (horas + globales):</strong> $<span id="rextra">–</span></div>
+          <hr style="border:none; border-top:1px solid #141a33; margin:8px 0;">
+          <div><strong>Beneficio total:</strong> <span id="profitVal" class="ok">–</span></div>
+          <div><strong>Restricciones violadas:</strong> <span id="viol" class="err">–</span></div>
+        </div>
+
+        <div class="panel" id="resTableWrap">
+          <div class="mono" style="margin-bottom:6px"><strong>Recursos — consumo vs disponibilidad</strong></div>
+          <table id="resTable">
+            <thead>
+              <tr><th>Recurso</th><th>Disponible</th><th>Extra</th><th>Usado</th><th>Balance</th><th>Estado</th></tr>
+            </thead>
+            <tbody id="resBody"></tbody>
+          </table>
+        </div>
+
+        <details>
+          <summary class="muted">Demanda mínima/máxima por mes</summary>
+          <div class="sep"></div>
+          <table id="demTable"></table>
+        </details>
+
+        <!-- NUEVO: panel de consumo unitario -->
+        <details>
+          <summary class="muted">Consumo unitario de recursos por producto</summary>
+          <div class="sep"></div>
+          <table id="consTable"></table>
+        </details>
+      </div>
+    </section>
+
+    <!-- Pie de página -->
+    <footer>
+      <div class="footer-left">
+        <span>Plan hecho por:</span>
+        <input type="text" id="author" placeholder="Tu nombre" value="Tu nombre" />
+        <span id="authorEcho" class="muted"></span>
+      </div>
+      <div class="footer-right">
+        <button id="heuristic" class="btn" type="button" title="Fija producción = demanda mínima y compra recursos extra mínimos">Plan heurístico</button>
+        <button id="csv" class="btn" type="button">Descargar CSV</button>
+      </div>
+      <p>Enrique Gabriel Baquela</>
+    </footer>
+  </div>
+
+<script>
+/* ======== Datos del problema (podés cambiarlos si querés) ======== */
+const products = [
+  { key:'A', name:'Alpha',  color:getVar('--p0'), price:120, vcost:60,  hold:2.0 },
+  { key:'B', name:'Beta',   color:getVar('--p1'), price: 90, vcost:45,  hold:1.5 },
+  { key:'C', name:'Gamma',  color:getVar('--p2'), price:150, vcost:80,  hold:3.0 },
+  { key:'D', name:'Delta',  color:getVar('--p3'), price:200, vcost:110, hold:4.0 },
+  { key:'E', name:'Épsilon',color:getVar('--p4'), price: 75, vcost:35,  hold:1.0 },
+];
+// Recursos: r0=HorasProd (mensual), r1..r5 globales.
+const resources = [
+  { key:'hp',  name:'Horas de producción (h/mes)', type:'monthly', avail:[2000,2000,2000], extraCost:20 },
+  { key:'steel', name:'Acero (kg)',          type:'global',  avail:10000, extraCost:2.0 },
+  { key:'plast', name:'Plástico (kg)',       type:'global',  avail:7000,  extraCost:1.5 },
+  { key:'elec',  name:'Electrónicos (u)',    type:'global',  avail:6000,  extraCost:6.0 },
+  { key:'energy',name:'Energía (kWh)',       type:'global',  avail:18000, extraCost:0.2 },
+  { key:'pack',  name:'Embalaje (u)',        type:'global',  avail:8000,  extraCost:0.4 },
+];
+// Consumos por unidad producida [p][r]
+const cons = [
+/* A */ [1.8, 4, 0, 1, 5, 1],
+/* B */ [1.2, 2, 3, 2, 4, 1],
+/* C */ [2.5, 6, 0, 3, 6, 1],
+/* D */ [3.0, 8, 2, 4, 8, 1],
+/* E */ [0.8, 0, 5, 2, 3, 1],
+];
+// Demanda mínima y máxima por mes [p][m]
+const dmin = [
+/* A */ [300,320,340],
+/* B */ [250,260,275],
+/* C */ [180,200,220],
+/* D */ [120,130,140],
+/* E */ [400,420,440],
+];
+const dmax = [
+/* A */ [500,520,540],
+/* B */ [450,460,480],
+/* C */ [300,320,350],
+/* D */ [220,230,240],
+/* E */ [650,670,700],
+];
+
+/* ======== Estado ======== */
+const M=3, P=products.length, R=resources.length;
+const state = {
+  prod: Array.from({length:P}, (_,p)=> dmin[p].slice()), // producción por mes (inicial = dmin)
+  extraHP: [0,0,0],               // compra extra horas de producción por mes
+  extraGlob: [0,0,0,0,0],         // compra extra de recursos 1..5 (globales)
+  // resultados:
+  inv: Array.from({length:P}, ()=> Array(M).fill(0)),
+  sold: Array.from({length:P}, ()=> Array(M).fill(0)),
+  unmet: Array.from({length:P}, ()=> Array(M).fill(false)),
+  resUsedHP: [0,0,0],
+  resUsedGlob: [0,0,0,0,0],
+  rev:0, vcost:0, hold:0, rcost:0, profit:0, violations:0
+};
+
+/* ======== DOM / UI ======== */
+const $=(s)=>document.querySelector(s);
+const controls = $('#controls');
+const profitBox = { rev:$('#rev'), vc:$('#vc'), hold:$('#hold'), rextra:$('#rextra'), profit:$('#profitVal'), viol:$('#viol') };
+const resBody = $('#resBody');
+const demTable = $('#demTable');
+const consTable = $('#consTable');
+const authorInp = $('#author'), authorEcho = $('#authorEcho');
+
+const cProd=$('#plotProd'), ctxProd=cProd.getContext('2d');
+const cInv=$('#plotInv'), ctxInv=cInv.getContext('2d');
+
+/* ======== Construcción de UI ======== */
+function buildControls(){
+  // Producción por producto/mes
+  const block = document.createElement('div');
+  block.innerHTML = `<div class="mono" style="margin-bottom:6px"><strong>Producción mensual por producto</strong></div>`;
+  controls.appendChild(block);
+
+  products.forEach((p,pi)=>{
+    const box = document.createElement('div'); box.className='panel'; box.style.padding='10px';
+    box.innerHTML = `<div class="mono" style="margin-bottom:6px; color:${p.color}"><strong>${p.name}</strong> · precio $${p.price} · c.var $${p.vcost} · almac $${p.hold}/mes</div>`;
+    for (let m=0;m<M;m++){
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `
+        <label>Mes ${m+1} (min ${dmin[pi][m]}, máx ${dmax[pi][m]})</label>
+        <input id="p-${pi}-${m}" type="range" min="0" max="${Math.round(dmax[pi][m]*1.6)}" step="1" value="${state.prod[pi][m]}"/>
+        <output id="pval-${pi}-${m}">${state.prod[pi][m]}</output>
+      `;
+      box.appendChild(row);
+    }
+    controls.appendChild(box);
+  });
+
+  // Recursos extra
+  const resPanel = document.createElement('div'); resPanel.className='panel';
+  resPanel.innerHTML = `<div class="mono" style="margin-bottom:6px"><strong>Compra extra de recursos</strong></div>`;
+  // Horas producción por mes
+  for (let m=0;m<M;m++){
+    const row = document.createElement('div'); row.className='row';
+    row.innerHTML = `
+      <label>Horas de producción extra — Mes ${m+1} (costo $${resources[0].extraCost}/h)</label>
+      <input id="hp-${m}" type="range" min="0" max="4000" step="10" value="${state.extraHP[m]}"/>
+      <output id="hpval-${m}">${state.extraHP[m]}</output>
+    `;
+    resPanel.appendChild(row);
+  }
+  // Globales
+  for (let r=1;r<R;r++){
+    const row = document.createElement('div'); row.className='row';
+    row.innerHTML = `
+      <label>${resources[r].name} extra (costo $${resources[r].extraCost}/${r===4?'kWh':'u'})</label>
+      <input id="g-${r-1}" type="range" min="0" max="8000" step="10" value="${state.extraGlob[r-1]}"/>
+      <output id="gval-${r-1}">${state.extraGlob[r-1]}</output>
+    `;
+    resPanel.appendChild(row);
+  }
+  // Botones rápidos
+  const btns = document.createElement('div'); btns.style='display:flex; gap:10px; margin-top:6px; flex-wrap:wrap';
+  btns.innerHTML = `
+    <button id="setMin" class="btn" type="button">Plan base: cumplir mínimos</button>
+    <button id="clearExtra" class="btn" type="button">Borrar compras extra</button>
+  `;
+  resPanel.appendChild(btns);
+
+  controls.appendChild(resPanel);
+
+  // Tablas informativas
+  buildDemTable();
+  buildConsTable();
+
+  // Bindings sliders
+  products.forEach((_,pi)=>{
+    for (let m=0;m<M;m++){
+      const inp = $(`#p-${pi}-${m}`), out=$(`#pval-${pi}-${m}`);
+      inp.addEventListener('input', ()=>{ state.prod[pi][m]=+inp.value; out.textContent=inp.value; recompute(); });
+    }
+  });
+  for (let m=0;m<M;m++){
+    const inp=$(`#hp-${m}`), out=$(`#hpval-${m}`);
+    inp.addEventListener('input', ()=>{ state.extraHP[m]=+inp.value; out.textContent=inp.value; recompute(); });
+  }
+  for (let r=1;r<R;r++){
+    const inp=$(`#g-${r-1}`), out=$(`#gval-${r-1}`);
+    inp.addEventListener('input', ()=>{ state.extraGlob[r-1]=+inp.value; out.textContent=inp.value; recompute(); });
+  }
+  $('#setMin').addEventListener('click', ()=>{
+    products.forEach((_,pi)=>{ for (let m=0;m<M;m++){ state.prod[pi][m]=dmin[pi][m]; $(`#p-${pi}-${m}`).value=dmin[pi][m]; $(`#pval-${pi}-${m}`).textContent=dmin[pi][m]; }});
+    recompute();
+  });
+  $('#clearExtra').addEventListener('click', ()=>{
+    state.extraHP=[0,0,0]; for (let m=0;m<M;m++){ $(`#hp-${m}`).value=0; $(`#hpval-${m}`).textContent='0'; }
+    state.extraGlob=[0,0,0,0,0]; for (let k=0;k<5;k++){ $(`#g-${k}`).value=0; $(`#gval-${k}`).textContent='0'; }
+    recompute();
+  });
+}
+
+function buildDemTable(){
+  const months=['Mes 1','Mes 2','Mes 3'];
+  let html = `<thead><tr><th>Producto</th>${months.map(m=>`<th colspan="2">${m}</th>`).join('')}</tr>
+  <tr><th></th>${months.map(()=>'<th>mín</th><th>máx</th>').join('')}</tr></thead><tbody>`;
+  products.forEach((p,pi)=>{
+    html += `<tr><td style="color:${p.color}">${p.name}</td>`;
+    for (let m=0;m<M;m++){
+      html += `<td>${dmin[pi][m]}</td><td>${dmax[pi][m]}</td>`;
+    }
+    html += `</tr>`;
+  });
+  html += `</tbody>`;
+  demTable.innerHTML = html;
+}
+
+function buildConsTable(){
+  let html = `<thead><tr><th>Recurso por unidad</th>${products.map(p=>`<th style="color:${p.color}">${p.name}</th>`).join('')}</tr></thead><tbody>`;
+  const resNames = ['Horas prod','Acero (kg)','Plástico (kg)','Electrónicos (u)','Energía (kWh)','Embalaje (u)'];
+  for (let r=0;r<R;r++){
+    html += `<tr><td>${resNames[r]}</td>`;
+    for (let p=0;p<P;p++){
+      html += `<td>${cons[p][r]}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody>`;
+  consTable.innerHTML = html;
+}
+
+/* ======== Cálculo principal ======== */
+function recompute(){
+  // Reset
+  state.rev=0; state.vcost=0; state.hold=0; state.rcost=0; state.violations=0;
+  state.resUsedHP=[0,0,0]; state.resUsedGlob=[0,0,0,0,0];
+  // Inventarios / ventas
+  for (let pi=0; pi<P; pi++){
+    let invPrev = 0;
+    for (let m=0;m<M;m++){
+      const prod = state.prod[pi][m];
+      const avail = invPrev + prod;
+      const sell = Math.min(avail, dmax[pi][m]);
+      const invEnd = avail - sell;
+
+      state.sold[pi][m] = sell;
+      state.inv[pi][m]  = invEnd;
+      const unmet = sell < dmin[pi][m];
+      state.unmet[pi][m]= unmet;
+      if (unmet) state.violations++;
+
+      // $$
+      state.rev   += sell * products[pi].price;
+      state.vcost += prod * products[pi].vcost;
+      if (m<2) state.hold += invEnd * products[pi].hold; // costo por llevar al mes siguiente
+
+      // Recursos: HP mensual
+      state.resUsedHP[m] += prod * cons[pi][0];
+      // Recursos globales r=1..5
+      for (let r=1;r<R;r++){ state.resUsedGlob[r-1] += prod * cons[pi][r]; }
+
+      invPrev = invEnd;
+    }
+  }
+  // Costos de recursos extra
+  for (let m=0;m<M;m++) state.rcost += state.extraHP[m] * resources[0].extraCost;
+  for (let r=1;r<R;r++) state.rcost += state.extraGlob[r-1] * resources[r].extraCost;
+
+  // Violaciones por recursos
+  for (let m=0;m<M;m++){
+    const avail = resources[0].avail[m] + state.extraHP[m];
+    if (state.resUsedHP[m] > avail + 1e-9) state.violations++;
+  }
+  for (let r=1;r<R;r++){
+    const avail = resources[r].avail + state.extraGlob[r-1];
+    if (state.resUsedGlob[r-1] > avail + 1e-9) state.violations++;
+  }
+
+  // Beneficio
+  state.profit = state.rev - state.vcost - state.hold - state.rcost;
+
+  // UI
+  updateProfitBox();
+  renderResTable();
+  drawProdChart();
+  drawInvChart();
+}
+
+function fmt(n){ return Number(n).toLocaleString('es-AR', {maximumFractionDigits:0}); }
+function money(n){ return Number(n).toLocaleString('es-AR', {minimumFractionDigits:0}); }
+
+function updateProfitBox(){
+  profitBox.rev.textContent   = money(state.rev);
+  profitBox.vc.textContent    = money(state.vcost);
+  profitBox.hold.textContent  = money(state.hold);
+  profitBox.rextra.textContent= money(state.rcost);
+  profitBox.profit.textContent= (state.profit>=0?'+':'') + '$' + money(state.profit);
+  profitBox.profit.className  = state.profit>=0?'ok':'err';
+  profitBox.viol.textContent  = state.violations===0? '0 (OK)' : state.violations;
+  profitBox.viol.className    = state.violations===0?'ok':'err';
+}
+
+function renderResTable(){
+  // filas: HP por mes + globales
+  let html = '';
+  // HP mensual (3 filas)
+  for (let m=0;m<M;m++){
+    const avail = resources[0].avail[m], extra=state.extraHP[m], used=state.resUsedHP[m];
+    const bal = avail + extra - used;
+    const cls = bal>=0 ? (bal/Math.max(1,avail+extra) > 0.1 ? 'ok' : 'warn') : 'err';
+    html += `<tr>
+      <td>Horas de producción — Mes ${m+1}</td>
+      <td>${fmt(avail)}</td>
+      <td>${fmt(extra)}</td>
+      <td>${fmt(used.toFixed(1))}</td>
+      <td>${fmt(bal.toFixed(1))}</td>
+      <td class="${cls}">${cls.toUpperCase()}</td>
+    </tr>`;
+  }
+  // Globales (1 fila c/u)
+  for (let r=1;r<R;r++){
+    const avail = resources[r].avail, extra=state.extraGlob[r-1], used=state.resUsedGlob[r-1];
+    const bal = avail + extra - used;
+    const cls = bal>=0 ? (bal/Math.max(1,avail+extra) > 0.1 ? 'ok' : 'warn') : 'err';
+    html += `<tr>
+      <td>${resources[r].name}</td>
+      <td>${fmt(avail)}</td>
+      <td>${fmt(extra)}</td>
+      <td>${fmt(used.toFixed(1))}</td>
+      <td>${fmt(bal.toFixed(1))}</td>
+      <td class="${cls}">${cls.toUpperCase()}</td>
+    </tr>`;
+  }
+  resBody.innerHTML = html;
+}
+
+/* ======== Gráficos ======== */
+function resizeCanvasToDisplaySize(canvas, ctx){
+  const dpr = window.devicePixelRatio||1;
+  const cssW = Math.max(1, Math.round(canvas.clientWidth));
+  const cssH = Math.max(1, Math.round(canvas.clientHeight));
+  if (canvas.width!==cssW*dpr || canvas.height!==cssH*dpr){ canvas.width=cssW*dpr; canvas.height=cssH*dpr; }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawProdChart(){
+  resizeCanvasToDisplaySize(cProd, ctxProd);
+  const W=cProd.clientWidth, H=cProd.clientHeight, m={l:56,r:16,t:16,b:36};
+  ctxProd.clearRect(0,0,W,H);
+  ctxProd.fillStyle='#0c1226'; roundRect(ctxProd,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxProd.fill();
+
+  const months=[0,1,2]; const mxPerMonth = Math.max(...months.map(mi => products.reduce((s,_,pi)=> Math.max(s, state.prod[pi][mi]), 0)));
+  const ymax = Math.max(10, Math.ceil(mxPerMonth*1.2));
+  const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+  const bandW = (x1-x0)/M;
+  const barW = Math.min(24, bandW/(P+1));
+
+  const xMonth=(mi)=> x0 + bandW*mi + bandW/2;
+  const yScale=(v)=> y0 - (v/ymax)*(y0-y1);
+
+  // grid
+  ctxProd.strokeStyle='rgba(255,255,255,0.06)'; ctxProd.lineWidth=1;
+  for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctxProd,x,y1,x,y0); }
+  for (let k=0;k<=6;k++){ const y=y0 - k*(y0-y1)/6; line(ctxProd,x0,y,x1,y); }
+
+  // axes
+  ctxProd.strokeStyle='rgba(255,255,255,0.18)'; ctxProd.lineWidth=1.2;
+  line(ctxProd,x0,y1,x0,y0); line(ctxProd,x0,y0,x1,y0);
+
+  // bars
+  products.forEach((p,pi)=>{
+    ctxProd.fillStyle=p.color;
+    months.forEach((mi)=>{
+      const xCenter=xMonth(mi);
+      const x = xCenter - (P/2 - pi)*barW + (pi-P/2)*barW;
+      const y = yScale(state.prod[pi][mi]);
+      ctxProd.fillRect(x, y, barW*0.9, y0-y);
+    });
+  });
+
+  // ticks
+  ctxProd.fillStyle='rgba(231,236,243,0.9)'; ctxProd.font='12px system-ui,sans-serif';
+  ctxProd.textAlign='center'; ctxProd.textBaseline='top';
+  months.forEach((mi)=> ctxProd.fillText(`Mes ${mi+1}`, xMonth(mi), y0+6));
+  ctxProd.textAlign='right'; ctxProd.textBaseline='middle';
+  for (let k=0;k<=6;k++){ const yk=Math.round(k*ymax/6); ctxProd.fillText(String(yk), x0-6, yScale(yk)); }
+}
+
+function drawInvChart(){
+  resizeCanvasToDisplaySize(cInv, ctxInv);
+  const W=cInv.clientWidth, H=cInv.clientHeight, m={l:56,r:16,t:16,b:36};
+  ctxInv.clearRect(0,0,W,H);
+  ctxInv.fillStyle='#0c1226'; roundRect(ctxInv,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxInv.fill();
+
+  const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+  const xStep = (x1-x0)/(M-1);
+  const xAt=(mi)=> x0 + xStep*mi;
+  const ymax = Math.max(10, Math.ceil(Math.max(...state.inv.flat())*1.2));
+  const yScale=(v)=> y0 - (v/ymax)*(y0-y1);
+
+  // grid
+  ctxInv.strokeStyle='rgba(255,255,255,0.06)'; ctxInv.lineWidth=1;
+  for (let k=0;k<M;k++){ const x=xAt(k); line(ctxInv,x,y1,x,y0); }
+  for (let k=0;k<=6;k++){ const y=y0 - k*(y0-y1)/6; line(ctxInv,m.l,y,x1,y); }
+
+  // axes
+  ctxInv.strokeStyle='rgba(255,255,255,0.18)'; ctxInv.lineWidth=1.2;
+  line(ctxInv,x0,y1,x0,y0); line(ctxInv,x0,y0,x1,y0);
+
+  // series (líneas por producto)
+  products.forEach((p,pi)=>{
+    ctxInv.strokeStyle=p.color; ctxInv.lineWidth=2; ctxInv.beginPath();
+    for (let m=0;m<M;m++){
+      const X = xAt(m);
+      const Y = yScale(state.inv[pi][m]);
+      if (m===0) ctxInv.moveTo(X,Y); else ctxInv.lineTo(X,Y);
+    }
+    ctxInv.stroke();
+  });
+
+  // ticks
+  ctxInv.fillStyle='rgba(231,236,243,0.9)'; ctxInv.font='12px system-ui,sans-serif';
+  ctxInv.textAlign='center'; ctxInv.textBaseline='top';
+  for (let m=0;m<M;m++){ ctxInv.fillText(`Mes ${m+1}`, xAt(m), y0+6); }
+  ctxInv.textAlign='right'; ctxInv.textBaseline='middle';
+  for (let k=0;k<=6;k++){ const yk=Math.round(k*ymax/6); ctxInv.fillText(String(yk), x0-6, yScale(yk)); }
+}
+
+/* ======== Heurística ======== */
+function applyHeuristic(){
+  // 1) Producción = demandas mínimas
+  products.forEach((_,pi)=>{ for (let m=0;m<M;m++){ state.prod[pi][m]=dmin[pi][m]; const el = document.getElementById(`p-${pi}-${m}`); if (el){ el.value=dmin[pi][m]; document.getElementById(`pval-${pi}-${m}`).textContent=dmin[pi][m]; } }});
+
+  // 2) Recalcular uso de recursos con ese plan
+  // (recompute calcula usos y violaciones con extras actuales)
+  state.extraHP=[0,0,0];
+  state.extraGlob=[0,0,0,0,0];
+  if (document.getElementById('hp-0')){ for (let m=0;m<M;m++){ document.getElementById(`hp-${m}`).value=0; document.getElementById(`hpval-${m}`).textContent='0'; } }
+  for (let r=0;r<5;r++){ const g=document.getElementById(`g-${r}`); if (g){ g.value=0; document.getElementById(`gval-${r}`).textContent='0'; } }
+  recompute();
+
+  // 3) Comprar lo mínimo para cubrir faltantes
+  // Horas por mes
+  for (let m=0;m<M;m++){
+    const need = Math.max(0, state.resUsedHP[m] - resources[0].avail[m]);
+    const extra = Math.ceil(need);
+    state.extraHP[m] = extra;
+    if (document.getElementById(`hp-${m}`)){ document.getElementById(`hp-${m}`).value=extra; document.getElementById(`hpval-${m}`).textContent=extra; }
+  }
+  // Globales
+  for (let r=1;r<R;r++){
+    const used = state.resUsedGlob[r-1];
+    const need = Math.max(0, used - resources[r].avail);
+    const extra = Math.ceil(need);
+    state.extraGlob[r-1] = extra;
+    const el = document.getElementById(`g-${r-1}`);
+    if (el){ el.value=extra; document.getElementById(`gval-${r-1}`).textContent=extra; }
+  }
+  // 4) Recalcular con extras aplicados
+  recompute();
+}
+
+/* ======== CSV ======== */
+function buildCSV(){
+  // Sección 1: producción / ventas / inventario
+  let lines = [];
+  lines.push(`# Plan de manufactura — ${new Date().toISOString()}`);
+  lines.push(`# Autor: ${authorInp.value}`);
+  lines.push('');
+  lines.push('SECCION,PRODUCTO,MES,PRODUCIDO,VENDIDO,INVENTARIO_FIN');
+  for (let pi=0; pi<P; pi++){
+    for (let m=0;m<M;m++){
+      lines.push(['PRODUCCION', products[pi].name, m+1, state.prod[pi][m], state.sold[pi][m], state.inv[pi][m]].join(','));
+    }
+  }
+  lines.push('');
+  // Sección 2: recursos
+  lines.push('SECCION,RECURSO,PERIODO/TYPE,DISPONIBLE,EXTRA,USADO,BALANCE');
+  for (let m=0;m<M;m++){
+    const avail = resources[0].avail[m], extra=state.extraHP[m], used=state.resUsedHP[m], bal=avail+extra-used;
+    lines.push(['RECURSO', 'HorasProduccion', `Mes${m+1}`, avail, extra, used.toFixed(2), bal.toFixed(2)].join(','));
+  }
+  for (let r=1;r<R;r++){
+    const avail = resources[r].avail, extra=state.extraGlob[r-1], used=state.resUsedGlob[r-1], bal=avail+extra-used;
+    lines.push(['RECURSO', resources[r].name.replace(/,/g,' '), 'Global', avail, extra, used.toFixed(2), bal.toFixed(2)].join(','));
+  }
+  lines.push('');
+  // Sección 3: resumen económico
+  lines.push('SECCION,CONCEPTO,VALOR');
+  lines.push(['ECONOMIA','Ingresos', state.rev.toFixed(2)].join(','));
+  lines.push(['ECONOMIA','CostosVariables', state.vcost.toFixed(2)].join(','));
+  lines.push(['ECONOMIA','Almacenaje', state.hold.toFixed(2)].join(','));
+  lines.push(['ECONOMIA','RecursosExtra', state.rcost.toFixed(2)].join(','));
+  lines.push(['ECONOMIA','Beneficio', state.profit.toFixed(2)].join(','));
+  return lines.join('\n');
+}
+function downloadCSV(){
+  const csv = buildCSV();
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = authorInp.value.trim().replace(/\s+/g,'_') || 'plan';
+  a.href = url; a.download = `plan_manufactura_${safeName}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+
+/* ======== Resize ======== */
+const ro1=new ResizeObserver(()=>{ drawProdChart(); });
+const ro2=new ResizeObserver(()=>{ drawInvChart(); });
+
+/* ======== Init ======== */
+function init(){
+  buildControls();
+  recompute();
+  ro1.observe(cProd); ro2.observe(cInv);
+  const mq=matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener?.('change', ()=>{ drawProdChart(); drawInvChart(); });
+
+  // Footer
+  authorEcho.textContent = '· aparecerá en el CSV';
+  authorInp.addEventListener('input', ()=>{ authorEcho.textContent = authorInp.value ? `· ${authorInp.value}` : '· aparecerá en el CSV'; });
+  document.getElementById('heuristic').addEventListener('click', applyHeuristic);
+  document.getElementById('csv').addEventListener('click', downloadCSV);
+}
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+init();
+</script>
+</body>
+</html>
+
