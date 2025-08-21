@@ -26,6 +26,7 @@ tags = ["general"]
 
 ## Libros, escritura, etc
 
+* [Generar tablas en markdown](../posts/20250602_tablas_markdown)
 * [Links acerca de licencias para libros y blogs](../posts/20250225_links_licencias)
 
 ## Matemática
@@ -39,7 +40,7 @@ tags = ["general"]
 
 ## Linux
 
-[¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
+* [¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
 
 ## Docencia
 
