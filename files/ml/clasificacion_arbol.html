@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Árbol de decisión (profundidad 2) — Clasificación 2D</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#78a6ff; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f;
+      --c0:#8ec5ff; --c1:#ffd166;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+    }
+    .container{max-width:1100px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:18px}
+    h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+    @media (max-width: 980px){ .card,.side{grid-column:1 / -1} }
+    canvas{width:100%; height:520px; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+
+    .controls{display:grid; gap:12px}
+    .row{display:grid; grid-template-columns: 170px 1fr auto; gap:10px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .pill{display:inline-block; background:#0e1a3c; border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:12px; color:var(--muted)}
+    .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .c0{background:var(--c0)} .c1{background:var(--c1)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    input[type="number"], select{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border); border-radius:10px; padding:6px 8px; width:100%;
+    }
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:560px){ .row{grid-template-columns: 130px 1fr auto} .cols{grid-template-columns:1fr} }
+    .nodebox{border:1px dashed #1c254a; border-radius:12px; padding:8px}
+    .nodebox h3{margin:0 0 6px 0; font-size:13px; color:var(--muted); font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Árbol de decisión (profundidad 2)</h1>
+      <div class="muted">
+        Elegí para cada nodo la <strong>variable</strong> (<code>x1</code> o <code>x2</code>) y el <strong>umbral</strong>. La clase predicha en cada hoja se calcula por mayoría (probabilidad suavizada).
+      </div>
+      <div class="legend">
+        <span class="pill"><span class="dot c0"></span> clase 0</span>
+        <span class="pill"><span class="dot c1"></span> clase 1</span>
+        <span class="pill">borde = fronteras de las hojas</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <canvas id="plot" width="900" height="520" aria-label="Plano X1–X2 con árbol de decisión"></canvas>
+      </div>
+
+      <aside class="side">
+        <div class="panel controls">
+          <div class="nodebox">
+            <h3>Nodo raíz</h3>
+            <div class="row">
+              <label for="rootVar">Variable</label>
+              <select id="rootVar"><option value="x1">x1</option><option value="x2">x2</option></select>
+              <span></span>
+            </div>
+            <div class="row">
+              <label for="rootThr">Umbral</label>
+              <input id="rootThr" type="range" min="-3" max="3" step="0.05" value="0.0" />
+              <output id="rootThrVal">0.00</output>
+            </div>
+          </div>
+
+          <div class="one-col">
+            <div class="nodebox">
+              <h3>Nodo izquierdo (rama ≤ raíz)</h3>
+              <div class="row">
+                <label for="lVar">Variable</label>
+                <select id="lVar"><option value="x1">x1</option><option value="x2">x2</option></select>
+                <span></span>
+              </div>
+              <div class="row">
+                <label for="lThr">Umbral</label>
+                <input id="lThr" type="range" min="-3" max="3" step="0.05" value="0.0" />
+                <output id="lThrVal">0.00</output>
+              </div>
+            </div>
+
+            <div class="nodebox">
+              <h3>Nodo derecho (rama &gt; raíz)</h3>
+              <div class="row">
+                <label for="rVar">Variable</label>
+                <select id="rVar"><option value="x1">x1</option><option value="x2">x2</option></select>
+                <span></span>
+              </div>
+              <div class="row">
+                <label for="rThr">Umbral</label>
+                <input id="rThr" type="range" min="-3" max="3" step="0.05" value="0.0" />
+                <output id="rThrVal">0.00</output>
+              </div>
+            </div>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="shape">Datos</label>
+              <select id="shape">
+                <option value="moons">Dos lunas</option>
+                <option value="circles">Círculos concéntricos</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="sigma">Ruido σ</label>
+              <input id="sigma" type="number" step="0.05" value="0.25" />
+            </div>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="n">Muestras N</label>
+              <input id="n" type="number" min="60" max="2000" step="20" value="300" />
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+            <button id="regen" class="btn" type="button">Regenerar datos</button>
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input id="toggleProb" type="checkbox" checked/> Fondo según probabilidad (hojas)
+            </label>
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input id="toggleErr" type="checkbox" checked/> Resaltar mal clasificados
+            </label>
+            <button id="resetGood" class="btn" type="button">Reset razonable</button>
+          </div>
+        </div>
+
+        <div class="panel mono" id="metrics">
+          <div><strong>Accuracy:</strong> <span id="acc" class="ok">–</span></div>
+          <div><strong>LogLoss:</strong> <span id="ll">–</span></div>
+        </div>
+
+        <details>
+          <summary class="muted">Matriz de confusión</summary>
+          <div style="margin-top:8px;">
+            <table id="cm">
+              <thead>
+                <tr><th></th><th>Pred 0</th><th>Pred 1</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>True 0</td><td id="tn">–</td><td id="fp">–</td></tr>
+                <tr><td>True 1</td><td id="fn">–</td><td id="tp">–</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // ---------- Utils ----------
+    function mulberry32(seed){ let t = seed>>>0; return function(){
+      t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r);
+      return ((r ^ (r>>>14))>>>0) / 4294967296;
+    }}
+    function randn(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+    const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+    const lerp  = (a,b,t)=> a + (b-a)*t;
+
+    // ---------- Estado ----------
+    const state = {
+      data: [], // {x1,x2,y}
+      xlim: [-3,3], ylim: [-3,3],
+      // árbol: raíz y dos nodos de nivel 1
+      rootVar: 'x1', rootThr: 0,
+      lVar: 'x2',    lThr: 0,
+      rVar: 'x2',    rThr: 0,
+      // datos
+      shape:'moons', sigma:0.25, n:300, seed:1234,
+      showProb:true, highlightErrors:true,
+      leafP:[0.5,0.5,0.5,0.5], // prob de clase 1 por hoja (con suavizado)
+    };
+
+    // ---------- DOM ----------
+    const $=(s)=>document.querySelector(s);
+    const canvas=$('#plot'), ctx=canvas.getContext('2d');
+
+    const rootVarSel=$('#rootVar'), rootThrInp=$('#rootThr'), rootThrVal=$('#rootThrVal');
+    const lVarSel=$('#lVar'), lThrInp=$('#lThr'), lThrVal=$('#lThrVal');
+    const rVarSel=$('#rVar'), rThrInp=$('#rThr'), rThrVal=$('#rThrVal');
+
+    const shapeSel=$('#shape'), sigmaInp=$('#sigma'), nInp=$('#n'), seedInp=$('#seed');
+    const regenBtn=$('#regen'), toggleProb=$('#toggleProb'), toggleErr=$('#toggleErr'), resetGoodBtn=$('#resetGood');
+
+    const accEl=$('#acc'), llEl=$('#ll'), tnEl=$('#tn'), fpEl=$('#fp'), fnEl=$('#fn'), tpEl=$('#tp');
+
+    // ---------- Datos ----------
+    function genData(){
+      const rng = mulberry32(+state.seed||0);
+      const N = Math.max(60, +state.n|0);
+      const s = Math.max(0, +state.sigma);
+      const arr=[];
+      if (state.shape==='moons'){
+        for (let i=0;i<N;i++){
+          const y=i%2;
+          const angle = Math.PI*(rng()*0.9+0.05);
+          if (y===0){
+            const r=1;
+            arr.push({x1: r*Math.cos(angle) + randn(rng)*s, x2: r*Math.sin(angle) + randn(rng)*s, y});
+          } else {
+            const r=1;
+            arr.push({x1:-r*Math.cos(angle)+1.0 + randn(rng)*s, x2:-r*Math.sin(angle)-0.2 + randn(rng)*s, y});
+          }
+        }
+      } else {
+        for (let i=0;i<N;i++){
+          const y=i%2, ang=2*Math.PI*rng();
+          const r= (y===0?0.8:1.6) + randn(rng)*s;
+          arr.push({x1:r*Math.cos(ang), x2:r*Math.sin(ang), y});
+        }
+      }
+      state.data=arr;
+
+      // límites
+      const xs=arr.map(d=>d.x1), ys=arr.map(d=>d.x2);
+      let xmin=Math.min(...xs), xmax=Math.max(...xs);
+      let ymin=Math.min(...ys), ymax=Math.max(...ys);
+      const padX=0.15*(xmax-xmin||1), padY=0.15*(ymax-ymin||1);
+      state.xlim=[xmin-padX,xmax+padX]; state.ylim=[ymin-padY,ymax+padY];
+
+      // recalibrar sliders a rangos
+      updateSliderRanges();
+      // reset razonable si recién arranca o si thresholds quedaron fuera
+      clampThresholdsToRanges();
+      computeLeafProbs();
+    }
+
+    // ---------- Árbol ----------
+    function route(x1,x2){
+      const goLeftRoot = (state.rootVar==='x1') ? x1<=state.rootThr : x2<=state.rootThr;
+      if (goLeftRoot){
+        const goLeftL = (state.lVar==='x1') ? x1<=state.lThr : x2<=state.lThr;
+        return goLeftL ? 0 : 1; // LL o LR
+      } else {
+        const goLeftR = (state.rVar==='x1') ? x1<=state.rThr : x2<=state.rThr;
+        return goLeftR ? 2 : 3; // RL o RR
+      }
+    }
+
+    function splitRange(range, variable, thr){
+      const {x0,x1,y0,y1} = range;
+      if (variable==='x1'){
+        return [
+          {x0:x0, x1:Math.min(x1,thr), y0, y1},
+          {x0:Math.max(x0,thr), x1:x1, y0, y1}
+        ];
+      } else {
+        return [
+          {x0, x1, y0:y0, y1:Math.min(y1,thr)},
+          {x0, x1, y0:Math.max(y0,thr), y1:y1}
+        ];
+      }
+    }
+
+    function leafRegions(){
+      const [xmin,xmax]=state.xlim, [ymin,ymax]=state.ylim;
+      const rootRange={x0:xmin,x1:xmax,y0:ymin,y1:ymax};
+      const [L,R] = splitRange(rootRange, state.rootVar, state.rootThr);
+      const [LL,LR]= splitRange(L, state.lVar, state.lThr);
+      const [RL,RR]= splitRange(R, state.rVar, state.rThr);
+      return [LL,LR,RL,RR];
+    }
+
+    // Prob por hoja con suavizado de Laplace (evita logloss infinita)
+    function computeLeafProbs(){
+      const counts = [[0,0],[0,0],[0,0],[0,0]]; // [ [n0,n1], ... ]
+      for (const {x1,x2,y} of state.data){
+        const leaf = route(x1,x2);
+        counts[leaf][y] += 1;
+      }
+      const P = new Array(4).fill(0.5);
+      for (let i=0;i<4;i++){
+        const n0=counts[i][0], n1=counts[i][1], n=n0+n1;
+        P[i] = (n1 + 1) / (n + 2); // Laplace alpha=1
+      }
+      state.leafP = P;
+    }
+
+    function predictProb(x1,x2){
+      const leaf = route(x1,x2);
+      return state.leafP[leaf];
+    }
+
+    // ---------- Métricas ----------
+    function evaluate(){
+      computeLeafProbs();
+      const eps = 1e-9;
+      let correct=0, ll=0, tn=0, tp=0, fn=0, fp=0;
+      for (const {x1,x2,y} of state.data){
+        const p = predictProb(x1,x2);
+        const yhat = p>=0.5 ? 1 : 0;
+        if (yhat===y) correct++;
+        ll += -(y*Math.log(clamp(p,eps,1-eps)) + (1-y)*Math.log(clamp(1-p,eps,1-eps)));
+        if (y===1 && yhat===1) tp++; else
+        if (y===1 && yhat===0) fn++; else
+        if (y===0 && yhat===1) fp++; else tn++;
+      }
+      const n = state.data.length;
+      return {acc: correct/n, ll: ll/n, tn, fp, fn, tp};
+    }
+
+    // ---------- Dibujo ----------
+    function draw(){
+      const [xmin,xmax]=state.xlim,[ymin,ymax]=state.ylim;
+      const W=canvas.width,H=canvas.height; if (!W||!H) return;
+      const m={l:48,r:16,t:18,b:44};
+      const plotW=W-m.l-m.r, plotH=H-m.t-m.b;
+
+      const x2px=(x)=> m.l + (x - xmin)/(xmax-xmin)*plotW;
+      const y2px=(y)=> m.t + (1 - (y - ymin)/(ymax-ymin))*plotH;
+
+      ctx.clearRect(0,0,W,H);
+      // fondo
+      ctx.fillStyle='#0c1226'; roundRect(ctx,m.l,m.t,plotW,plotH,10); ctx.fill();
+
+      // grid
+      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+      drawGrid(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H);
+
+      // ejes 0
+      ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.2;
+      if (ymin<0 && ymax>0) line(ctx,m.l,y2px(0),m.l+plotW,y2px(0));
+      if (xmin<0 && xmax>0) line(ctx,x2px(0),m.t,x2px(0),m.t+plotH);
+
+      // regiones por hoja (fondo)
+      const regs = leafRegions();
+      if (state.showProb){
+        for (let i=0;i<4;i++){
+          const r = regs[i]; if (!isValidRect(r)) continue;
+          const p = clamp(state.leafP[i], 0, 1);
+          const c0=[142,197,255], c1=[255,209,102];
+          const R=Math.round(lerp(c0[0],c1[0],p));
+          const G=Math.round(lerp(c0[1],c1[1],p));
+          const B=Math.round(lerp(c0[2],c1[2],p));
+          ctx.fillStyle=`rgba(${R},${G},${B},0.12)`;
+          ctx.fillRect(x2px(r.x0), y2px(r.y1), x2px(r.x1)-x2px(r.x0), y2px(r.y0)-y2px(r.y1));
+        }
+      }
+
+      // fronteras (líneas blancas recortadas a cada subregión)
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
+      // raíz
+      if (state.rootVar==='x1'){
+        const x = clamp(state.rootThr, xmin, xmax);
+        line(ctx, x2px(x), y2px(ymin), x2px(x), y2px(ymax));
+      } else {
+        const y = clamp(state.rootThr, ymin, ymax);
+        line(ctx, x2px(xmin), y2px(y), x2px(xmax), y2px(y));
+      }
+      // hijos
+      const [L,R] = splitRange({x0:xmin,x1:xmax,y0:ymin,y1:ymax}, state.rootVar, state.rootThr);
+      // izquierdo
+      if (state.lVar==='x1'){
+        const x=clamp(state.lThr, L.x0, L.x1);
+        if (x> L.x0 && x< L.x1) line(ctx, x2px(x), y2px(L.y0), x2px(x), y2px(L.y1));
+      } else {
+        const y=clamp(state.lThr, L.y0, L.y1);
+        if (y> L.y0 && y< L.y1) line(ctx, x2px(L.x0), y2px(y), x2px(L.x1), y2px(y));
+      }
+      // derecho
+      if (state.rVar==='x1'){
+        const x=clamp(state.rThr, R.x0, R.x1);
+        if (x> R.x0 && x< R.x1) line(ctx, x2px(x), y2px(R.y0), x2px(x), y2px(R.y1));
+      } else {
+        const y=clamp(state.rThr, R.y0, R.y1);
+        if (y> R.y0 && y< R.y1) line(ctx, x2px(R.x0), y2px(y), x2px(R.x1), y2px(y));
+      }
+
+      // puntos
+      for (const {x1,x2,y} of state.data){
+        const p = predictProb(x1,x2);
+        const yhat = p>=0.5?1:0;
+        const X=x2px(x1), Y=y2px(x2);
+        ctx.fillStyle=(y===0)? getVar('--c0'): getVar('--c1');
+        dot(ctx,X,Y,3.0);
+        if (state.highlightErrors && y!==yhat){
+          ctx.strokeStyle=getVar('--err'); ctx.lineWidth=1.4;
+          ctx.beginPath(); ctx.arc(X,Y,5,0,Math.PI*2); ctx.stroke();
+        }
+      }
+
+      // ticks
+      drawTicks(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H);
+    }
+
+    function isValidRect(r){ return isFinite(r.x0)&&isFinite(r.x1)&&isFinite(r.y0)&&isFinite(r.y1) && r.x1>r.x0 && r.y1>r.y0; }
+
+    // ---------- Helpers de dibujo ----------
+    function roundRect(ctx, x,y,w,h,r){
+      ctx.beginPath(); ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    }
+    function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+    function dot(ctx,x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+    function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+    // grid/ticks
+    function niceTicks(min,max,count=6){
+      const span=max-min; if (span<=0 || !isFinite(span)) return {start:min, step:1, count:1};
+      const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+      const nice = norm<1.5?1: norm<3?2: norm<7?5:10;
+      const step=nice*mag; const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+      const n=Math.max(1, Math.round((end-start)/step)+1); return {start, step, count:n};
+    }
+    function drawGrid(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H){
+      const xt=niceTicks(xmin,xmax,6);
+      for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctx, x2px(x), m.t, x2px(x), H-m.b); }
+      const yt=niceTicks(ymin,ymax,6);
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctx, m.l, y2px(y), W-m.r, y2px(y)); }
+    }
+    function drawTicks(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H){
+      ctx.fillStyle='rgba(231,236,243,0.9)'; ctx.font='12px system-ui, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      const xt=niceTicks(xmin,xmax,6);
+      for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctx.fillText(fmt(x), x2px(x), H-m.b+6); }
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      const yt=niceTicks(ymin,ymax,6);
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctx.fillText(fmt(y), m.l-6, y2px(y)); }
+    }
+    const fmt=(v)=> !isFinite(v)?'–': (Math.abs(v)>=10? v.toFixed(2): v.toFixed(3));
+
+    // ---------- UI / Refresh ----------
+    function refresh(resize=true){
+      rootThrVal.textContent=(+state.rootThr).toFixed(2);
+      lThrVal.textContent   =(+state.lThr).toFixed(2);
+      rThrVal.textContent   =(+state.rThr).toFixed(2);
+
+      const {acc,ll,tn,fp,fn,tp} = evaluate();
+      accEl.textContent = isFinite(acc)? (acc*100).toFixed(1)+'%':'–';
+      accEl.className = (acc>=0.9)?'ok': (acc>=0.7)?'warn':'err';
+      llEl.textContent = isFinite(ll)? ll.toFixed(4): '–';
+      tnEl.textContent=tn; fpEl.textContent=fp; fnEl.textContent=fn; tpEl.textContent=tp;
+
+      if (resize) resizeCanvasToDisplaySize();
+      draw();
+    }
+
+    function updateSliderRanges(){
+      const [xmin,xmax]=state.xlim,[ymin,ymax]=state.ylim;
+      // raíz
+      const rootMin = (state.rootVar==='x1')? xmin:ymin;
+      const rootMax = (state.rootVar==='x1')? xmax:ymax;
+      setSliderRange(rootThrInp, rootMin, rootMax);
+
+      // nodo izquierdo (sobre rango de la mitad izquierda/derecha)
+      const [L,R] = splitRange({x0:xmin,x1:xmax,y0:ymin,y1:ymax}, state.rootVar, state.rootThr);
+      const lMin = (state.lVar==='x1')? L.x0 : L.y0;
+      const lMax = (state.lVar==='x1')? L.x1 : L.y1;
+      const rMin = (state.rVar==='x1')? R.x0 : R.y0;
+      const rMax = (state.rVar==='x1')? R.x1 : R.y1;
+      setSliderRange(lThrInp, lMin, lMax);
+      setSliderRange(rThrInp, rMin, rMax);
+    }
+
+    function setSliderRange(inp, min, max){
+      inp.min=min; inp.max=max;
+      // si el valor salió del rango, se ajusta
+      const v=+inp.value; if (v<min || v>max){ inp.value=clamp(v,min,max); }
+    }
+
+    function clampThresholdsToRanges(){
+      const [xmin,xmax]=state.xlim,[ymin,ymax]=state.ylim;
+      state.rootThr = clamp(state.rootThr, (state.rootVar==='x1'?xmin:ymin), (state.rootVar==='x1'?xmax:ymax));
+      const [L,R]   = splitRange({x0:xmin,x1:xmax,y0:ymin,y1:ymax}, state.rootVar, state.rootThr);
+      state.lThr    = clamp(state.lThr, (state.lVar==='x1'?L.x0:L.y0), (state.lVar==='x1'?L.x1:L.y1));
+      state.rThr    = clamp(state.rThr, (state.rVar==='x1'?R.x0:R.y0), (state.rVar==='x1'?R.x1:R.y1));
+      syncInputsFromState(); // para arrastrar los sliders con el clamp
+    }
+
+    function syncInputsFromState(){
+      rootVarSel.value=state.rootVar; rootThrInp.value=state.rootThr;
+      lVarSel.value=state.lVar;       lThrInp.value=state.lThr;
+      rVarSel.value=state.rVar;       rThrInp.value=state.rThr;
+      rootThrVal.textContent=state.rootThr.toFixed(2);
+      lThrVal.textContent=state.lThr.toFixed(2);
+      rThrVal.textContent=state.rThr.toFixed(2);
+    }
+
+    // bindings
+    rootVarSel.addEventListener('change', ()=>{ state.rootVar=rootVarSel.value; updateSliderRanges(); clampThresholdsToRanges(); refresh(false); });
+    lVarSel.addEventListener('change',    ()=>{ state.lVar   =lVarSel.value;    updateSliderRanges(); clampThresholdsToRanges(); refresh(false); });
+    rVarSel.addEventListener('change',    ()=>{ state.rVar   =rVarSel.value;    updateSliderRanges(); clampThresholdsToRanges(); refresh(false); });
+
+    rootThrInp.addEventListener('input', ()=>{ state.rootThr=+rootThrInp.value; updateSliderRanges(); refresh(false); });
+    lThrInp.addEventListener('input',    ()=>{ state.lThr   =+lThrInp.value;    updateSliderRanges(); refresh(false); });
+    rThrInp.addEventListener('input',    ()=>{ state.rThr   =+rThrInp.value;    updateSliderRanges(); refresh(false); });
+
+    shapeSel.addEventListener('change', ()=>{ state.shape=shapeSel.value; });
+    sigmaInp.addEventListener('change', ()=>{ state.sigma=Math.max(0,+sigmaInp.value); });
+    nInp.addEventListener('change',     ()=>{ state.n=Math.max(60,+nInp.value|0); });
+    seedInp.addEventListener('change',  ()=>{ state.seed=+seedInp.value|0; });
+
+    regenBtn.addEventListener('click', ()=>{ genData(); refresh(); });
+    toggleProb.addEventListener('change', ()=>{ state.showProb=toggleProb.checked; draw(); });
+    toggleErr .addEventListener('change', ()=>{ state.highlightErrors=toggleErr.checked; draw(); });
+
+    resetGoodBtn.addEventListener('click', ()=>{
+      // Set básico útil en "moons"
+      const [xmin,xmax]=state.xlim,[ymin,ymax]=state.ylim;
+      state.rootVar='x1'; state.rootThr=(xmin+xmax)/2;
+      state.lVar='x2';    state.lThr=(ymin+ymax)/2;
+      state.rVar='x2';    state.rThr=(ymin+ymax)/2;
+      syncInputsFromState(); updateSliderRanges(); refresh(false);
+    });
+
+    // ---------- Resize HiDPI ----------
+    function resizeCanvasToDisplaySize(){
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.max(1, Math.round(rect.width));
+      const cssH = Math.max(1, Math.round(rect.height));
+      const wantW = Math.round(cssW * dpr);
+      const wantH = Math.round(cssH * dpr);
+      if (canvas.width!==wantW || canvas.height!==wantH){
+        canvas.width = wantW; canvas.height = wantH;
+      }
+      ctx.setTransform(1,0,0,1,0,0);
+    }
+    const ro = new ResizeObserver(()=>{ resizeCanvasToDisplaySize(); draw(); });
+
+    // ---------- Init ----------
+    function init(){
+      // inputs iniciales
+      rootVarSel.value=state.rootVar; lVarSel.value=state.lVar; rVarSel.value=state.rVar;
+      genData();
+      requestAnimationFrame(()=>{
+        ro.observe(canvas);
+        refresh();
+      });
+      matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener?.('change', ()=>{
+        resizeCanvasToDisplaySize(); draw();
+      });
+    }
+    init();
+  </script>
+</body>
+</html>
+

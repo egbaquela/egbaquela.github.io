@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clasificación no lineal — NN (2 sigmoides → sigmoide)</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#78a6ff; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f;
+      --c0:#8ec5ff; --c1:#ffd166;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+    }
+    .container{max-width:1100px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:18px}
+    h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+    @media (max-width: 980px){ .card,.side{grid-column:1 / -1} }
+    canvas{width:100%; height:520px; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+
+    .controls{display:grid; gap:12px}
+    .row{display:grid; grid-template-columns: 170px 1fr auto; gap:10px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .pill{display:inline-block; background:#0e1a3c; border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:12px; color:var(--muted)}
+    .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .c0{background:var(--c0)} .c1{background:var(--c1)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    input[type="number"], select{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border); border-radius:10px; padding:6px 8px; width:100%;
+    }
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:560px){ .row{grid-template-columns: 130px 1fr auto} .cols{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Clasificación no lineal — NN (2 sigmoides → sigmoide)</h1>
+      <div class="muted">
+        Ajustá <strong>w₁₁,w₁₂,b₁,w₂₁,w₂₂,b₂,v₁,v₂,c</strong> para modelar fronteras no lineales. Métricas en vivo y entrenamiento por LogLoss (GD).
+      </div>
+      <div class="legend">
+        <span class="pill"><span class="dot c0"></span> clase 0</span>
+        <span class="pill"><span class="dot c1"></span> clase 1</span>
+        <span class="pill">p(x)=σ(v₁·σ(w₁₁x₁+w₁₂x₂+b₁) + v₂·σ(w₂₁x₁+w₂₂x₂+b₂) + c)</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <canvas id="plot" width="900" height="520" aria-label="Plano X1–X2 con frontera no lineal"></canvas>
+      </div>
+
+      <aside class="side">
+        <div class="panel controls">
+          <!-- H1 neuron -->
+          <div class="row">
+            <label for="w11">w₁₁ (x₁→s₁)</label>
+            <input id="w11" type="range" min="-8" max="8" step="0.1" value="2.5" />
+            <output id="w11Val">2.5</output>
+          </div>
+          <div class="row">
+            <label for="w12">w₁₂ (x₂→s₁)</label>
+            <input id="w12" type="range" min="-8" max="8" step="0.1" value="0.0" />
+            <output id="w12Val">0.0</output>
+          </div>
+          <div class="row">
+            <label for="b1">b₁</label>
+            <input id="b1" type="range" min="-10" max="10" step="0.1" value="0.0" />
+            <output id="b1Val">0.0</output>
+          </div>
+
+          <!-- H2 neuron -->
+          <div class="row">
+            <label for="w21">w₂₁ (x₁→s₂)</label>
+            <input id="w21" type="range" min="-8" max="8" step="0.1" value="-2.5" />
+            <output id="w21Val">-2.5</output>
+          </div>
+          <div class="row">
+            <label for="w22">w₂₂ (x₂→s₂)</label>
+            <input id="w22" type="range" min="-8" max="8" step="0.1" value="0.0" />
+            <output id="w22Val">0.0</output>
+          </div>
+          <div class="row">
+            <label for="b2">b₂</label>
+            <input id="b2" type="range" min="-10" max="10" step="0.1" value="0.0" />
+            <output id="b2Val">0.0</output>
+          </div>
+
+          <!-- Output -->
+          <div class="row">
+            <label for="v1">v₁ (s₁→logit)</label>
+            <input id="v1" type="range" min="-10" max="10" step="0.1" value="5.0" />
+            <output id="v1Val">5.0</output>
+          </div>
+          <div class="row">
+            <label for="v2">v₂ (s₂→logit)</label>
+            <input id="v2" type="range" min="-10" max="10" step="0.1" value="-5.0" />
+            <output id="v2Val">-5.0</output>
+          </div>
+          <div class="row">
+            <label for="c0">c (bias salida)</label>
+            <input id="c0" type="range" min="-10" max="10" step="0.1" value="0.0" />
+            <output id="c0Val">0.0</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="shape">Datos</label>
+              <select id="shape">
+                <option value="moons">Dos lunas</option>
+                <option value="circles">Círculos concéntricos</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="sigma">Ruido σ</label>
+              <input id="sigma" type="number" step="0.1" value="0.25" />
+            </div>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="n">Muestras N</label>
+              <input id="n" type="number" min="60" max="5000" step="20" value="600" />
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+            <button id="regen" class="btn" type="button">Regenerar datos</button>
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input id="toggleProb" type="checkbox" checked/> Fondo según probabilidad
+            </label>
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input id="toggleErr" type="checkbox" checked/> Resaltar mal clasificados
+            </label>
+            <button id="resetGood" class="btn" type="button">Reset razonable</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <details>
+            <summary class="muted">Entrenar por LogLoss (GD) — opcional</summary>
+            <div class="cols" style="margin-top:8px;">
+              <div>
+                <label class="muted" for="lr">LR</label>
+                <input id="lr" type="number" step="0.01" value="0.1" />
+              </div>
+              <div>
+                <label class="muted" for="epochs">Épocas</label>
+                <input id="epochs" type="number" step="50" value="400" />
+              </div>
+            </div>
+            <div style="margin-top:8px;">
+              <button id="train" class="btn" type="button">Ajustar (GD)</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="panel mono" id="metrics">
+          <div><strong>Accuracy:</strong> <span id="acc" class="ok">–</span></div>
+          <div><strong>LogLoss:</strong> <span id="ll">–</span></div>
+        </div>
+
+        <details>
+          <summary class="muted">Matriz de confusión</summary>
+          <div style="margin-top:8px;">
+            <table id="cm">
+              <thead>
+                <tr><th></th><th>Pred 0</th><th>Pred 1</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>True 0</td><td id="tn">–</td><td id="fp">–</td></tr>
+                <tr><td>True 1</td><td id="fn">–</td><td id="tp">–</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // ---------- Utils ----------
+    function mulberry32(seed){ let t = seed>>>0; return function(){
+      t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r);
+      return ((r ^ (r>>>14))>>>0) / 4294967296;
+    }}
+    function randn(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+    const σ = (z)=> 1/(1+Math.exp(-z));
+    const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+    const lerp = (a,b,t)=> a + (b-a)*t;
+
+    // ---------- Estado ----------
+    const state = {
+      data: [],       // {x1, x2, y}
+      xlim: [-3, 3],
+      ylim: [-3, 3],
+      // pesos
+      w11: 2.5, w12: 0.0, b1: 0.0,
+      w21:-2.5, w22: 0.0, b2: 0.0,
+      v1 : 5.0, v2 : -5.0, c : 0.0,
+      // datos
+      shape: 'moons',
+      sigma: 0.25,
+      n: 600,
+      seed: 1234,
+      showProb: true,
+      highlightErrors: true,
+    };
+
+    // ---------- DOM ----------
+    const $ = (sel)=>document.querySelector(sel);
+    const canvas = $('#plot'), ctx = canvas.getContext('2d');
+
+    // sliders
+    const w11Inp=$('#w11'), w12Inp=$('#w12'), b1Inp=$('#b1');
+    const w21Inp=$('#w21'), w22Inp=$('#w22'), b2Inp=$('#b2');
+    const v1Inp=$('#v1'), v2Inp=$('#v2'), c0Inp=$('#c0');
+
+    const w11Val=$('#w11Val'), w12Val=$('#w12Val'), b1Val=$('#b1Val');
+    const w21Val=$('#w21Val'), w22Val=$('#w22Val'), b2Val=$('#b2Val');
+    const v1Val=$('#v1Val'), v2Val=$('#v2Val'), c0Val=$('#c0Val');
+
+    const shapeSel=$('#shape'), sigmaInp=$('#sigma'), nInp=$('#n'), seedInp=$('#seed');
+    const regenBtn=$('#regen'), toggleProb=$('#toggleProb'), toggleErr=$('#toggleErr'), resetGoodBtn=$('#resetGood');
+
+    const lrInp=$('#lr'), epochsInp=$('#epochs'), trainBtn=$('#train');
+
+    const accEl=$('#acc'), llEl=$('#ll'), tnEl=$('#tn'), fpEl=$('#fp'), fnEl=$('#fn'), tpEl=$('#tp');
+
+    // ---------- Red ----------
+    function prob(x1,x2){
+      const s1 = σ(state.w11*x1 + state.w12*x2 + state.b1);
+      const s2 = σ(state.w21*x1 + state.w22*x2 + state.b2);
+      const a  = state.v1*s1 + state.v2*s2 + state.c; // logit
+      return σ(a); // prob clase 1
+    }
+
+    // ---------- Datos ----------
+    function genData(){
+      const rng = mulberry32(+state.seed || 0);
+      const N = Math.max(60, +state.n|0), s = Math.max(0, +state.sigma);
+      const arr=[];
+      if (state.shape === 'moons'){
+        // dos lunas
+        for (let i=0;i<N;i++){
+          const y = i%2;
+          const angle = Math.PI * (rng()*0.9 + 0.05);
+          if (y===0){
+            const r=1;
+            const x1 =  r*Math.cos(angle) + randn(rng)*s;
+            const x2 =  r*Math.sin(angle) + randn(rng)*s;
+            arr.push({x1,x2,y});
+          } else {
+            const r=1;
+            const x1 = -r*Math.cos(angle) + 1.0 + randn(rng)*s;
+            const x2 = -r*Math.sin(angle) - 0.2 + randn(rng)*s;
+            arr.push({x1,x2,y});
+          }
+        }
+      } else {
+        // círculos concéntricos
+        for (let i=0;i<N;i++){
+          const y = i%2;
+          const angle = 2*Math.PI*rng();
+          const r = (y===0 ? 0.8 : 1.6) + randn(rng)*s;
+          const x1 = r*Math.cos(angle);
+          const x2 = r*Math.sin(angle);
+          arr.push({x1,x2,y});
+        }
+      }
+      state.data = arr;
+
+      // bounds automáticos
+      const xs = arr.map(d=>d.x1), ys = arr.map(d=>d.x2);
+      let xmin=Math.min(...xs), xmax=Math.max(...xs);
+      let ymin=Math.min(...ys), ymax=Math.max(...ys);
+      const padX = 0.15*(xmax-xmin||1), padY = 0.15*(ymax-ymin||1);
+      state.xlim=[xmin-padX,xmax+padX]; state.ylim=[ymin-padY,ymax+padY];
+    }
+
+    // ---------- Métricas ----------
+    function evaluate(){
+      const n=state.data.length; const eps=1e-9;
+      let correct=0, ll=0, tn=0, tp=0, fn=0, fp=0;
+      for (const {x1,x2,y} of state.data){
+        const p = prob(x1,x2);
+        const yhat = (p>=0.5)?1:0;
+        if (yhat===y) correct++;
+        ll += -(y*Math.log(clamp(p,eps,1-eps)) + (1-y)*Math.log(clamp(1-p,eps,1-eps)));
+        if (y===1 && yhat===1) tp++; else
+        if (y===1 && yhat===0) fn++; else
+        if (y===0 && yhat===1) fp++; else tn++;
+      }
+      return { acc: correct/n, ll: ll/n, tn, fp, fn, tp };
+    }
+
+    // ---------- Entrenamiento (GD, LogLoss) ----------
+    async function trainGD(){
+      let {w11,w12,b1,w21,w22,b2,v1,v2,c} = state;
+      const lr = +lrInp.value || 0.1;
+      const epochs = Math.max(1, +epochsInp.value|0);
+      const n = state.data.length;
+
+      for (let e=0; e<epochs; e++){
+        let gw11=0,gw12=0,gb1=0, gw21=0,gw22=0,gb2=0, gv1=0,gv2=0,gc=0;
+
+        for (const {x1,x2,y} of state.data){
+          const z1 = w11*x1 + w12*x2 + b1, s1 = σ(z1), ds1 = s1*(1-s1);
+          const z2 = w21*x1 + w22*x2 + b2, s2 = σ(z2), ds2 = s2*(1-s2);
+          const a = v1*s1 + v2*s2 + c;  // logit
+          const p = σ(a);
+          const diff = (p - y); // ∂logloss/∂a = p - y
+
+          gv1 += diff * s1;
+          gv2 += diff * s2;
+          gc  += diff;
+
+          const g1 = diff * v1 * ds1;
+          const g2 = diff * v2 * ds2;
+          gw11 += g1 * x1; gw12 += g1 * x2; gb1 += g1;
+          gw21 += g2 * x1; gw22 += g2 * x2; gb2 += g2;
+        }
+
+        // promedio
+        const invN = 1/n;
+        gw11*=invN; gw12*=invN; gb1*=invN; gw21*=invN; gw22*=invN; gb2*=invN; gv1*=invN; gv2*=invN; gc*=invN;
+
+        // paso GD
+        w11 -= lr*gw11; w12 -= lr*gw12; b1 -= lr*gb1;
+        w21 -= lr*gw21; w22 -= lr*gw22; b2 -= lr*gb2;
+        v1  -= lr*gv1;  v2  -= lr*gv2;  c  -= lr*gc;
+
+        if ((e+1)%40===0){
+          Object.assign(state,{w11,w12,b1,w21,w22,b2,v1,v2,c});
+          syncSlidersFromState();
+          refresh(false);
+          await new Promise(r=>requestAnimationFrame(r));
+        }
+      }
+      Object.assign(state,{w11,w12,b1,w21,w22,b2,v1,v2,c});
+      syncSlidersFromState();
+      refresh(false);
+    }
+
+    // ---------- Dibujo ----------
+    function draw(){
+      const [xmin,xmax]=state.xlim,[ymin,ymax]=state.ylim;
+      const W=canvas.width,H=canvas.height;
+      if (!W || !H) return; // por las dudas
+
+      const m={l:48,r:16,t:18,b:44};
+      const plotW=W-m.l-m.r, plotH=H-m.t-m.b;
+
+      const x2px=(x)=> m.l + (x - xmin)/(xmax-xmin)*plotW;
+      const y2px=(y)=> m.t + (1 - (y - ymin)/(ymax-ymin))*plotH;
+      const px2x=(X)=> xmin + (X - m.l)/plotW*(xmax-xmin);
+      const py2y=(Y)=> ymin + (1 - (Y - m.t)/plotH)*(ymax-ymin);
+
+      ctx.clearRect(0,0,W,H);
+      // fondo
+      ctx.fillStyle='#0c1226'; roundRect(ctx,m.l,m.t,plotW,plotH,10); ctx.fill();
+
+      // grid
+      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+      drawGrid(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H);
+
+      // ejes 0
+      ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.2;
+      if (ymin<0 && ymax>0) line(ctx,m.l,y2px(0),m.l+plotW,y2px(0));
+      if (xmin<0 && xmax>0) line(ctx,x2px(0),m.t,x2px(0),m.t+plotH);
+
+      // fondo de prob (heatmap)
+      if (state.showProb){
+        const cols = 160, rows = Math.max(1, Math.round(cols * plotH/plotW));
+        for (let i=0;i<cols;i++){
+          for (let j=0;j<rows;j++){
+            const x = xmin + (i+0.5)/cols*(xmax-xmin);
+            const y = ymin + (j+0.5)/rows*(ymax-ymin);
+            const p = prob(x,y);
+            const c0=[142,197,255], c1=[255,209,102];
+            const r=Math.round(lerp(c0[0],c1[0],p));
+            const g=Math.round(lerp(c0[1],c1[1],p));
+            const b=Math.round(lerp(c0[2],c1[2],p));
+            ctx.fillStyle=`rgba(${r},${g},${b},0.12)`;
+            const X=m.l + i/cols*plotW, Y=m.t + j/rows*plotH;
+            ctx.fillRect(X,Y, Math.ceil(plotW/cols), Math.ceil(plotH/rows));
+          }
+        }
+      }
+
+      // puntos
+      for (const {x1,x2,y} of state.data){
+        const p = prob(x1,x2);
+        const yhat = (p>=0.5)?1:0;
+        const X=x2px(x1), Y=y2px(x2);
+        ctx.fillStyle = (y===0)? getVar('--c0') : getVar('--c1');
+        dot(ctx,X,Y,3.0);
+        if (state.highlightErrors && y!==yhat){
+          ctx.strokeStyle=getVar('--err'); ctx.lineWidth=1.4;
+          ctx.beginPath(); ctx.arc(X,Y,5,0,Math.PI*2); ctx.stroke();
+        }
+      }
+
+      // frontera p=0.5 por marching squares
+      drawContour05(px2x, py2y, x2px, y2px, m, plotW, plotH);
+
+      // ticks
+      drawTicks(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H);
+    }
+
+    function drawContour05(px2x, py2y, x2px, y2px, m, plotW, plotH){
+      const cols = 100, rows = Math.max(1, Math.round(cols * plotH/plotW));
+      // muestreamos f = p(x,y) - 0.5
+      const f = Array.from({length: rows+1}, ()=> Array(cols+1).fill(0));
+      for (let j=0;j<=rows;j++){
+        for (let i=0;i<=cols;i++){
+          const X = m.l + i/cols*plotW;
+          const Y = m.t + j/rows*plotH;
+          // Ojo: px2x/py2y esperan coords en px dentro del plot
+          const x = px2x(X), y = py2y(Y);
+          f[j][i] = prob(x,y) - 0.5;
+        }
+      }
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
+      for (let j=0;j<rows;j++){
+        for (let i=0;i<cols;i++){
+          const a=f[j][i], b=f[j][i+1], c=f[j+1][i+1], d=f[j+1][i];
+          const X0 = m.l + i/cols*plotW, X1 = m.l + (i+1)/cols*plotW;
+          const Y0 = m.t + j/rows*plotH, Y1 = m.t + (j+1)/rows*plotH;
+          const idx = (a>0?8:0) | (b>0?4:0) | (c>0?2:0) | (d>0?1:0);
+
+          const eps = 1e-12;
+          const eTop    = Math.abs(a-b)>eps ? {x: X0 + (a/(a-b))*(X1-X0), y:Y0} : null;
+          const eRight  = Math.abs(b-c)>eps ? {x: X1, y: Y0 + (b/(b-c))*(Y1-Y0)} : null;
+          const eBottom = Math.abs(d-c)>eps ? {x: X0 + (d/(d-c))*(X1-X0), y:Y1} : null;
+          const eLeft   = Math.abs(a-d)>eps ? {x: X0, y: Y0 + (a/(a-d))*(Y1-Y0)} : null;
+
+          const map = {
+            1:[eLeft,eBottom], 2:[eBottom,eRight], 3:[eLeft,eRight], 4:[eTop,eRight],
+            5:[eTop,eLeft, eBottom,eRight], 6:[eTop,eBottom], 7:[eTop,eLeft],
+            8:[eTop,eLeft], 9:[eTop,eBottom], 10:[eTop,eRight, eLeft,eBottom], 11:[eTop,eRight],
+            12:[eLeft,eRight], 13:[eBottom,eRight], 14:[eLeft,eBottom]
+          }[idx];
+
+          if (map){
+            ctx.beginPath();
+            for (let k=0;k<map.length;k+=2){
+              const p1=map[k], p2=map[k+1];
+              if (p1 && p2){ ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); }
+            }
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // ---------- Helpers de dibujo ----------
+    function roundRect(ctx, x,y,w,h,r){
+      ctx.beginPath(); ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    }
+    function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+    function dot(ctx,x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+    function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+    function niceTicks(min,max,count=6){
+      const span=max-min; if (span<=0 || !isFinite(span)) return {start:min, step:1, count:1};
+      const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+      const nice = norm<1.5?1: norm<3?2: norm<7?5:10;
+      const step=nice*mag; const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+      const n=Math.max(1, Math.round((end-start)/step)+1); return {start, step, count:n};
+    }
+    function drawGrid(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H){
+      const xt=niceTicks(xmin,xmax,6);
+      for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctx, x2px(x), m.t, x2px(x), H-m.b); }
+      const yt=niceTicks(ymin,ymax,6);
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctx, m.l, y2px(y), W-m.r, y2px(y)); }
+    }
+    function drawTicks(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H){
+      ctx.fillStyle='rgba(231,236,243,0.9)'; ctx.font='12px system-ui, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      const xt=niceTicks(xmin,xmax,6);
+      for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctx.fillText(fmt(x), x2px(x), H-m.b+6); }
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      const yt=niceTicks(ymin,ymax,6);
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctx.fillText(fmt(y), m.l-6, y2px(y)); }
+    }
+    const fmt=(v)=> !isFinite(v)?'–': (Math.abs(v)>=10? v.toFixed(2): v.toFixed(3));
+
+    // ---------- UI ----------
+    function syncSlidersFromState(){
+      w11Inp.value=state.w11.toFixed(2); w12Inp.value=state.w12.toFixed(2); b1Inp.value=state.b1.toFixed(2);
+      w21Inp.value=state.w21.toFixed(2); w22Inp.value=state.w22.toFixed(2); b2Inp.value=state.b2.toFixed(2);
+      v1Inp.value =state.v1 .toFixed(2); v2Inp.value =state.v2 .toFixed(2); c0Inp.value=state.c .toFixed(2);
+    }
+    function refresh(resize=true){
+      // valores visibles
+      w11Val.textContent=(+state.w11).toFixed(2); w12Val.textContent=(+state.w12).toFixed(2); b1Val.textContent=(+state.b1).toFixed(2);
+      w21Val.textContent=(+state.w21).toFixed(2); w22Val.textContent=(+state.w22).toFixed(2); b2Val.textContent=(+state.b2).toFixed(2);
+      v1Val.textContent =(+state.v1 ).toFixed(2); v2Val.textContent =(+state.v2 ).toFixed(2); c0Val.textContent=(+state.c).toFixed(2);
+
+      // métricas
+      const {acc, ll, tn, fp, fn, tp} = evaluate();
+      accEl.textContent = isFinite(acc)? (acc*100).toFixed(1)+'%':'–';
+      accEl.className = (acc>=0.9)?'ok' : (acc>=0.7)?'warn':'err';
+      llEl.textContent = isFinite(ll)? ll.toFixed(4): '–';
+      tnEl.textContent = tn; fpEl.textContent = fp; fnEl.textContent = fn; tpEl.textContent = tp;
+
+      if (resize) resizeCanvasToDisplaySize();
+      draw();
+    }
+
+    // bindings
+    w11Inp.addEventListener('input',()=>{ state.w11=+w11Inp.value; refresh(false); });
+    w12Inp.addEventListener('input',()=>{ state.w12=+w12Inp.value; refresh(false); });
+    b1Inp .addEventListener('input',()=>{ state.b1 =+b1Inp.value ; refresh(false); });
+
+    w21Inp.addEventListener('input',()=>{ state.w21=+w21Inp.value; refresh(false); });
+    w22Inp.addEventListener('input',()=>{ state.w22=+w22Inp.value; refresh(false); });
+    b2Inp .addEventListener('input',()=>{ state.b2 =+b2Inp.value ; refresh(false); });
+
+    v1Inp .addEventListener('input',()=>{ state.v1 =+v1Inp.value ; refresh(false); });
+    v2Inp .addEventListener('input',()=>{ state.v2 =+v2Inp.value ; refresh(false); });
+    c0Inp .addEventListener('input',()=>{ state.c  =+c0Inp.value ; refresh(false); });
+
+    shapeSel.addEventListener('change',()=>{ state.shape=shapeSel.value; });
+    sigmaInp.addEventListener('change',()=>{ state.sigma=Math.max(0,+sigmaInp.value); });
+    nInp.addEventListener('change',()=>{ state.n=Math.max(60,+nInp.value|0); });
+    seedInp.addEventListener('change',()=>{ state.seed=+seedInp.value|0; });
+
+    regenBtn.addEventListener('click',()=>{ genData(); refresh(); });
+    toggleProb.addEventListener('change',()=>{ state.showProb=toggleProb.checked; draw(); });
+    toggleErr .addEventListener('change',()=>{ state.highlightErrors=toggleErr.checked; draw(); });
+
+    resetGoodBtn.addEventListener('click',()=>{
+      state.w11= 2.5; state.w12= 0.0; state.b1= 0.0;
+      state.w21=-2.5; state.w22= 0.0; state.b2= 0.0;
+      state.v1 = 5.0; state.v2 =-5.0; state.c = 0.0;
+      syncSlidersFromState(); refresh(false);
+    });
+
+    trainBtn.addEventListener('click',()=>{ trainGD(); });
+
+    // ---------- Resize HiDPI (sin doble escala) + OBSERVADOR ----------
+    function resizeCanvasToDisplaySize(){
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.max(1, Math.round(rect.width));
+      const cssH = Math.max(1, Math.round(rect.height));
+      const wantW = Math.round(cssW * dpr);
+      const wantH = Math.round(cssH * dpr);
+      if (canvas.width!==wantW || canvas.height!==wantH){
+        canvas.width = wantW; canvas.height = wantH;
+      }
+      ctx.setTransform(1,0,0,1,0,0);
+    }
+    const ro = new ResizeObserver(()=>{ resizeCanvasToDisplaySize(); draw(); });
+
+    // ---------- Init ----------
+    function init(){
+      state.shape=shapeSel.value; state.sigma=+sigmaInp.value; state.n=+nInp.value; state.seed=+seedInp.value;
+      genData();
+      // Esperar un frame para asegurar layout -> clientWidth/Height válidos
+      requestAnimationFrame(()=>{
+        ro.observe(canvas);
+        refresh(); // esto ya llama a resizeCanvasToDisplaySize() y dibuja
+      });
+      // Redibujar si cambia el DPR (zoom del sistema)
+      matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener?.('change', ()=>{
+        resizeCanvasToDisplaySize(); draw();
+      });
+    }
+    init();
+  </script>
+</body>
+</html>
+

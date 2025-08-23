@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regresión lineal interactiva — RMSE y residuos</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#78a6ff; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink); background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    }
+    .container{max-width:1100px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:18px}
+    h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+    @media (max-width: 980px){ .card,.side{grid-column:1 / -1} }
+    canvas{width:100%; height:420px; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    .controls{display:grid; gap:12px}
+    .row{display:grid; grid-template-columns: 120px 1fr auto; gap:10px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .pill{display:inline-block; background:#0e1a3c; border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:12px; color:var(--muted)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .panel{
+      background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px
+    }
+    .mono{font:13px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .c-point{background:#8ec5ff}
+    .c-line{background:#ffd166}
+    .c-res{background:#ef476f}
+    .ok{color:var(--ok)} .warn{color:var(--warn)}
+    input[type="number"], input[type="text"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border); border-radius:10px; padding:6px 8px; width:100%;
+    }
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:560px){ .row{grid-template-columns: 100px 1fr auto} .cols{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Regresión lineal interactiva</h1>
+      <div class="muted">Mové los sliders de <strong>a</strong> y <strong>b</strong> para ver cómo cambian los <em>residuos</em> y el <strong>RMSE</strong>.</div>
+      <div class="legend">
+        <span class="pill"><span class="dot c-point"></span> puntos</span>
+        <span class="pill"><span class="dot c-line"></span> recta del modelo (tu a,b)</span>
+        <span class="pill"><span class="dot c-res"></span> residuos (distancia vertical)</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <canvas id="plot" width="900" height="420" aria-label="Gráfico de regresión"></canvas>
+      </div>
+
+      <aside class="side">
+        <div class="panel controls">
+          <div class="row">
+            <label for="a">Pendiente (a)</label>
+            <input id="a" type="range" min="-5" max="5" step="0.1" value="1.0" />
+            <output id="aVal">1.0</output>
+          </div>
+          <div class="row">
+            <label for="b">Ordenada (b)</label>
+            <input id="b" type="range" min="-10" max="10" step="0.1" value="0.0" />
+            <output id="bVal">0.0</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="sigma">Ruido σ</label>
+              <input id="sigma" type="number" step="0.1" value="1.0" />
+            </div>
+            <div>
+              <label class="muted" for="n">Muestras N</label>
+              <input id="n" type="number" min="5" max="1000" step="1" value="60" />
+            </div>
+          </div>
+          <div class="cols">
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button id="regen" class="btn" type="button" title="Regenerar puntos">Regenerar datos</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button id="ols" class="btn" type="button" title="Calcular a y b óptimos por mínimos cuadrados">Ajustar por OLS</button>
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input id="toggleRes" type="checkbox" checked/> Mostrar residuos
+            </label>
+          </div>
+        </div>
+
+        <div class="panel mono" id="metrics">
+          <div><strong>RMSE:</strong> <span id="rmse" class="ok">–</span></div>
+          <div><strong>MSE:</strong> <span id="mse">–</span></div>
+          <div><strong>Error medio (bias):</strong> <span id="bias">–</span></div>
+        </div>
+
+        <details>
+          <summary class="muted">Ver errores individuales (residuos)</summary>
+          <div style="max-height:200px; overflow:auto; margin-top:8px;">
+            <table id="errs">
+              <thead><tr><th>#</th><th>x</th><th>y</th><th>ŷ</th><th>e=y-ŷ</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // ---------- Utilidades ----------
+    // PRNG simple y reproducible (mulberry32)
+    function mulberry32(seed){
+      let t = seed >>> 0;
+      return function(){
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+    // Normal estándar con Box-Muller
+    function randn(rng){
+      let u = 0, v = 0;
+      while(u === 0) u = rng();
+      while(v === 0) v = rng();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // ---------- Estado ----------
+    const state = {
+      data: [],         // [{x, y}]
+      xRange: [-5, 5],
+      aModel: 1.0,
+      bModel: 0.0,
+      sigma: 1.0,
+      n: 60,
+      seed: 1234,
+      showResiduals: true,
+    };
+
+    // ---------- DOM ----------
+    const $ = (sel) => document.querySelector(sel);
+    const canvas = $('#plot');
+    const ctx = canvas.getContext('2d');
+
+    const aInp = $('#a'), bInp = $('#b'), aVal = $('#aVal'), bVal = $('#bVal');
+    const sigmaInp = $('#sigma'), nInp = $('#n'), seedInp = $('#seed');
+    const regenBtn = $('#regen'), olsBtn = $('#ols'), toggleRes = $('#toggleRes');
+    const rmseEl = $('#rmse'), mseEl = $('#mse'), biasEl = $('#bias');
+
+    const errsTableBody = $('#errs tbody');
+
+    // ---------- Generación de datos ----------
+    function genData(){
+      const rng = mulberry32(Number(state.seed) || 0);
+      const aTrue = 2.0, bTrue = 1.0;
+      const [xmin, xmax] = state.xRange;
+      const arr = [];
+      for(let i=0;i<state.n;i++){
+        const x = xmin + (xmax - xmin) * rng();
+        const y = aTrue * x + bTrue + randn(rng) * state.sigma;
+        arr.push({x, y});
+      }
+      state.data = arr;
+    }
+
+    // ---------- Métricas ----------
+    function metrics(a, b){
+      const n = state.data.length;
+      if (n === 0) return { rmse: NaN, mse: NaN, bias: NaN, rows: [] };
+      let sse = 0, se = 0;
+      const rows = [];
+      for (let i = 0; i < n; i++){
+        const {x, y} = state.data[i];
+        const yhat = a * x + b;
+        const e = y - yhat;
+        sse += e * e;
+        se  += e;
+        rows.push({i, x, y, yhat, e});
+      }
+      const mse = sse / n;
+      const rmse = Math.sqrt(mse);
+      const bias = se / n;
+      return {rmse, mse, bias, rows};
+    }
+
+    // ---------- Ajuste OLS (mínimos cuadrados) ----------
+    function fitOLS(){
+      const n = state.data.length;
+      let sx=0, sy=0, sxx=0, sxy=0;
+      for (const {x,y} of state.data){
+        sx += x; sy += y; sxx += x*x; sxy += x*y;
+      }
+      const xbar = sx / n, ybar = sy / n;
+      const num = sxy - n * xbar * ybar;
+      const den = sxx - n * xbar * xbar;
+      const a = den === 0 ? 0 : num / den;
+      const b = ybar - a * xbar;
+      return {a, b};
+    }
+
+    // ---------- Dibujo ----------
+    function draw(){
+      // Calcular bounds
+      const [xmin, xmax] = state.xRange;
+      // Extremos de la recta del modelo
+      const yModelMin = state.aModel * xmin + state.bModel;
+      const yModelMax = state.aModel * xmax + state.bModel;
+
+      let ymin = Math.min(yModelMin, yModelMax);
+      let ymax = Math.max(yModelMin, yModelMax);
+      for (const {y} of state.data){
+        if (y < ymin) ymin = y;
+        if (y > ymax) ymax = y;
+      }
+      // padding
+      const padX = 0.08 * (xmax - xmin);
+      const padY = 0.12 * (ymax - ymin || 1);
+      const Xmin = xmin - padX, Xmax = xmax + padX;
+      const Ymin = ymin - padY, Ymax = ymax + padY;
+
+      // helpers de proyección (USAMOS dimensiones en píxel del canvas, no CSS)
+      const W = canvas.width, H = canvas.height;
+      const m = {l: 48, r: 16, t: 18, b: 40};
+      const plotW = W - m.l - m.r, plotH = H - m.t - m.b;
+
+      const x2px = (x) => m.l + (x - Xmin) / (Xmax - Xmin) * plotW;
+      const y2px = (y) => m.t + (1 - (y - Ymin) / (Ymax - Ymin)) * plotH;
+
+      // clear
+      ctx.clearRect(0,0,W,H);
+
+      // fondo área
+      ctx.fillStyle = '#0c1126';
+      roundRect(ctx, m.l, m.t, plotW, plotH, 10);
+      ctx.fill();
+
+      // grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      drawGrid(ctx, x2px, y2px, Xmin, Xmax, Ymin, Ymax, m, W, H);
+
+      // ejes
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1.2;
+      if (Ymin < 0 && Ymax > 0){
+        const y0 = y2px(0);
+        line(ctx, m.l, y0, m.l + plotW, y0);
+      }
+      if (Xmin < 0 && Xmax > 0){
+        const x0 = x2px(0);
+        line(ctx, x0, m.t, x0, m.t + plotH);
+      }
+
+      // residuos (líneas verticales)
+      if (state.showResiduals){
+        ctx.strokeStyle = '#ef476f';
+        ctx.lineWidth = 1.2;
+        for (const {x, y} of state.data){
+          const yhat = state.aModel * x + state.bModel;
+          line(ctx, x2px(x), y2px(y), x2px(x), y2px(yhat));
+        }
+      }
+
+      // puntos
+      ctx.fillStyle = '#8ec5ff';
+      for (const {x, y} of state.data){
+        dot(ctx, x2px(x), y2px(y), 3.2);
+      }
+
+      // recta del modelo (tu a,b)
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = 2;
+      const xL = Xmin, xR = Xmax;
+      const yL = state.aModel * xL + state.bModel;
+      const yR = state.aModel * xR + state.bModel;
+      line(ctx, x2px(xL), y2px(yL), x2px(xR), y2px(yR));
+
+      // ticks y labels
+      drawTicks(ctx, x2px, y2px, Xmin, Xmax, Ymin, Ymax, m, W, H);
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath();
+    }
+    function line(ctx, x1, y1, x2, y2){
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+    function dot(ctx, x, y, r){
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+
+    function niceTicks(min, max, count=6){
+      const span = max - min;
+      if (span <= 0 || !isFinite(span)) return {start:min, step:1, count:1};
+      const raw = span / count;
+      const mag = Math.pow(10, Math.floor(Math.log10(Math.abs(raw))));
+      const norm = raw / mag;
+      let nice;
+      if (norm < 1.5) nice = 1;
+      else if (norm < 3) nice = 2;
+      else if (norm < 7) nice = 5;
+      else nice = 10;
+      const step = nice * mag;
+      const start = Math.ceil(min / step) * step;
+      const end = Math.floor(max / step) * step;
+      const n = Math.max(1, Math.round((end - start) / step) + 1);
+      return {start, step, count:n};
+    }
+    function drawGrid(ctx, x2px, y2px, xmin, xmax, ymin, ymax, m, W, H){
+      const xt = niceTicks(xmin, xmax, 6);
+      for (let i=0;i<xt.count;i++){
+        const x = xt.start + i*xt.step;
+        const X = x2px(x);
+        line(ctx, X, m.t, X, H - m.b);
+      }
+      const yt = niceTicks(ymin, ymax, 6);
+      for (let i=0;i<yt.count;i++){
+        const y = yt.start + i*yt.step;
+        const Y = y2px(y);
+        line(ctx, m.l, Y, W - m.r, Y);
+      }
+    }
+    function drawTicks(ctx, x2px, y2px, xmin, xmax, ymin, ymax, m, W, H){
+      ctx.fillStyle = 'rgba(231,236,243,0.9)';
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      const xt = niceTicks(xmin, xmax, 6);
+      for (let i=0;i<xt.count;i++){
+        const x = xt.start + i*xt.step;
+        const X = x2px(x);
+        ctx.fillText(fmt(x), X, H - m.b + 6);
+      }
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      const yt = niceTicks(ymin, ymax, 6);
+      for (let i=0;i<yt.count;i++){
+        const y = yt.start + i*yt.step;
+        const Y = y2px(y);
+        ctx.fillText(fmt(y), m.l - 6, Y);
+      }
+    }
+
+    function fmt(v){
+      if (!isFinite(v)) return '–';
+      const av = Math.abs(v);
+      if (av >= 1000) return v.toFixed(0);
+      if (av >= 100)  return v.toFixed(1);
+      if (av >= 10)   return v.toFixed(2);
+      return v.toFixed(3);
+    }
+
+    // ---------- UI bindings ----------
+    function refresh(){
+      aVal.textContent = Number(state.aModel).toFixed(2);
+      bVal.textContent = Number(state.bModel).toFixed(2);
+      const {rmse, mse, bias, rows} = metrics(state.aModel, state.bModel);
+      rmseEl.textContent = isFinite(rmse) ? rmse.toFixed(4) : '–';
+      rmseEl.className = (isFinite(rmse) && rmse < state.sigma*1.2) ? 'ok' : 'warn';
+      mseEl.textContent  = isFinite(mse)  ? mse.toFixed(6)  : '–';
+      biasEl.textContent = isFinite(bias) ? bias.toFixed(4) : '–';
+
+      // tabla de errores
+      const frag = document.createDocumentFragment();
+      rows.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${idx+1}</td><td>${r.x.toFixed(3)}</td><td>${r.y.toFixed(3)}</td><td>${r.yhat.toFixed(3)}</td><td>${r.e.toFixed(3)}</td>`;
+        frag.appendChild(tr);
+      });
+      errsTableBody.innerHTML = '';
+      errsTableBody.appendChild(frag);
+
+      // dibujar
+      draw();
+    }
+
+    aInp.addEventListener('input', () => { state.aModel = parseFloat(aInp.value); refresh(); });
+    bInp.addEventListener('input', () => { state.bModel = parseFloat(bInp.value); refresh(); });
+    toggleRes.addEventListener('change', () => { state.showResiduals = toggleRes.checked; refresh(); });
+
+    sigmaInp.addEventListener('change', () => { state.sigma = Math.max(0, parseFloat(sigmaInp.value)); });
+    nInp.addEventListener('change', () => { state.n = Math.max(5, parseInt(nInp.value || '60', 10)); });
+    seedInp.addEventListener('change', () => { state.seed = parseInt(seedInp.value || '0', 10); });
+
+    regenBtn.addEventListener('click', () => {
+      genData(); refresh();
+    });
+
+    olsBtn.addEventListener('click', () => {
+      const {a, b} = fitOLS();
+      state.aModel = a;
+      state.bModel = b;
+      aInp.value = a.toFixed(2);
+      bInp.value = b.toFixed(2);
+      refresh();
+    });
+
+    // ---------- Resize sin doble escala (DPR) ----------
+    function resizeCanvasToDisplaySize(){
+      const dpr = window.devicePixelRatio || 1;
+      const cssWidth  = Math.max(1, canvas.clientWidth);
+      const cssHeight = Math.max(1, canvas.clientHeight);
+      const wantW = Math.round(cssWidth  * dpr);
+      const wantH = Math.round(cssHeight * dpr);
+
+      if (canvas.width !== wantW || canvas.height !== wantH){
+        canvas.width  = wantW;
+        canvas.height = wantH;
+      }
+
+      // Importante: NO escalar el contexto aquí (evitamos doble escala)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      draw();
+    }
+
+    // ---------- Init ----------
+    function init(){
+      state.sigma = parseFloat(sigmaInp.value);
+      state.n = parseInt(nInp.value, 10);
+      state.seed = parseInt(seedInp.value, 10);
+      genData();
+      refresh();
+
+      // Resize responsivo y nitidez en pantallas HiDPI
+      window.addEventListener('resize', resizeCanvasToDisplaySize);
+      // Primera llamada tras layout
+      requestAnimationFrame(resizeCanvasToDisplaySize);
+    }
+    init();
+  </script>
+</body>
+</html>
+
