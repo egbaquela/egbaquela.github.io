@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Investigación operativa en una página</title>
+  <title>Breve introducción a la Investigación Operativa</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,85 +75,140 @@
 
     <!-- Encabezado -->
     <section class="hero section">
-      <h1 class="hero-title">Investigación Operativa (IO)</h1>
+      <h1 class="hero-title">Introducción a la Investigación Operativa (IO)</h1>
     </section>
 
     <!-- Video -->
+    <!--
     <section class="section">
       <div class="grid-1">
         <div class="card">
-          <!--<iframe id="ytFrame" src="https://www.youtube.com/embed/Yaz4budxYSY?si=mCsin2Fa6hoI05qc" allowfullscreen></iframe>-->
           <iframe width="560" height="315" src="https://www.youtube.com/embed/P6VHgZyNTlw?si=dvD4oPoQ0zccugYH" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>
       </div>
     </section>
+    -->
 
-    <!-- Descripcion -->
+    <!-- Intro-->
     <section class="section">
-      <h2>¿Que estudiamos cuando estudiamos IO?</h2>
-      <p class="muted" style="margin-top:.6rem; text-align:center">Nuestro objeto de estudio son las <b>decisiones</b>, puntualmente la <b>toma de decisión</b> en si misma.</p>
-      <div class="grid-3">
-        <div class="card">Estudiamos como identificar las características principales de un problema.</div>
-        <div class="card">Aprendemos como crear modelos y usar datos para poder seleccionar una de muchas <b>alternativas</b>.</div>
-        <div class="card">Usamos herramientas para <b>exprimir</b> los modelos y que nos ayuden a <b>decidir mejor</b>.</div>
+      <h2>La IO estudia como tomar decisiones</h2>
+      <p class="muted" style="margin-top:.6rem; text-align:center">La Investigación Operativa estudia <b>decisiones</b>: situaciones en las que existe un <b>conjunto de alternativas</b> y debemos <b>elegir una</b> (o una política de elección) para <b>alcanzar una meta</b> medible, dadas ciertas <b>restricciones</b> y un estado de información.</p>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Hay decisiones <b>únicas</b> (una vez y listo: ¿abrimos la planta A o B?) y decisiones <b>secuenciales</b> (repetidas en el tiempo: ¿cada cuánto reponer inventario?, ¿cuántos turnos asignar por franja?). En estas últimas solemos hablar de <b>políticas</b>: reglas que dicen qué acción tomar según la información disponible en cada momento.</p>
+    </section> 
+
+
+
+    <!-- Modelos -->
+    <section class="section">
+      <h2>En IO usamos modelos alimentados por datos</h2>
+      <!--<p class="muted" style="margin-top:.6rem; text-align:center">Nuestro objeto de estudio son las <b>decisiones</b>, puntualmente la <b>toma de decisión</b> en si misma.</p>-->
+      <div class="grid-2">
+        <div class="card">El mundo real es complejo. En IO trabajamos con <b>modelos</b> para enfocarnos en lo esencial: variables, relaciones, objetivos y restricciones relevantes. Un buen modelo no pretende copiar la realidad; busca <b>explicar y orientar la decisión</b> con suficiente fidelidad para <b>comparar alternativas</b> y <b>anticipar consecuencias</b>.</div>
+        <div class="card">La realidad trae <b>incertidumbre</b>: demanda que varía, tiempos de entrega aleatorios, fallas, ausentismo. La IO la trata explícitamente mediante <b>probabilidades, escenarios y simulación</b>, o implícitamente con <b>márgenes de seguridad</b> y políticas robustas.</div>
       </div>
     </section> 
 
-    <!-- Decisiones -->
+    <!-- Modelos matemáticos -->
     <section class="section">
-      <h2>¿Pero que significa tomar una decisión?</h2>
-      <p class="muted" style="margin-top:.6rem; text-align:center">Es seleccionar una alternativa en un conjunto de mas de una alternativa (a veces, infinitas) con el fin de alcanzar una meta.</p>
+      <h2>La IO representa problemas en forma matemática</h2>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Un problema puede expresarse matemáticamente con:</p>
 
       <div class="grid-3">
-        <div class="card">Las alternativas pueden ser planes o políticas. Los primeros son valores, los segundos reglas.</div>
-        <div class="card">A veces podemos tener certeza de los resultados de las decisiones, a veces no.</div>
-        <div class="card">Pueden ser una decisión de una única vez. O repetirse frecuentemente.</div>
+        <div class="card"><b>Conjuntos y parámetros</b> (datos): productos, recursos, capacidades, costos, demandas.</div>
+        <div class="card"><b>Variables de decisión</b>: lo que podemos elegir (producción por mes, flujos, asignaciones).</div>
+        <div class="card"><b>Objetivos y restricciones</b>: maximizar beneficio / servicio, minimizar costo / tiempo, no superar determinada capacidad, no gastar mas de determinando monto.</div>
       </div>
-  
-      <p class="muted" style="margin-top:.6rem; text-align:center">Un problema de decisión se compone, como mínimo, de:</p>
-      <ul>
-        <li>Alternativas (incluyendo el status quo)</li>
-        <li>Objetivos</li>
-        <li>Restricciones o impedimentos</li>
-        <li>Información e incertidumbre</li>
-        <li>Horizonte y frecuencia</li>
-        <li>Stakeholders y criterios de aceptación</li>
-        <li>Plan de validación</li>
-      </ul>
-
     </section> 
 
-    <!-- Pilares y herramientas -->
+    <!-- Familias de herramientas -->
     <section class="section">
-      <h2>Pilares y herramientas de la IO</h2>
-      <div class="radar">
-
-
-        <div class="grid-2">
-          <div class="card"><b>Herramientas descriptivas/predictivas</b>: nos permiten saber que pasaría si selecciono una determinada alternativa.</div>
-          <div class="card"><b>Herramientas prescriptivas o normativas</b>: nos permiten saber que pasaría si selecciono una determinada alternativa.</div>
-        </div>
-
-
-        <div class="card">
-          <div class="flex">
-            <button class="btn" id="btnPred">Ver herramientas predictivo</button>
-            <button class="btn" id="btnNorm">Ver herramientas normativo</button>
-          </div>
-          <div class="chips" id="chipBox"></div>
-          <div id="toolBox" class="fade-in" style="margin-top:.6rem; min-height:80px">
-            <span class="muted">Seleccioná una herramienta para ver un caso y KPIs.</span>
-          </div>
-        </div>
+      <h2>La IO proporciona dos familias de herramientas</h2>
+      <div class="grid-2">
+        <div class="card"><b>Normativas (para elegir la “mejor” alternativa):</b><br>
+          <b>Programación matemática</b> — lineal (LP), entero-mixta (MILP), no lineal (NLP), dinámica (DP). Encuentran planes óptimos dados objetivos y restricciones. Útiles para <b>asignar recursos, mezclar productos, diseñar portafolios y redes</b>, planificar producción, etc.</div>
+        <div class="card"><b>Descriptivo-predictivas (para entender y predecir):</b><br>
+          <b>Simulación</b> (eventos discretos, Monte Carlo) y <b>teoría de colas</b>. Describen el comportamiento del sistema bajo políticas dadas, cuantifican <b>variabilidad, riesgo y tiempos de espera</b>, y permiten <b>experimentos</b> (“¿qué pasa si…?”) cuando no hay fórmulas cerradas.</div>
       </div>
-      <p class="muted mini" style="margin-top:.6rem; text-align:center">Click en los botones para ver <b>casos y métricas</b> concretas.</p>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Ambas se <b>complementan</b>: optimizás un plan con MILP y lo <b>validás por simulación</b> bajo escenarios de incertidumbre; o usás simulación para <b>explorar</b> opciones y luego formalizás una <b>selección óptima</b> con LP/MILP.</p>
     </section>
 
-  </div>
+    <!-- Lo importante -->
+    <section class="section">
+      <h2>Lo más importante: conceptualizar bien</h2>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Antes de abrir un solver o escribir código o una planilla de cálculo, definir:</p>
+      <ol>
+        <li><b>Meta y KPI</b>: ¿qué significa ganar? (p. ej., maximizar margen con fill rate ≥ 95% y tiempo de espera ≤ 3 min).</li>
+        <li><b>Alternativas</b> (incluido <b>status quo</b>).</li>
+        <li><b>Restricciones</b>: capacidades, presupuesto, nivel de servicio, reglas.</li>
+        <li><b>Horizonte y frecuencia</b>: ¿plan único o política repetida?</li>
+        <li><b>Incertidumbre</b>: ¿qué varía? ¿cómo la modelamos (escenarios, distribuciones)?</li>
+        <li><b>Datos</b>: fuentes, calidad, supuestos.</li>
+        <li><b>Criterio de aceptación</b>: ¿cuándo una solución es “suficientemente buena”?</li>
+      </ol>
 
+      <div class="grid-1">
+        <div class="card"><blockquote><b>Litmus test</b>: “Decidir [acción/política] para [meta/KPI] sujeto a [restricciones], durante [horizonte], tratando la incertidumbre de [modo].”</blockquote></div>
+      </div>
+    </section> 
 
+    <!-- Lo importante -->
+    <section class="section">
+      <h2>El problema debe guiar la selección de la herrameinta</h2>
+      <ul>
+        <li><b>Estructura lineal, tamaño moderado</b> → LP/MILP (óptimo y sensibilidad).</li>
+        <li><b>Reglas lógicas complejas</b> → MILP (binarias), a veces con <b>descomposición</b> o <b>heurísticas</b>.</li>
+        <li><b>Relaciones suaves no lineales</b> → NLP (chequear convexidad).</li>
+        <li><b>Dinámica y decisión secuencial</b> → Programación dinámica / políticas (p. ej., inventarios (s,Q)).</li>
+        <li><b>Variabilidad fuerte, redes o procesos complejos</b> → Simulación y colas (para medir tiempos, colas, SLA).</li>
+      </ul>
 
+      <h3>Al elegir la herramienta, tengamos en cuenta el trade-off costo computacional - calidad:</h3>
+      <ul>
+        <li><b>Exactos</b> (LP/MILP, DP) → alta calidad/óptimo, pero el tiempo crece con el tamaño y la combinatoria.</li>
+        <li><b>Aproximados/heurísticos</b> → soluciones rápidas y buenas (no garantizan óptimo), útiles en problemas grandes o en tiempo real.</li>
+        <li><b>Simulación</b> → describe bien el sistema y el riesgo; no “optimiza” por sí sola, pero guía y valida decisiones.</li>
+      </ul>
+      <p class="muted" style="margin-top:.6rem; text-align:center">La clave es <b>usar el método más simple</b> que responda a la pregunta con la <b>precisión necesaria</b> y sea <b>implementable</b>.</p>
+    </section> 
 
+    <section class="section">
+      <h2>Un proceso típico en IO</h2>
+      <div class="grid-1">
+        <div class="card">
+          <ol>
+            <li><b>Formular la decisión</b> y fijar <b>KPI/meta</b>.</li>
+            <li><b>Elegir el enfoque</b> (normativo, descriptivo, o ambos) y <b>definir el modelo</b>.</li>
+            <li><b>Calibrar/validar</b> con datos; <b>experimentar</b> (escenarios, sensibilidad).</li>
+            <li><b>Recomendar</b> una acción/política con <b>trade-offs explícitos</b>.</li>
+            <li><b>Implementar y medir</b> (ciclo PDCA), iterando si cambian datos o objetivos.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Ejemplos cortos</h2>
+      <div class="grid-3">
+        <div class="card">
+          <b>Plan maestro de producción:</b> decidir cantidades por mes para maximizar margen con recursos limitados; <b>MILP</b> para el plan, <b>simulación</b> para validar el impacto de la variabilidad de demanda y tiempos.</div>
+        <div class="card">
+          <b>Atención al cliente:</b> dimensionar agentes por franja para cumplir un SLA; <b>colas/ simulación</b> para tiempos, <b>MILP</b> si además hay turnos, habilidades y costos fijos.</div>
+        <div class="card">
+          <b>Distribución/transporte:</b> asignar flujos planta-cliente al menor costo; <b>LP</b> + análisis de <b> precios sombra</b> para entender valor de capacidad adicional.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Para llevar</h2>
+      <ul>
+        <li>La IO trata <b>problemas de decisión</b>: metas claras, alternativas, restricciones e incertidumbre.</li>
+        <li>La <b>representación matemática</b> hace visibles las piezas y conecta con <b>métodos de solución</b>.</li>
+        <li>Hay <b>herramientas normativas</b> (elegir el mejor plan) y <b>descriptivo-predictivas</b> (entender el sistema y el riesgo); <b>se potencian juntas</b>.</li>
+        <li>Elegí la técnica según la <b>estructura y escala</b> del problema, cuidando el <b>trade-off</b> entre <b>calidad</b> y <b>tiempo de cómputo</b>.</li>
+        <li>Lo esencial no es el algoritmo, sino <b>conceptualizar bien</b> y <b>cerrar el loop</b> con validación e implementación.</li>
+      </ul>
+      <p class="muted" style="margin-top:.6rem; text-align:center">Con esta perspectiva, la IO se vuelve una <b>caja de herramientas práctica</b> para decidir mejor — en proyectos, operaciones y cadenas de suministro — con <b>rigor</b>, <b>claridad</b> y <b>resultados medibles</b>.</p>
+    </section>
 
   <footer>
     <!--© 2025 — <b>TU NOMBRE / UDESA</b>. Todos los derechos reservados.-->
