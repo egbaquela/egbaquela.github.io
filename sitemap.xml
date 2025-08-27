@@ -188,6 +188,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/files/simulacion/problema_plantas_y_transporte/</loc>
+    <lastmod>2025-08-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/files/ml/regresion_logistica/</loc>
     <lastmod>2025-08-14</lastmod>
     <changefreq>monthly</changefreq>
