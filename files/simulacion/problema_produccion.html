@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulador — Plan de producción Winco (4 productos / 2 recursos)</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+    --ok:#21c07a; --warn:#ffb454; --err:#ef476f;
+    --p1:#8ec5ff; --p2:#ffd166; --p3:#78a6ff; --p4:#21c07a;
+    --r1:#a0c4ff; --r2:#caffbf;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+  }
+  .container{max-width:1100px; margin:0 auto; padding:28px 16px 60px;}
+  header{display:grid; gap:8px; margin-bottom:12px}
+  h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+  .muted{color:var(--muted)}
+  .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+  .card{
+    grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+  }
+  .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+  @media (max-width: 1024px){ .card,.side{grid-column:1 / -1} }
+  canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+  #plotProd{height:290px} #plotRes{height:260px}
+
+  .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+  .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .controls{display:grid; gap:10px}
+  .row{display:grid; grid-template-columns:minmax(160px,240px) 1fr minmax(58px,72px); gap:10px; align-items:center}
+  .row input[type="range"]{width:100%}
+  .row output{justify-self:end; font-variant-numeric: tabular-nums}
+
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+  th:first-child, td:first-child{text-align:left}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:2px 8px; border:1px solid var(--border); border-radius:999px; background:#0e1a3c; font-size:12px; color:var(--muted)}
+  .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+    background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+  }
+  .btn:active{transform:translateY(1px)}
+  .sep{height:8px}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Simulador del problema de Winco — producción y recursos</h1>
+      <div class="muted">Ajustá los sliders para evaluar planes de producción: ingresos, uso de recursos y cumplimiento de restricciones.</div>
+    </header>
+
+    <!-- Descripción del problema -->
+    <section class="panel" id="problem">
+      <div class="mono" style="margin-bottom:8px"><strong>Descripción del problema</strong></div>
+      <p>Winco vende cuatro tipos de productos. Para satisfacer las demandas de los clientes, hay que producir, como mínimo, 600 unidades en total y por lo menos 400 unidades del producto 4.</p>
+      <p>En la tabla a continuación se dan los recursos requeridos para producir una unidad de cada producto y los precios de venta de cada uno.</p>
+
+      <table aria-label="Tabla de requerimientos y precios">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Producto 1</th>
+            <th>Producto 2</th>
+            <th>Producto 3</th>
+            <th>Producto 4</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Materia Prima</td><td>2</td><td>3</td><td>3</td><td>7</td></tr>
+          <tr><td>Horas de trabajo</td><td>3</td><td>7</td><td>5</td><td>6</td></tr>
+          <tr><td>Precio de venta</td><td>4</td><td>6</td><td>7</td><td>8</td></tr>
+        </tbody>
+      </table>
+
+      <p>En la actualidad, se dispone de 4600 unidades de materia prima  y 5000 horas de trabajo.</p>
+      <p>El objetivo de Winco es maximizar sus ingresos por las ventas.</p>
+    </section>
+
+    <section class="grid">
+      <!-- Gráficos -->
+      <div class="card">
+        <div class="legend" style="margin: 2px 4px 10px;">
+          <span class="pill"><span class="box" style="background:var(--p1)"></span> Prod 1</span>
+          <span class="pill"><span class="box" style="background:var(--p2)"></span> Prod 2</span>
+          <span class="pill"><span class="box" style="background:var(--p3)"></span> Prod 3</span>
+          <span class="pill"><span class="box" style="background:var(--p4)"></span> Prod 4</span>
+          <span class="pill"><span class="box" style="background:var(--r1)"></span> Materia Prima</span>
+          <span class="pill"><span class="box" style="background:var(--r2)"></span> Horas de trabajo</span>
+        </div>
+        <canvas id="plotProd" aria-label="Producción por producto"></canvas>
+        <div class="sep"></div>
+        <canvas id="plotRes" aria-label="Uso de recursos vs disponibilidad"></canvas>
+      </div>
+
+      <!-- Controles y métricas -->
+      <!--<aside class="side">-->
+      <div class="card">  
+        <div class="panel controls">
+          <div class="row">
+            <label for="q1">Producto 1 (precio $4)</label>
+            <input id="q1" type="range" min="0" max="2000" step="10" value="70" />
+            <output id="q1v">70</output>
+          </div>
+          <div class="row">
+            <label for="q2">Producto 2 (precio $6)</label>
+            <input id="q2" type="range" min="0" max="2000" step="10" value="70" />
+            <output id="q2v">70</output>
+          </div>
+          <div class="row">
+            <label for="q3">Producto 3 (precio $7)</label>
+            <input id="q3" type="range" min="0" max="2000" step="10" value="60" />
+            <output id="q3v">60</output>
+          </div>
+          <div class="row">
+            <label for="q4">Producto 4 (precio $8)</label>
+            <input id="q4" type="range" min="0" max="2000" step="10" value="400" />
+            <output id="q4v">400</output>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+            <button id="base" class="btn" type="button">Plan base (factible)</button>
+            <button id="clear" class="btn" type="button">Poner todo en 0</button>
+            <button id="csv" class="btn" type="button">Descargar CSV</button>
+          </div>
+        </div>
+
+        <div class="panel mono" id="metrics">
+          <div><strong>Unidades totales:</strong> <span id="tot">–</span> <span id="totOK" class="ok"></span></div>
+          <div><strong>Producto 4 (mín 400):</strong> <span id="p4qty">–</span> <span id="p4OK" class="ok"></span></div>
+          <hr style="border:none;border-top:1px solid #141a33; margin:6px 0;">
+          <div><strong>Materia prima usada:</strong> <span id="mpUsed">–</span> / <span id="mpAvail">4600</span> <span id="mpOK" class="ok"></span></div>
+          <div><strong>Horas usadas:</strong> <span id="hrUsed">–</span> / <span id="hrAvail">5000</span> <span id="hrOK" class="ok"></span></div>
+          <hr style="border:none;border-top:1px solid #141a33; margin:6px 0;">
+          <div><strong>Ingresos (ventas):</strong> $<span id="rev">–</span></div>
+          <div><strong>Restricciones violadas:</strong> <span id="viol" class="err">–</span></div>
+        </div>
+      <!--</aside>-->
+      </div>
+    </section>
+  </div>
+
+<script>
+/* ===== Datos del problema ===== */
+const mpAvail = 4600;
+const hrAvail = 5000;
+const products = [
+  {name:'Producto 1', price:4, mp:2, hr:3, color:getVar('--p1')},
+  {name:'Producto 2', price:6, mp:3, hr:7, color:getVar('--p2')},
+  {name:'Producto 3', price:7, mp:3, hr:5, color:getVar('--p3')},
+  {name:'Producto 4', price:8, mp:7, hr:6, color:getVar('--p4')},
+];
+
+/* ===== Estado & DOM ===== */
+const $ = (s)=>document.querySelector(s);
+const qs = [$('#q1'), $('#q2'), $('#q3'), $('#q4')];
+const qv = [$('#q1v'),$('#q2v'),$('#q3v'),$('#q4v')];
+
+const totEl=$('#tot'), totOK=$('#totOK');
+const p4qty=$('#p4qty'), p4OK=$('#p4OK');
+const mpUsedEl=$('#mpUsed'), mpAvailEl=$('#mpAvail'), mpOK=$('#mpOK');
+const hrUsedEl=$('#hrUsed'), hrAvailEl=$('#hrAvail'), hrOK=$('#hrOK');
+const revEl=$('#rev'), violEl=$('#viol');
+
+const cProd=$('#plotProd'), ctxP=cProd.getContext('2d');
+const cRes=$('#plotRes'),  ctxR=cRes.getContext('2d');
+
+/* ===== Lógica ===== */
+function plan(){ return qs.map(i=>+i.value|0); }
+
+function recompute(){
+  const q = plan();
+  q.forEach((v,i)=> qv[i].textContent = v);
+
+  const total = q.reduce((a,b)=>a+b,0);
+  const q4    = q[3];
+  const mpUse = q.reduce((s,qi,i)=> s + qi*products[i].mp, 0);
+  const hrUse = q.reduce((s,qi,i)=> s + qi*products[i].hr, 0);
+  const rev   = q.reduce((s,qi,i)=> s + qi*products[i].price, 0);
+
+  // checks
+  const okTot = total >= 600;
+  const okP4  = q4 >= 400;
+  const okMP  = mpUse <= mpAvail + 1e-9;
+  const okHR  = hrUse <= hrAvail + 1e-9;
+  const viols = [!okTot, !okP4, !okMP, !okHR].filter(Boolean).length;
+
+  // UI
+  totEl.textContent = total; totOK.textContent = okTot?'OK':'Falta'; totOK.className = okTot?'ok':'err';
+  p4qty.textContent = q4;    p4OK.textContent  = okP4?'OK':'Falta'; p4OK.className  = okP4?'ok':'err';
+  mpUsedEl.textContent = mpUse.toFixed(0); mpOK.textContent = okMP?'OK':'Exceso'; mpOK.className = okMP?'ok':'err';
+  hrUsedEl.textContent = hrUse.toFixed(0); hrOK.textContent = okHR?'OK':'Exceso'; hrOK.className = okHR?'ok':'err';
+  revEl.textContent = rev.toLocaleString('es-AR', {maximumFractionDigits:0});
+  violEl.textContent = viols===0? '0 (OK)' : String(viols);
+  violEl.className = viols===0?'ok':'err';
+
+  drawProd(q);
+  drawRes(mpUse, hrUse);
+}
+
+/* ===== Canvases ===== */
+function resizeCanvasToDisplaySize(canvas, ctx){
+  const dpr = window.devicePixelRatio||1;
+  const cssW = Math.max(1, Math.round(canvas.clientWidth));
+  const cssH = Math.max(1, Math.round(canvas.clientHeight));
+  if (canvas.width!==cssW*dpr || canvas.height!==cssH*dpr){ canvas.width=cssW*dpr; canvas.height=cssH*dpr; }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawProd(q){
+  resizeCanvasToDisplaySize(cProd, ctxP);
+  const W=cProd.clientWidth, H=cProd.clientHeight;
+  ctxP.clearRect(0,0,W,H);
+  const m={l:56,r:16,t:16,b:36};
+  ctxP.fillStyle='#0c1226'; roundRect(ctxP,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxP.fill();
+
+  const ymax = Math.max(10, Math.ceil(Math.max(...q)*1.2), 600); // que se vea el mín total
+  const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+  const barW = (x1-x0)/(q.length*1.8);
+  const xAt=(i)=> x0 + (i+0.5)*(x1-x0)/q.length;
+
+  // grid
+  ctxP.strokeStyle='rgba(255,255,255,0.06)'; ctxP.lineWidth=1;
+  for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctxP,x,y1,x,y0); }
+  for (let k=0;k<=6;k++){ const y=y0 - k*(y0-y1)/6; line(ctxP,x0,y,x1,y); }
+
+  // línea de total mínimo (no es por producto, solo guía)
+  ctxP.setLineDash([6,6]); ctxP.strokeStyle='rgba(255,255,255,0.35)';
+  const yMinTot = y0 - (600/ymax)*(y0-y1);
+  line(ctxP, x0, yMinTot, x1, yMinTot);
+  ctxP.setLineDash([]);
+
+  // barras
+  q.forEach((v,i)=>{
+    const col = products[i].color;
+    const X = xAt(i) - barW/2;
+    const Y = y0 - (v/ymax)*(y0-y1);
+    ctxP.fillStyle=col; ctxP.fillRect(X, Y, barW*0.85, y0-Y);
+  });
+
+  // ejes & ticks
+  ctxP.strokeStyle='rgba(255,255,255,0.18)'; ctxP.lineWidth=1.2;
+  line(ctxP,x0,y1,x0,y0); line(ctxP,x0,y0,x1,y0);
+  ctxP.fillStyle='rgba(231,236,243,0.9)'; ctxP.font='12px system-ui,sans-serif';
+  ctxP.textAlign='center'; ctxP.textBaseline='top';
+  q.forEach((_,i)=> ctxP.fillText(products[i].name, xAt(i), y0+6));
+  ctxP.textAlign='right'; ctxP.textBaseline='middle';
+  for (let k=0;k<=6;k++){ const val=Math.round(k*ymax/6); const y=y0 - k*(y0-y1)/6; ctxP.fillText(String(val), x0-6, y); }
+}
+
+function drawRes(mpUse, hrUse){
+  resizeCanvasToDisplaySize(cRes, ctxR);
+  const W=cRes.clientWidth, H=cRes.clientHeight;
+  ctxR.clearRect(0,0,W,H);
+  const m={l:56,r:16,t:16,b:36};
+  ctxR.fillStyle='#0c1226'; roundRect(ctxR,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxR.fill();
+
+  const cats = ['Materia Prima','Horas de trabajo'];
+  const uses = [mpUse, hrUse];
+  const avls = [mpAvail, hrAvail];
+  const colors = [getVar('--r1'), getVar('--r2')];
+  const ymax = Math.max(10, ...uses, ...avls) * 1.1;
+  const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+  const bandW=(x1-x0)/cats.length, barW=Math.min(40, bandW/3);
+
+  const xCat=(i)=> x0 + bandW*i + bandW/2;
+  const yScale=(v)=> y0 - (v/ymax)*(y0-y1);
+
+  // grid
+  ctxR.strokeStyle='rgba(255,255,255,0.06)'; ctxR.lineWidth=1;
+  for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctxR,x,y1,x,y0); }
+  for (let k=0;k<=6;k++){ const y=y0 - k*(y0-y1)/6; line(ctxR,x0,y,x1,y); }
+
+  // barras (disponible y usado)
+  cats.forEach((_,i)=>{
+    const xc=xCat(i);
+    // disponible
+    ctxR.fillStyle='rgba(255,255,255,0.18)';
+    const Yd=yScale(avls[i]); ctxR.fillRect(xc-barW-4, Yd, barW*0.9, y0-Yd);
+    // usado
+    ctxR.fillStyle=colors[i];
+    const Yu=yScale(uses[i]); ctxR.fillRect(xc+4, Yu, barW*0.9, y0-Yu);
+  });
+
+  // ejes & ticks
+  ctxR.strokeStyle='rgba(255,255,255,0.18)'; ctxR.lineWidth=1.2;
+  line(ctxR,x0,y1,x0,y0); line(ctxR,x0,y0,x1,y0);
+  ctxR.fillStyle='rgba(231,236,243,0.9)'; ctxR.font='12px system-ui,sans-serif';
+  ctxR.textAlign='center'; ctxR.textBaseline='top';
+  cats.forEach((c,i)=> ctxR.fillText(c, xCat(i), y0+6));
+  ctxR.textAlign='right'; ctxR.textBaseline='middle';
+  for (let k=0;k<=6;k++){ const val=Math.round(k*ymax/6); const y=y0 - k*(y0-y1)/6; ctxR.fillText(String(val), x0-6, y); }
+}
+
+/* ===== Acciones ===== */
+qs.forEach(inp => inp.addEventListener('input', recompute));
+$('#base').addEventListener('click', ()=>{
+  // plan factible por defecto: q4=400, q1=70, q2=70, q3=60 (tot=600)
+  const base=[70,70,60,400];
+  base.forEach((v,i)=>{ qs[i].value=v; qv[i].textContent=v; });
+  recompute();
+});
+$('#clear').addEventListener('click', ()=>{
+  [0,0,0,0].forEach((v,i)=>{ qs[i].value=v; qv[i].textContent=v; });
+  recompute();
+});
+$('#csv').addEventListener('click', ()=>{
+  const q = plan();
+  const mpUse = q.reduce((s,qi,i)=> s + qi*products[i].mp, 0);
+  const hrUse = q.reduce((s,qi,i)=> s + qi*products[i].hr, 0);
+  const rev   = q.reduce((s,qi,i)=> s + qi*products[i].price, 0);
+  const rows = [];
+  rows.push('# CSV del plan de producción — Winco');
+  rows.push('Producto,Cantidad,Precio,MP por u,HR por u,MP total,HR total,Ingresos');
+  q.forEach((qi,i)=>{
+    const mp=qi*products[i].mp, hr=qi*products[i].hr, inc=qi*products[i].price;
+    rows.push([products[i].name, qi, products[i].price, products[i].mp, products[i].hr, mp, hr, inc].join(','));
+  });
+  rows.push('');
+  rows.push('Recurso,Usado,Disponible');
+  rows.push(['Materia Prima', mpUse, mpAvail].join(','));
+  rows.push(['Horas de trabajo', hrUse, hrAvail].join(','));
+  rows.push('');
+  rows.push('Ingresos totales,'+rev);
+  const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='plan_winco.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+});
+
+/* ===== Resize & Init ===== */
+const ro1=new ResizeObserver(()=>{ recompute(); }); ro1.observe(cProd);
+const ro2=new ResizeObserver(()=>{ recompute(); }); ro2.observe(cRes);
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function init(){
+  // valores iniciales factibles
+  recompute();
+  const mq=matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener?.('change', ()=>{ recompute(); });
+}
+init();
+</script>
+</body>
+</html>
+
