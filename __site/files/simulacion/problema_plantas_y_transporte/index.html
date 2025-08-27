@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulador — Transporte con instalación de plantas (3×3)</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+    --ok:#21c07a; --warn:#ffb454; --err:#ef476f;
+    --p1:#8ec5ff; --p2:#ffd166; --p3:#78a6ff;
+    --c1:#d4ffd4; --c2:#ffd4d4; --cap:#b1b6c3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+  }
+  .container{max-width:1160px; margin:0 auto; padding:28px 16px 60px;}
+  header{display:grid; gap:8px; margin-bottom:12px}
+  h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+  .muted{color:var(--muted)}
+  .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+  .card{
+    grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+  }
+  .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+  @media (max-width: 1024px){ .card,.side{grid-column:1 / -1} }
+  canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+  #plotByClient{height:280px} #plotByPlant{height:260px}
+
+  .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+  .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+  th:first-child, td:first-child{text-align:left}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:2px 8px; border:1px solid var(--border); border-radius:999px; background:#0e1a3c; font-size:12px; color:var(--muted)}
+  .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+    background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+  }
+  .btn:active{transform:translateY(1px)}
+  .row{display:grid; grid-template-columns:minmax(160px,230px) 1fr minmax(58px,72px); gap:10px; align-items:center}
+  .row input[type="range"]{width:100%}
+  .row output{justify-self:end; font-variant-numeric: tabular-nums}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media (max-width:700px){ .row{grid-template-columns:1fr} .cols{grid-template-columns:1fr} }
+  .sep{height:8px}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Transporte con instalación de plantas — simulador 3×3</h1>
+      <div class="muted">Activá plantas, decidí envíos y evaluá costos y restricciones.</div>
+    </header>
+
+    <!-- Enunciado (del adjunto), formateado en HTML -->
+    <section class="panel">
+      <div class="mono" style="margin-bottom:8px"><strong>Descripción del problema</strong></div>
+      <p>Se consideran tres sitios industriales para situar plantas de manufactura. Las plantas envían sus productos a tres clientes. La oferta de las plantas, la demanda de los clientes y el costo unitario de transporte de las plantas a los clientes aparecen en la siguiente tabla:</p>
+
+      <table aria-label="Tabla de costos unitarios, ofertas y demandas">
+        <thead>
+          <tr>
+            <th>Plantas \\ Clientes</th>
+            <th>Cliente 1</th>
+            <th>Cliente 2</th>
+            <th>Cliente 3</th>
+            <th>Oferta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Planta 1</strong></td><td>10</td><td>15</td><td>12</td><td>2500</td></tr>
+          <tr><td><strong>Planta 2</strong></td><td>17</td><td>14</td><td>20</td><td>2300</td></tr>
+          <tr><td><strong>Planta 3</strong></td><td>15</td><td>10</td><td>11</td><td>2000</td></tr>
+          <tr><td><strong>Demanda</strong></td><td>1200</td><td>1700</td><td>1600</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <p>Aparte de los costos de transporte, las plantas 1, 2 y 3 incurren en costos fijos a razón de $12,000, $11,000 y $12,000, respectivamente. Por razones impositivas, si la empresa instala dos plantas, tiene un extracosto de $2000, y si instala tres plantas el extracosto sube a $3500. Modele el problema nuevamente.</p>
+      <p><em>¿Cuál es la mejor selección de plantas?</em></p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="legend" style="margin: 2px 4px 10px;">
+          <span class="pill"><span class="box" style="background:var(--p1)"></span> Planta 1</span>
+          <span class="pill"><span class="box" style="background:var(--p2)"></span> Planta 2</span>
+          <span class="pill"><span class="box" style="background:var(--p3)"></span> Planta 3</span>
+          <span class="pill"><span class="box" style="background:var(--c1)"></span> Recibido por cliente</span>
+          <span class="pill"><span class="box" style="background:var(--cap)"></span> Capacidad activa</span>
+        </div>
+        <canvas id="plotByClient" aria-label="Envíos por cliente (apilado por planta)"></canvas>
+        <div class="sep"></div>
+        <canvas id="plotByPlant" aria-label="Uso de planta vs. capacidad activa"></canvas>
+      </div>
+
+      <!--<aside class="side">-->
+      <div class="card">
+        <!-- Activación de plantas y fijos -->
+        <div class="panel">
+          <div class="mono" style="margin-bottom:6px"><strong>Instalación de plantas</strong></div>
+          <div class="cols">
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="on1" checked> Planta 1 — fijo $12,000</label>
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="on2"> Planta 2 — fijo $11,000</label>
+          </div>
+          <div class="cols" style="margin-top:6px">
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="on3" checked> Planta 3 — fijo $12,000</label>
+            <div class="mono" id="extraNote">Extracostos por # plantas activas: 2→$2,000, 3→$3,500</div>
+          </div>
+        </div>
+
+        <!-- Envíos x_ij -->
+        <div class="panel" id="controls"></div>
+
+        <!-- Métricas -->
+        <div class="panel mono" id="metrics">
+          <div><strong>Demanda clientes (1,2,3):</strong> 1200 · 1700 · 1600</div>
+          <div><strong>Oferta plantas (1,2,3):</strong> 2500 · 2300 · 2000</div>
+          <hr style="border:none; border-top:1px solid #141a33; margin:6px 0;">
+          <div><strong>Costo transporte:</strong> $<span id="ct">–</span></div>
+          <div><strong>Costo fijos (+ extra):</strong> $<span id="cf">–</span></div>
+          <div><strong>Costo total:</strong> $<span id="tot">–</span></div>
+          <hr style="border:none; border-top:1px solid #141a33; margin:6px 0;">
+          <div><strong>Violaciones:</strong> <span id="viol" class="ok">0 (OK)</span></div>
+          <div id="violList" class="muted" style="margin-top:4px"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button id="base" class="btn" type="button">Plan base factible</button>
+            <button id="clear" class="btn" type="button">Poner todo en 0</button>
+            <button id="csv" class="btn" type="button">Descargar CSV</button>
+          </div>
+        </div>
+      <!--</aside>-->
+      </div>
+    </section>
+  </div>
+
+<script>
+/* ===== Datos del problema ===== */
+const plants = [
+  {name:'Planta 1', cap:2500, fixed:12000, color:getVar('--p1')},
+  {name:'Planta 2', cap:2300, fixed:11000, color:getVar('--p2')},
+  {name:'Planta 3', cap:2000, fixed:12000, color:getVar('--p3')},
+];
+const clients = [
+  {name:'Cliente 1', dem:1200},
+  {name:'Cliente 2', dem:1700},
+  {name:'Cliente 3', dem:1600},
+];
+// costos unitarios c_ij (i: planta, j: cliente)
+const C = [
+  [10,15,12],
+  [17,14,20],
+  [15,10,11],
+];
+// extracosto según # de plantas activas
+function extraCost(k){
+  if (k===2) return 2000;
+  if (k===3) return 3500;
+  return 0;
+}
+
+/* ===== Estado & DOM ===== */
+const $=(s)=>document.querySelector(s);
+const controls = $('#controls');
+const on1=$('#on1'), on2=$('#on2'), on3=$('#on3');
+const ctEl=$('#ct'), cfEl=$('#cf'), totEl=$('#tot'), violEl=$('#viol'), violListEl=$('#violList');
+
+const c1=$('#plotByClient'), ctx1=c1.getContext('2d');
+const c2=$('#plotByPlant'),  ctx2=c2.getContext('2d');
+
+// sliders de envíos x_ij
+const sliders = []; // [i][j] => {inp, out}
+
+/* ===== UI: construir controles por planta/cliente ===== */
+function buildControls(){
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="mono" style="margin-bottom:6px"><strong>Envíos desde plantas a clientes</strong></div>`;
+  // Para cada planta, tres sliders a clientes 1..3
+  plants.forEach((p,i)=>{
+    const card = document.createElement('div'); card.className='panel'; card.style.padding='10px';
+    card.innerHTML = `<div class="mono" style="margin-bottom:6px; color:${p.color}"><strong>${p.name}</strong> — capacidad ${p.cap}</div>`;
+    sliders[i]=[];
+    clients.forEach((c,j)=>{
+      const rid = `x-${i}-${j}`;
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `
+        <label>→ ${c.name} (costo $${C[i][j]}/u)</label>
+        <input id="${rid}" type="range" min="0" max="${c.dem}" step="10" value="0" />
+        <output id="${rid}v">0</output>
+      `;
+      sliders[i][j] = {inp: null, out: null};
+      card.appendChild(row);
+    });
+    wrap.appendChild(card);
+  });
+  controls.appendChild(wrap);
+
+  // enlazar
+  plants.forEach((_,i)=>{
+    clients.forEach((__,j)=>{
+      const id = `x-${i}-${j}`;
+      const inp=$(`#${id}`), out=$(`#${id}v`);
+      sliders[i][j].inp=inp; sliders[i][j].out=out;
+      inp.addEventListener('input', ()=>{ out.textContent=inp.value; recompute(); });
+    });
+  });
+}
+
+/* ===== Helpers & Dibujo ===== */
+function planX(){
+  return sliders.map(row=> row.map(({inp})=> +inp.value));
+}
+function resizeCanvasToDisplaySize(canvas, ctx){
+  const dpr=window.devicePixelRatio||1;
+  const w=Math.max(1,Math.round(canvas.clientWidth));
+  const h=Math.max(1,Math.round(canvas.clientHeight));
+  if (canvas.width!==w*dpr || canvas.height!==h*dpr){ canvas.width=w*dpr; canvas.height=h*dpr; }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+/* ===== Recompute ===== */
+function recompute(){
+  const on = [on1.checked, on2.checked, on3.checked];
+  const X = planX(); // 3x3
+  // costos
+  let cTransport = 0;
+  for (let i=0;i<3;i++) for (let j=0;j<3;j++) cTransport += X[i][j]*C[i][j];
+
+  const k = on.filter(Boolean).length;
+  let cFixed = 0;
+  for (let i=0;i<3;i++) if (on[i]) cFixed += plants[i].fixed;
+  cFixed += extraCost(k);
+
+  // restricciones
+  const useByPlant = X.map(row => row.reduce((a,b)=>a+b,0));
+  const recByClient = [0,0,0];
+  for (let j=0;j<3;j++) recByClient[j] = X[0][j]+X[1][j]+X[2][j];
+
+  const viols=[];
+  // 1) Si planta no activa, no puede enviar
+  for (let i=0;i<3;i++){
+    if (!on[i]){
+      const sent = useByPlant[i];
+      if (sent>0){ viols.push(`Planta ${i+1} no instalada y envía ${sent}.`); }
+    }
+  }
+  // 2) Oferta por planta (si activa)
+  for (let i=0;i<3;i++){
+    const capActive = on[i]? plants[i].cap : 0;
+    if (useByPlant[i] > capActive + 1e-9){
+      viols.push(`Planta ${i+1} excede su oferta activa (${useByPlant[i]} > ${capActive}).`);
+    }
+  }
+  // 3) Demanda por cliente (igualdad estricta)
+  for (let j=0;j<3;j++){
+    const d = clients[j].dem, r = recByClient[j];
+    if (Math.abs(r - d) > 1e-9){
+      const tipo = r<d? 'faltante' : 'exceso';
+      viols.push(`${tipo} en Cliente ${j+1}: enviado ${r}, demanda ${d}.`);
+    }
+  }
+
+  // costos a UI
+  ctEl.textContent = cTransport.toLocaleString('es-AR', {maximumFractionDigits:0});
+  cfEl.textContent = cFixed.toLocaleString('es-AR', {maximumFractionDigits:0});
+  const total = cTransport + cFixed;
+  totEl.textContent = total.toLocaleString('es-AR', {maximumFractionDigits:0});
+  violEl.textContent = viols.length===0? '0 (OK)' : `${viols.length}`;
+  violEl.className = viols.length===0? 'ok' : 'err';
+  violListEl.textContent = viols.join('  |  ');
+
+  drawByClient(X);
+  drawByPlant(useByPlant, on);
+}
+
+/* ===== Gráficos ===== */
+function drawByClient(X){
+  resizeCanvasToDisplaySize(c1, ctx1);
+  const W=c1.clientWidth, H=c1.clientHeight;
+  ctx1.clearRect(0,0,W,H);
+  const m={l:56,r:16,t:16,b:36};
+  ctx1.fillStyle='#0c1226'; roundRect(ctx1,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctx1.fill();
+
+  const totals = clients.map((c,j)=> X[0][j]+X[1][j]+X[2][j]);
+  const ymax = Math.max(10, ...clients.map(c=>c.dem), ...totals) * 1.1;
+  const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+  const bandW = (x1-x0)/3, barW=Math.min(30, bandW/3);
+
+  const xC = (j)=> x0 + bandW*j + bandW/2;
+  const yScale=(v)=> y0 - (v/ymax)*(y0-y1);
+
+  // grid
+  ctx1.strokeStyle='rgba(255,255,255,0.06)'; ctx1.lineWidth=1;
+  for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctx1,x,y1,x,y0); }
+  for (let k=0;k<=6;k++){ const y=y0 - k*(y0-y1)/6; line(ctx1,x0,y,x1,y); }
+
+  // barra apilada por cliente (por planta)
+  for (let j=0;j<3;j++){
+    let base=y0;
+    for (let i=0;i<3;i++){
+      const val=X[i][j], h=(val/ymax)*(y0-y1);
+      ctx1.fillStyle=plants[i].color;
+      ctx1.fillRect(xC(j)-barW/2, base-h, barW*0.9, h);
+      base -= h;
+    }
+    // línea de demanda
+    ctx1.setLineDash([6,6]); ctx1.strokeStyle='rgba(255,255,255,0.35)'; ctx1.lineWidth=1.2;
+    const yD=yScale(clients[j].dem); line(ctx1, xC(j)-barW, yD, xC(j)+barW, yD);
+    ctx1.setLineDash([]);
+  }
+
+  // ejes & ticks
+  ctx1.strokeStyle='rgba(255,255,255,0.18)'; ctx1.lineWidth=1.2;
+  line(ctx1,x0,y1,x0,y0); line(ctx1,x0,y0,x1,y0);
+  ctx1.fillStyle='rgba(231,236,243,0.9)'; ctx1.font='12px system-ui,sans-serif';
+  ctx1.textAlign='center'; ctx1.textBaseline='top';
+  for (let j=0;j<3;j++) ctx1.fillText(clients[j].name, xC(j), y0+6);
+  ctx1.textAlign='right'; ctx1.textBaseline='middle';
+  for (let k=0;k<=6;k++){ const val=Math.round(k*ymax/6); const y=y0 - k*(y0-y1)/6; ctx1.fillText(String(val), x0-6, y); }
+}
+
+function drawByPlant(useByPlant, on){
+  resizeCanvasToDisplaySize(c2, ctx2);
+  const W=c2.clientWidth, H=c2.clientHeight;
+  ctx2.clearRect(0,0,W,H);
+  const m={l:56,r:16,t:16,b:36};
+  ctx2.fillStyle='#0c1226'; roundRect(ctx2,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctx2.fill();
+
+  const capsActive = plants.map((p,i)=> on[i]? p.cap : 0);
+  const ymax = Math.max(10, ...capsActive, ...useByPlant) * 1.1;
+  const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+  const bandW = (x1-x0)/3, barW=Math.min(32, bandW/3);
+  const xP = (i)=> x0 + bandW*i + bandW/2;
+  const yScale=(v)=> y0 - (v/ymax)*(y0-y1);
+
+  // grid
+  ctx2.strokeStyle='rgba(255,255,255,0.06)'; ctx2.lineWidth=1;
+  for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctx2,x,y1,x,y0); }
+  for (let k=0;k<=6;k++){ const y=y0 - k*(y0-y1)/6; line(ctx2,x0,y,x1,y); }
+
+  // barras: capacidad activa vs uso
+  for (let i=0;i<3;i++){
+    // capacidad activa (gris)
+    ctx2.fillStyle=getVar('--cap');
+    const Yc=yScale(capsActive[i]); ctx2.fillRect(xP(i)-barW-4, Yc, barW*0.9, y0-Yc);
+    // uso
+    ctx2.fillStyle=plants[i].color;
+    const Yu=yScale(useByPlant[i]); ctx2.fillRect(xP(i)+4, Yu, barW*0.9, y0-Yu);
+  }
+
+  // ejes & ticks
+  ctx2.strokeStyle='rgba(255,255,255,0.18)'; ctx2.lineWidth=1.2;
+  line(ctx2,x0,y1,x0,y0); line(ctx2,x0,y0,x1,y0);
+  ctx2.fillStyle='rgba(231,236,243,0.9)'; ctx2.font='12px system-ui,sans-serif';
+  ctx2.textAlign='center'; ctx2.textBaseline='top';
+  for (let i=0;i<3;i++) ctx2.fillText(plants[i].name, xP(i), y0+6);
+  ctx2.textAlign='right'; ctx2.textBaseline='middle';
+  for (let k=0;k<=6;k++){ const val=Math.round(k*ymax/6); const y=y0 - k*(y0-y1)/6; ctx2.fillText(String(val), x0-6, y); }
+}
+
+/* ===== Acciones ===== */
+[on1,on2,on3].forEach(el => el.addEventListener('change', recompute));
+
+$('#base').addEventListener('click', ()=>{
+  // Plan base factible (instala 1 y 3):
+  // C1: 1200 desde P1; C2: 1700 desde P3; C3: 300 desde P3 y 1300 desde P1.
+  on1.checked=true; on2.checked=false; on3.checked=true;
+  const base = [
+    [1200,   0,1300], // P1→(C1,C2,C3)
+    [   0,   0,   0], // P2
+    [   0,1700, 300], // P3
+  ];
+  for (let i=0;i<3;i++) for (let j=0;j<3;j++){
+    sliders[i][j].inp.value = base[i][j];
+    sliders[i][j].out.textContent = base[i][j];
+  }
+  recompute();
+});
+
+$('#clear').addEventListener('click', ()=>{
+  on1.checked=false; on2.checked=false; on3.checked=false;
+  for (let i=0;i<3;i++) for (let j=0;j<3;j++){
+    sliders[i][j].inp.value = 0;
+    sliders[i][j].out.textContent = '0';
+  }
+  recompute();
+});
+
+$('#csv').addEventListener('click', ()=>{
+  const on=[on1.checked,on2.checked,on3.checked];
+  const X=planX();
+  const useByPlant = X.map(r=>r.reduce((a,b)=>a+b,0));
+  const recByClient = [X[0][0]+X[1][0]+X[2][0], X[0][1]+X[1][1]+X[2][1], X[0][2]+X[1][2]+X[2][2]];
+  let ct=0; for (let i=0;i<3;i++) for (let j=0;j<3;j++) ct += X[i][j]*C[i][j];
+  let cf=extraCost(on.filter(Boolean).length); for (let i=0;i<3;i++) if (on[i]) cf += plants[i].fixed;
+  const total = ct+cf;
+
+  const rows=[];
+  rows.push('# CSV — Transporte con instalación de plantas');
+  rows.push('Planta,Instalada,Capacidad,Enviado,total_plant');
+  for (let i=0;i<3;i++){
+    rows.push([plants[i].name, on[i]?'SI':'NO', on[i]?plants[i].cap:0, X[i].join('|'), useByPlant[i]].join(','));
+  }
+  rows.push('');
+  rows.push('Cliente,Demanda,Recibido');
+  for (let j=0;j<3;j++){
+    rows.push([clients[j].name, clients[j].dem, recByClient[j]].join(','));
+  }
+  rows.push('');
+  rows.push('CostoTransporte,'+ct);
+  rows.push('CostoFijosMasExtra,'+cf);
+  rows.push('CostoTotal,'+total);
+
+  const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='transporte_instalacion.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+});
+
+/* ===== Resize & Init ===== */
+const ro1=new ResizeObserver(()=>{ recompute(); }); ro1.observe(c1);
+const ro2=new ResizeObserver(()=>{ recompute(); }); ro2.observe(c2);
+
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function init(){
+  buildControls();
+  // valores iniciales: plan base factible
+  document.getElementById('base').click();
+  const mq=matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener?.('change', ()=>{ recompute(); });
+}
+init();
+</script>
+</body>
+</html>
+
