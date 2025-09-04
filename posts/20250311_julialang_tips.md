@@ -206,4 +206,44 @@ x = load_object("mytuple.jld2")
 
 (extraido de [https://stackoverflow.com/questions/67143280/save-data-in-julia](https://stackoverflow.com/questions/67143280/save-data-in-julia)).
 
+## Sumar listas por comprensión que podrían estar vacías
+
+Cuando hacemos algo como:
+
+```julia
+sum(x for x in X)
+```
+
+Puede pasar que _X_ esté vacía y, si no tenemos un tipo definido, es _Any_ y no sabe como resolver la suma. Por ejemplo:
+
+```julia
+julia> X=[]
+Any[]
+
+julia> sum(x for x in X)
+ERROR: MethodError: no method matching zero(::Type{Any})
+This error has been manually thrown, explicitly, so the method may exist but be intentionally marked as unimplemented.
+
+Closest candidates are:
+  zero(::Type{Union{Missing, T}}) where T
+   @ Base missing.jl:105
+  zero(::Type{Union{}}, Any...)
+   @ Base number.jl:310
+  zero(::Type{Missing})
+   @ Base missing.jl:104
+  ...
+```
+
+Una posible solución es forzar el tipo:
+
+```julia
+sum(Float64.(x for x in X))
+```
+
+Otra es usar _reduce_:
+
+```julia
+reduce(+, x for x in X; init=0.0)
+
+```
 
