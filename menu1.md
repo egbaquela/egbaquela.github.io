@@ -40,6 +40,7 @@ tags = ["general"]
 
 ## Linux
 
+* [¿Como recortar un video por línea de comandos?](../posts/20250904_recortar_video_linux)
 * [¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
 
 ## Docencia

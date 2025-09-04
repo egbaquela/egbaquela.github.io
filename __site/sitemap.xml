@@ -21,7 +21,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
-    <lastmod>2025-07-02</lastmod>
+    <lastmod>2025-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -100,6 +100,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_machine_learning/index.html</loc>
     <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250904_recortar_video_linux/index.html</loc>
+    <lastmod>2025-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>

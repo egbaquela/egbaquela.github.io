@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+   <link rel="stylesheet" href="/libs/highlight/styles/github.min.css">
+   
+  <link rel="stylesheet" href="/css/franklin.css">
+<link rel="stylesheet" href="/css/poole_hyde.css">
+<!-- style adjustments -->
+<style>
+  html {font-size: 17px;}
+  .franklin-content {position: relative; padding-left: 8%; padding-right: 5%; line-height: 1.35em;}
+  @media (min-width: 940px) {
+    .franklin-content {width: 100%; margin-left: auto; margin-right: auto;}
+  }
+  @media (max-width: 768px) {
+    .franklin-content {padding-left: 6%; padding-right: 6%;}
+  }
+</style>
+<link rel="icon" href="/assets/favicon.png">
+
+   <title>¿Como recortar un video por línea de comandos en Linux?</title>  
+</head>
+<body>
+<div class="sidebar">
+  <div class=style="text-align: center;"><img src="/assets/foto perfil cv 2025.jpeg" alt="Foto de perfil" width="210" height="210"></div>
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h2><a href="/">Modelizando sistemas</a></h2>
+      <p class="lead">Un blog personal-profesional de Enrique Gabriel Baquela</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item " href="/">Inicio</a>
+      <a class="sidebar-nav-item " href="/sobre_mi/">Sobre mi</a>
+      <a class="sidebar-nav-item " href="/en_los_medios/">Apariciones en los medios</a>
+      <a class="sidebar-nav-item " href="/menu1/">Posts</a>
+    </nav>
+    <p>&copy; Enrique Gabriel Baquela.</p>
+  </div>
+</div>
+<div class="content container">
+
+<!-- Content appended here -->
+<div class="franklin-content">
+<h1 id="como_recortar_un_video_por_línea_de_comandos_en_linux"><a href="#como_recortar_un_video_por_línea_de_comandos_en_linux" class="header-anchor">¿Como recortar un video por línea de comandos en Linux?</a></h1>
+<p>La forma mas fácil, usar ffmpeg:</p>
+<pre><code class="language-julia">ffmpeg -i input.mp4 -ss 00:00:00 -to 00:08:48 -c copy output.mp4</code></pre>
+<p>En este caso, generamos una copia de una parte del video original, desde su inicio &#40;00:00:00&#41; hasta el la posición indicada por <em>-to</em> &#40;00:08:48&#41;. La herramienta es mucho mas completa que esto, se puede buscar mas en su documentación oficial: <a href="https://ffmpeg.org/ffmpeg.html">https://ffmpeg.org/ffmpeg.html</a></p>
+<div class="page-foot">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: September 04, 2025.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div>  <!-- div: content container -->
+    
+    
+        <script src="/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>
+
+    
+  </body>
+</html>
