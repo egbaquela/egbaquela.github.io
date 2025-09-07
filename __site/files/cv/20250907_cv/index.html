@@ -1,0 +1,481 @@
+"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Enrique Gabriel Baquela, PhD — Optimization Engineer (Scheduling & Maritime)</title>
+<style>
+  :root {
+    --bg: #0b1220;
+    --card: #121a2b;
+    --accent: #66d9ef;
+    --accent2: #a6e22e;
+    --muted: #a9b1bd;
+    --text: #e6edf3;
+    --warn: #ffb86c;
+    --danger: #ff6b6b;
+    --good: #3ecf8e;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; margin: 0; padding: 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 64px; }
+  header { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; margin-bottom: 18px; }
+  .title { line-height: 1.2; }
+  h1 { font-size: 2rem; margin: 0; }
+  h2 { font-size: 1.15rem; margin: 0 0 12px 0; letter-spacing: 0.2px; }
+  h3 { font-size: 1rem; margin: 16px 0 8px 0; color: var(--accent2); }
+  .tag { color: var(--muted); font-size: 0.95rem; margin-top: 6px; }
+  .meta { text-align: right; color: var(--muted); font-size: 0.95rem; }
+  .pill { display: inline-block; padding: 4px 10px; border: 1px solid #2b3345; border-radius: 999px; margin-left: 8px; color: var(--accent2); }
+  .grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-top: 18px; }
+  .card { background: linear-gradient(180deg, #121a2b, #0f1626); border: 1px solid #242c3f; border-radius: 16px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+  ul { margin: 8px 0 0 1.2rem; padding: 0; }
+  li { margin: 6px 0; }
+  .inline-kv { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 6px; }
+  .inline-kv span { color: var(--muted); }
+  .footer { margin-top: 22px; font-size: 0.9rem; color: var(--muted); }
+  /* Simulator layout */
+  .sim-grid { display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-top: 6px; }
+  .controls label { display: block; font-size: 0.9rem; margin: 10px 0 6px; color: var(--muted); }
+  .controls input[type="number"], .controls select { width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #323b52; background: #0b1322; color: var(--text); }
+  .btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  button { background: #203054; color: var(--text); border: 1px solid #2c416d; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+  .kpi { background: #0e1626; border: 1px solid #27304a; border-radius: 12px; padding: 10px 12px; }
+  .kpi .label { color: var(--muted); font-size: 0.85rem; }
+  .kpi .value { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
+  .legend { color: var(--muted); font-size: 0.9rem; margin-top: 6px; line-height: 1.5; }
+  canvas { background: #0b1322; border: 1px solid #2a3350; border-radius: 12px; }
+  .table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  .table th, .table td { border: 1px solid #27304a; padding: 6px 8px; }
+  .table th { background: #101831; text-align: left; }
+  .ok { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--danger); }
+  .small { font-size: 0.85rem; color: var(--muted); }
+  .badgetxt { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #2b3452; background: #1d2842; margin-left: 4px; font-size: 0.8rem; }
+  .linkrow { display: flex; gap: 12px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .perma { font-size: 0.9rem; color: var(--muted); }
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: 1fr; }
+    .sim-grid { grid-template-columns: 1fr; }
+    header { grid-template-columns: 1fr; text-align: left; }
+    .meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Enrique Gabriel Baquela, PhD</h1>
+        <div class="tag">Operations Research Engineer / Data Scientist — Optimizacion, Simulation & Decision Systems</div>
+        <div class="inline-kv">
+          <span>Argentina (UTC-3)</span>
+          <span class="pill">Remote only; occasional on-site visits</span>
+        </div>
+        <div class="inline-kv">
+          <span><a href="https://www.egbaquela.com.ar" target="_blank" rel="noopener">egbaquela.com.ar</a></span>
+          <span><a href="https://scholar.google.com/citations?user=j_c7ZkIAAAAJ" target="_blank" rel="noopener">Google Scholar</a></span>
+          <span><a href="https://ar.linkedin.com/in/egbaquela" target="_blank" rel="noopener">LinkedIn</a></span>
+        </div>
+      </div>
+      <!--<div class="meta">
+        <div>Blog-ready, single-file HTML</div>
+        <div>Last updated: <span id="updated"></span></div>
+      </div>-->
+    </header>
+
+    <!-- Conversational intro -->
+    <section class="card">
+      <h2>Hi, I’m Enrique</h2>
+      <p>
+        I’ve spent 20+ years at the intersection of <strong>optimization</strong>, <strong>software engineering</strong>, and <strong>operations</strong>.
+        I love turning messy reality into <strong>clean models, algorithms, and measurable KPIs</strong>. <strong>Julia</strong> fan and <strong>Operations Research</strong> evangelist.
+      </p>
+      <p>I’ve built production systems for
+        ports and logistics (including a <strong>Julia solver for the Maritime Inventory &amp; routing optimization problem</strong> at V2T, and a <strong>C++ engine for barge &amp; pilot scheduling</strong> at Innovez One), taught Operations Research and
+        Machine Learning as a professor, and led research on hybrid optimization–simulation. I’m fluent in <strong>Julia</strong>, and have experience with <strong>Python</strong> and <strong>C++</strong>. 
+      </p>
+      <p>
+        When dealing with <strong>decision problems</strong>, my approach blends <strong>Theory of Constraints</strong> (bottleneck-first), simulations, solid MILP/CP, and
+        pragmatic heuristics with clear, actionable KPIs. Remote-first, happy to travel occasionally for discovery or go-lives.
+      </p>
+    </section>
+
+    <!--<div class="grid">-->
+      <section class="card"  style="margin-top:16px;">
+        <h2>Summary</h2>
+        <p>
+          Optimization engineer and OR researcher with <strong>PhD in Engineering (Optimization &amp; Simulation)</strong> and extensive industry delivery.
+        </p>
+        <p>
+          Expert at <strong>identifying bottlenecks and translating them into algorithms &amp; metrics</strong>, designing MILP/CP/heuristics for scheduling,
+          routing, and capacity planning. Teaching &amp; research in OR and ML; hands-on software (APIs/microservices, dashboards) used by global clients.
+        </p>
+
+        <h3>How can I match your projects?</h3>
+        <ul>
+          <li>Large-scale models in <strong>Julia</strong>, <strong>Python</strong>, <strong>C++</strong> with <strong>HiGHS/OR-Tools/Gurobi</strong>.</li>
+          <li><strong>Theory of Constraints</strong>: DBR buffers, bottleneck-driven planning, throughput KPIs.</li>
+          <li>Optimization with real constraints: not well defined, with uncertainty.</li>
+          <li>ML for ETA/demand, anomaly detection; simulation-optimization for robustness.</li>
+        </ul>
+
+        <h3>Selected Experience</h3>
+        <ul>
+          <li><strong>Innovez One</strong> — <strong>C++ scheduling engine</strong> for <em>barges &amp; pilot assignments</em> (berthing/unberthing; tides/windows/compatibility; dispatch APIs).</li>
+          <li><strong>V2T Logistics</strong> — optimization &amp; ML engines for real-time logistics (Julia/JuMP, OR-Tools, Gurobi/CPLEX; Docker/APIs).</li>
+          <li><strong>Furgens Research</strong> — custom optimization software: production scheduling, inventory, staff assignment.</li>
+          <li><strong>Academia</strong> — Professor of OR (UTN-FRSN); Graduate Lecturer (Universidad Austral); Visiting Professor (UPAEP).</li>
+        </ul>
+
+        <h3>Publications & Community</h3>
+        <p>
+          Peer-reviewed work in OR &amp; logistics (Operations Research Perspectives, IEEE LATAM Trans., TRIP, JFDS).
+          Member: INFORMS, System Dynamics Society.
+        </p>
+      </section>
+
+      <!--
+      <section class="card">
+        <h2>Contact & Links</h2>
+        <ul>
+          <li><strong>Blog:</strong> <a href="https://www.egbaquela.com.ar" target="_blank" rel="noopener">egbaquela.com.ar</a></li>
+          <li><strong>Google Scholar:</strong> <a href="https://scholar.google.com/citations?user=j_c7ZkIAAAAJ" target="_blank" rel="noopener">Scholar Profile</a></li>
+          <li><strong>LinkedIn:</strong> <a href="https://ar.linkedin.com/in/egbaquela" target="_blank" rel="noopener">/in/egbaquela</a></li>
+        </ul>
+
+        <h3>Video</h3>
+        <iframe width="0" height="0"></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/n6fl1pLM598?si=G4j7mHlxqJoYVisl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </section>
+      -->
+    <!--</div>-->
+
+    <!-- Passenger Flow Demo ONLY -->
+    <section class="card" style="margin-top:16px;">
+      <h2>An example - Small simulation — Passenger Flow (Embarkation)</h2>
+      <p class="legend">
+        <strong>What’s this?</strong> A two-stage queueing simulation for embark: <em>Gangways → Elevators</em>. Arrivals are Poisson (rate λ), and each stage has a pool of identical servers with exponential service times.
+        It’s a classic <strong>M/M/c</strong> pipeline. You’ll see average and P95 waits, throughput, and stage utilizations <em>ρ</em>. The model is intentionally lightweight to run in-browser and explain decisions quickly.
+      </p>
+      <p class="legend">
+        <strong>How to read it:</strong> If <em>ρ ≥ 1</em> in any stage, queues explode. Even with <em>ρ &lt; 1</em>, high utilizations (e.g., 0.9–0.99) mean long tails (large P95). The panel below also computes a simple <em>staffing suggestion</em>
+        to keep both stages under a target utilization and runs two automatic <em>what-if</em> scenarios: add one gangway or one elevator.
+      </p>
+
+      <div class="sim-grid">
+        <div class="controls">
+          <label>Scenario parameters</label>
+          <table class="table" id="p_params">
+            <thead>
+              <tr><th>Symbol</th><th>Description</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>λ</td><td>Arrival rate (passengers/min)</td><td id="p_lambda_val">–</td></tr>
+              <tr><td>G</td><td>Gangways (servers)</td><td id="p_g_val">–</td></tr>
+              <tr><td>1/μ₁</td><td>Mean service per passenger at gangway (min)</td><td id="p_s1_val">–</td></tr>
+              <tr><td>E</td><td>Elevators (servers)</td><td id="p_e_val">–</td></tr>
+              <tr><td>1/μ₂</td><td>Mean service per passenger at elevator (min)</td><td id="p_s2_val">–</td></tr>
+              <tr><td>T</td><td>Simulation horizon (min)</td><td id="p_T_val">–</td></tr>
+              <tr><td>Seed</td><td>Random seed</td><td id="p_seed_val">–</td></tr>
+            </tbody>
+          </table>
+
+          <div class="btns">
+            <button id="p_generate">Generate scenario</button>
+          </div>
+
+          <div class="linkrow">
+            <!--<span class="perma">Permalink: <a id="p_link" href="#">(copy)</a></span>-->
+            <a id="p_csv" download="passenger_waits.csv" href="#">Download waits CSV</a>
+          </div>
+
+          <h3>Capacity & What-ifs</h3>
+          <table class="table" id="p_sugg">
+            <thead>
+              <tr><th>Case</th><th>ρ<sub>gangway</sub></th><th>ρ<sub>elev</sub></th><th>Avg wait</th><th>P95</th><th>Throughput</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <!--<p class="small">Suggestion aims for ρ ≤ 0.90 on both stages. What-ifs simulate <em>+1 gangway</em> and <em>+1 elevator</em> keeping the rest fixed.</p>-->
+        </div>
+
+        <div>
+          <div class="kpis">
+            <div class="kpi"><div class="label">Avg wait (total)</div><div class="value" id="pk_avg">–</div></div>
+            <div class="kpi"><div class="label">P95 wait (total)</div><div class="value" id="pk_p95">–</div></div>
+            <div class="kpi"><div class="label">Throughput</div><div class="value" id="pk_thr">–</div></div>
+          </div>
+          <div class="legend">Utilization: ρ<sub>gangway</sub> = λ / (G·μ₁), ρ<sub>elev</sub> = λ / (E·μ₂). <span class="ok">OK</span> &lt; 0.85 · <span class="warn">High</span> 0.85–0.99 · <span class="bad">Unstable</span> ≥ 1.</div>
+          <canvas id="p_hist" width="720" height="280" style="margin-top:8px;"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <h2>Technical Stack</h2>
+      <p><strong>Optimization:</strong> Julia/JuMP, Python (OR-Tools), C++ (custom engines), Gurobi, CPLEX, HiGHS.</p>
+      <p><strong>Heuristics & ML:</strong> NSGA-II, ALNS, SA, Tabu, GRASP; MLJ/Flux, scikit-learn; RL integrations.</p>
+      <p><strong>Software Engineering:</strong> SQL, Docker, REST/gRPC, CI/CD, Linux; reproducible research &amp; teaching (Pluto/Jupyter).</p>
+      <p><strong>Programming:</strong> Julia, Python, R, Lisp, FreePascal, C++, Javascript.</p>
+      <p><strong>Simulation:</strong> Julia, Anylogic, Vensim, IThink.</p>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <h2>Selected Maritime/Logistics Work</h2>
+      <ul>
+        <li><strong>Maritime Inventory Routing &amp; Scheduling</strong> — Julia core; jointly decide routing/scheduling with port inventories &amp; time windows; hybrid math-heuristics; robustness to delays/weather.</li>
+        <li><strong>Pilot/Barge Dispatch &amp; Berth Allocation</strong> — C++ core + solver-guided heuristics; constraints: tides, windows, compatibilities; KPIs: turnaround, missed windows, utilization.</li>
+        <li><strong>Container Consolidation &amp; Vessel Loading</strong> — bi-objective NSGA-II + MILP; Pareto frontiers; scenario dashboards.</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      © <span id="year"></span> Enrique Gabriel Baquela.
+    </footer>
+  </div>
+
+<script>
+// Utils
+function mulberry32(a) {
+  return function() {
+    var t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+function percentile(arr, p) {
+  if (arr.length === 0) return 0;
+  const a = [...arr].sort((x,y) => x-y);
+  const idx = Math.min(a.length-1, Math.max(0, Math.floor(p*(a.length-1))));
+  return a[idx];
+}
+function classifyRho(r) {
+  if (r >= 1) return '<span class="bad">'+r.toFixed(2)+'</span>';
+  if (r >= 0.85) return '<span class="warn">'+r.toFixed(2)+'</span>';
+  return '<span class="ok">'+r.toFixed(2)+'</span>';
+}
+
+// Simulation core
+function randExp(rng, mean) { const u = Math.max(1e-9, rng()); return -mean * Math.log(u); }
+
+function simulate(seed, T, lambda, G, mean1, E, mean2) {
+  const rng = mulberry32(seed>>>0);
+  let t = 0;
+  const arrivals = [];
+  while (true) {
+    t += randExp(rng, 1/lambda); // interarrival with rate lambda -> mean 1/lambda
+    if (t > T) break;
+    arrivals.push({t});
+  }
+  const gang = Array(G).fill(0);
+  const elev = Array(E).fill(0);
+  const waits = [];
+  let processed = 0;
+  for (const a of arrivals) {
+    // stage 1
+    let i = 0;
+    for (let k=1;k<G;k++) if (gang[k] < gang[i]) i = k;
+    const start1 = Math.max(a.t, gang[i]);
+    const end1 = start1 + randExp(rng, mean1);
+    gang[i] = end1;
+
+    // stage 2
+    let j = 0;
+    for (let k=1;k<E;k++) if (elev[k] < elev[j]) j = k;
+    const start2 = Math.max(end1, elev[j]);
+    const end2 = start2 + randExp(rng, mean2);
+    elev[j] = end2;
+
+    waits.push((start1 - a.t) + (start2 - end1));
+    processed++;
+  }
+  return { waits, processed, arrivals: arrivals.length };
+}
+
+// Rendering
+(function(){
+  const $ = id => document.getElementById(id);
+  const avgEl = $("pk_avg"), p95El = $("pk_p95"), thrEl = $("pk_thr");
+  const canvas = $("p_hist");
+  const ctx = canvas.getContext("2d");
+  const lambdaVal = $("p_lambda_val"), gVal = $("p_g_val"), s1Val = $("p_s1_val");
+  const eVal = $("p_e_val"), s2Val = $("p_s2_val"), Tval = $("p_T_val"), seedVal = $("p_seed_val");
+  const suggBody = $("p_sugg").querySelector("tbody");
+  const linkEl = $("p_link"), csvEl = $("p_csv");
+  const genBtn = $("p_generate");
+
+  function drawHist(values) {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#0b1322";
+    ctx.fillRect(0,0,W,H);
+    if (values.length === 0) return;
+    const maxV = Math.max(...values);
+    const bins = Math.max(10, Math.min(40, Math.floor(Math.sqrt(values.length))));
+    const hist = Array(bins).fill(0);
+    for (const v of values) {
+      const idx = Math.min(bins-1, Math.floor(v / (maxV + 1e-9) * bins));
+      hist[idx]++;
+    }
+    const maxC = Math.max(...hist);
+    const bw = W / bins;
+    for (let i=0;i<bins;i++) {
+      const h = (hist[i]/maxC) * (H - 30);
+      ctx.fillStyle = "#3f7bd6";
+      ctx.fillRect(i*bw + 2, H - h - 20, bw - 4, h);
+    }
+    // axes
+    ctx.fillStyle = "#a9b1bd";
+    ctx.font = "12px system-ui";
+    ctx.fillText("0", 4, H-4);
+    ctx.fillText(maxV.toFixed(1) + " min", W-80, H-4);
+    ctx.fillText("Wait time distribution", 10, 16);
+  }
+
+  function toCSV(values) {
+    let s = "wait_minutes\n";
+    for (const v of values) s += v.toFixed(4) + "\n";
+    return s;
+  }
+
+  function permalink(params) {
+    const q = new URLSearchParams(params).toString();
+    const url = location.origin + location.pathname + "#" + q;
+    linkEl.href = url;
+    linkEl.onclick = (e)=>{
+      e.preventDefault();
+      navigator.clipboard.writeText(url).then(()=>{
+        linkEl.textContent = "(copied)";
+        setTimeout(()=>linkEl.textContent="(copy)", 1000);
+      });
+    }
+  }
+
+  function staffingSuggestion(lambda, G, mean1, E, mean2, target=0.90) {
+    // Find minimal integers G*,E* so that rho<=target at both stages.
+    const mu1 = 1/mean1, mu2 = 1/mean2;
+    let g = G, e = E;
+    function rhoG(g){ return lambda / (g*mu1); }
+    function rhoE(e){ return lambda / (e*mu2); }
+    while (rhoG(g) > target) g++;
+    while (rhoE(e) > target) e++;
+    return { g, e, rhoG: lambda/(g*mu1), rhoE: lambda/(e*mu2) };
+  }
+
+  function formatRho(lambda, G, mean1, E, mean2) {
+    const mu1 = 1/mean1, mu2 = 1/mean2;
+    const r1 = lambda/(G*mu1), r2 = lambda/(E*mu2);
+    return { r1, r2, r1Html: classifyRho(lambda/(G*mu1)), r2Html: classifyRho(lambda/(E*mu2)) };
+  }
+
+  function runScenario(params) {
+    const { seed, T, lambda, G, mean1, E, mean2 } = params;
+    // Render params
+    lambdaVal.textContent = lambda.toFixed(2);
+    gVal.textContent = ""+G;
+    s1Val.textContent = mean1.toFixed(2);
+    eVal.textContent = ""+E;
+    s2Val.textContent = mean2.toFixed(2);
+    Tval.textContent = ""+T;
+    seedVal.textContent = ""+seed;
+
+    // Base simulation
+    const base = simulate(seed, T, lambda, G, mean1, E, mean2);
+    const avg = base.waits.length ? base.waits.reduce((a,b)=>a+b,0)/base.waits.length : 0;
+    const p95 = percentile(base.waits, 0.95);
+    avgEl.textContent = avg.toFixed(2) + " min";
+    p95El.textContent = p95.toFixed(2) + " min";
+    thrEl.textContent = base.processed + " / " + base.arrivals;
+
+    // Histogram
+    drawHist(base.waits);
+
+    // CSV link
+    const csv = toCSV(base.waits);
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    csvEl.href = url;
+
+    // Suggestion + what-ifs
+    const sug = staffingSuggestion(lambda, G, mean1, E, mean2, 0.90);
+    const rhoBase = formatRho(lambda, G, mean1, E, mean2);
+    const rhoG = formatRho(lambda, G+1, mean1, E, mean2);
+    const rhoE = formatRho(lambda, G, mean1, E+1, mean2);
+
+    function tr(name, rhoHtml1, rhoHtml2, sim) {
+      return `<tr>
+        <td>${name}</td>
+        <td>${rhoHtml1}</td>
+        <td>${rhoHtml2}</td>
+        <td>${sim.avg.toFixed(2)} min</td>
+        <td>${sim.p95.toFixed(2)} min</td>
+        <td>${sim.proc} / ${sim.arr}</td>
+      </tr>`;
+    }
+    const simG = simulate(seed+1, T, lambda, G+1, mean1, E, mean2);
+    const simE = simulate(seed+2, T, lambda, G, mean1, E+1, mean2);
+    const simS = simulate(seed+3, T, lambda, sug.g, mean1, sug.e, mean2);
+
+    suggBody.innerHTML = ""
+      + tr("Baseline", rhoBase.r1Html, rhoBase.r2Html, {avg, p95, proc: base.processed, arr: base.arrivals})
+      + tr("What-if: +1 gangway", rhoG.r1Html, rhoG.r2Html, {avg: simG.waits.reduce((a,b)=>a+b,0)/Math.max(1,simG.waits.length), p95: percentile(simG.waits,0.95), proc: simG.processed, arr: simG.arrivals})
+      + tr("What-if: +1 elevator", rhoE.r1Html, rhoE.r2Html, {avg: simE.waits.reduce((a,b)=>a+b,0)/Math.max(1,simE.waits.length), p95: percentile(simE.waits,0.95), proc: simE.processed, arr: simE.arrivals})
+      + tr(`Suggestion (ρ≤0.90) → G=${sug.g}, E=${sug.e}`, classifyRho(sug.rhoG), classifyRho(sug.rhoE), {avg: simS.waits.reduce((a,b)=>a+b,0)/Math.max(1,simS.waits.length), p95: percentile(simS.waits,0.95), proc: simS.processed, arr: simS.arrivals});
+
+    // Permalink
+    permalink({seed, T, lambda, G, mean1, E, mean2});
+  }
+
+  function randomScenario() {
+    // Broad but reasonable ranges for embark windows
+    const seed = (Math.random()*1e9)>>>0;
+    const T = [180, 240, 300][Math.floor(Math.random()*3)];   // minutes
+    const lambda = +(Math.random()*4.0 + 1.0).toFixed(2);      // 1–5 pax/min
+    const G = Math.floor(Math.random()*3)+2;                   // 2–4 gangways
+    const mean1 = +(Math.random()*0.9 + 0.4).toFixed(2);       // 0.4–1.3 min per pax
+    const E = Math.floor(Math.random()*6)+3;                   // 3–8 elevators
+    const mean2 = +(Math.random()*1.8 + 0.8).toFixed(2);       // 0.8–2.6 min per pax
+    return { seed, T, lambda, G, mean1, E, mean2 };
+  }
+
+  function parseHash() {
+    if (!location.hash) return null;
+    const q = new URLSearchParams(location.hash.slice(1));
+    const p = {
+      seed: +(q.get("seed")||0),
+      T: +(q.get("T")||0),
+      lambda: +(q.get("lambda")||0),
+      G: +(q.get("G")||0),
+      mean1: +(q.get("mean1")||0),
+      E: +(q.get("E")||0),
+      mean2: +(q.get("mean2")||0)
+    };
+    if (Object.values(p).some(v => !isFinite(v) || v<=0)) return null;
+    return p;
+  }
+
+  genBtn.addEventListener("click", () => {
+    const p = randomScenario();
+    runScenario(p);
+  });
+
+  // initial: load permalink if present, else generate
+  const init = parseHash() || randomScenario();
+  runScenario(init);
+})();
+
+// Header timestamps
+(function() {
+  const now = new Date();
+  document.getElementById("updated").textContent = now.toISOString().slice(0,10);
+  document.getElementById("year").textContent = now.getFullYear();
+})();
+</script>
+</body>
+</html>
