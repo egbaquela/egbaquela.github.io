@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Backpropagation paso a paso — Regresión (2 ocultas → salida lineal)</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#78a6ff; --border:#1e2646;
+    --ok:#21c07a; --warn:#ffb454; --err:#ef476f;
+    --c-point:#8ec5ff; --c-line:#ffd166; --c-res:#ef476f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+  }
+  .container{max-width:1100px; margin:0 auto; padding:28px 16px 60px;}
+  header{display:grid; gap:8px; margin-bottom:18px}
+  h1{margin:0; font-size:clamp(22px, 2vw + 16px, 34px)}
+  .muted{color:var(--muted)}
+  .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .pill{display:inline-block; background:#0e1a3c; border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:12px; color:var(--muted)}
+  .dot{width:10px; height:10px; border-radius:50%}
+  .c-point{background:var(--c-point)} .c-line{background:var(--c-line)} .c-res{background:var(--c-res)}
+  .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+  .card{
+    grid-column:span 8; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)
+  }
+  .side{grid-column:span 4; display:flex; flex-direction:column; gap:16px}
+  @media (max-width: 980px){ .card,.side{grid-column:1 / -1} }
+  canvas{width:100%; height:460px; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+  .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+  .controls{display:grid; gap:12px}
+  .row{display:grid; grid-template-columns: 160px 1fr auto; gap:10px; align-items:center}
+  .row input[type="range"]{width:100%}
+  input[type="number"], select{
+    background:#0d1631; color:var(--ink); border:1px solid var(--border); border-radius:10px; padding:6px 8px; width:100%;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+    background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+  }
+  .btn:active{transform:translateY(1px)}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+  th:first-child, td:first-child{text-align:left}
+  .mono{font:13px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+  details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+  summary{cursor:pointer}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media (max-width:560px){ .row{grid-template-columns: 120px 1fr auto} .cols{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Backpropagation paso a paso — Regresión (2 ocultas Sigmoide/ReLU → salida lineal)</h1>
+      <div class="muted">Misma red y problema: ŷ = v₁·ϕ(w₁x+b₁) + v₂·ϕ(w₂x+b₂) + c. Mostramos <em>forward</em>, derivadas y gradientes.</div>
+      <div class="legend">
+        <span class="pill"><span class="dot c-point"></span> puntos</span>
+        <span class="pill"><span class="dot c-line"></span> curva predicha</span>
+        <span class="pill"><span class="dot c-res"></span> residuos</span>
+        <span class="pill">L = (y − ŷ)² (MSE por muestra)</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <canvas id="plot" width="900" height="460" aria-label="Gráfico de regresión con NN"></canvas>
+      </div>
+
+      <aside class="side">
+        <div class="panel controls">
+          <div class="row">
+            <label for="w1">w₁ (x → s₁)</label>
+            <input id="w1" type="range" min="-12" max="12" step="0.1" value="4.0" />
+            <output id="w1Val">4.0</output>
+          </div>
+          <div class="row">
+            <label for="b1">b₁</label>
+            <input id="b1" type="range" min="-10" max="10" step="0.1" value="0.0" />
+            <output id="b1Val">0.0</output>
+          </div>
+          <div class="row">
+            <label for="w2">w₂ (x → s₂)</label>
+            <input id="w2" type="range" min="-12" max="12" step="0.1" value="-4.0" />
+            <output id="w2Val">-4.0</output>
+          </div>
+          <div class="row">
+            <label for="b2">b₂</label>
+            <input id="b2" type="range" min="-10" max="10" step="0.1" value="0.0" />
+            <output id="b2Val">0.0</output>
+          </div>
+          <div class="row">
+            <label for="v1">v₁ (s₁ → ŷ)</label>
+            <input id="v1" type="range" min="-10" max="10" step="0.1" value="1.2" />
+            <output id="v1Val">1.2</output>
+          </div>
+          <div class="row">
+            <label for="v2">v₂ (s₂ → ŷ)</label>
+            <input id="v2" type="range" min="-10" max="10" step="0.1" value="-1.0" />
+            <output id="v2Val">-1.0</output>
+          </div>
+          <div class="row">
+            <label for="c0">c (bias salida)</label>
+            <input id="c0" type="range" min="-10" max="10" step="0.1" value="1.0" />
+            <output id="c0Val">1.0</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="target">Objetivo</label>
+              <select id="target">
+                <option value="piecewise">Recta partida</option>
+                <option value="smooth">Curva suave</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="sigma">Ruido σ</label>
+              <input id="sigma" type="number" step="0.1" value="0.6" />
+            </div>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="n">Muestras N</label>
+              <input id="n" type="number" min="20" max="1000" step="10" value="120" />
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="act">Activación oculta</label>
+              <select id="act">
+                <option value="sigmoid" selected>Sigmoide</option>
+                <option value="relu">ReLU</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="alpha">α (leak ReLU, backward)</label>
+              <input id="alpha" type="number" step="0.001" value="0.01" />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+            <button id="regen" class="btn" type="button">Regenerar datos</button>
+            <button id="resetGood" class="btn" type="button">Reset razonable</button>
+            <button id="resetHe" class="btn" type="button" title="He init (ReLU)">Reset He</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <details open>
+            <summary class="muted">Entrenar</summary>
+            <div class="cols" style="margin-top:8px;">
+              <div>
+                <label class="muted" for="lr">LR</label>
+                <input id="lr" type="number" step="0.01" value="0.05" />
+              </div>
+              <div>
+                <label class="muted" for="epochs">Épocas</label>
+                <input id="epochs" type="number" step="50" value="500" />
+              </div>
+            </div>
+            <div class="cols" style="margin-top:8px;">
+              <div>
+                <label class="muted" for="opt">Optimizador</label>
+                <select id="opt">
+                  <option value="gd">GD</option>
+                  <option value="adam" selected>Adam</option>
+                </select>
+              </div>
+              <div>
+                <label class="muted" for="batch">Batch</label>
+                <input id="batch" type="number" step="1" value="32" />
+              </div>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="train" class="btn" type="button">Entrenar (épocas)</button>
+              <button id="step" class="btn" type="button" title="Un paso con el batch actual">Un paso</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="panel mono" id="metrics">
+          <div><strong>RMSE:</strong> <span id="rmse" class="ok">–</span></div>
+          <div><strong>MSE:</strong> <span id="mse">–</span></div>
+          <div><strong>Error medio (bias):</strong> <span id="bias">–</span></div>
+        </div>
+      </aside>
+
+      <!-- Backprop paso a paso -->
+      <div class="card" style="grid-column:1 / -1;">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+          <span class="muted">Backprop paso a paso</span>
+          <label class="muted" style="display:flex; align-items:center; gap:6px;">
+            <input id="modeBatch" type="checkbox"/> Modo batch (gradientes promedio)
+          </label>
+          <label class="muted" style="display:flex; align-items:center; gap:6px;">
+            <span>Muestra</span>
+            <input id="idx" type="number" min="1" step="1" value="1" style="width:80px"/>
+          </label>
+        </div>
+
+        <div class="panel mono" id="math">
+          <!-- Aquí se inyecta la explicación con fórmulas y números -->
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  // ======= Utils =======
+  const $ = (s)=>document.querySelector(s);
+  const sigmoid = (z)=> 1/(1+Math.exp(-z));
+  function mulberry32(seed){ let t = seed>>>0; return function(){
+    t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r);
+    return ((r ^ (r>>>14))>>>0) / 4294967296;
+  }}
+  function randn(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  const getVar=(name)=> getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const fmt=(v,d=4)=> !isFinite(v)?'–': (Math.abs(v)>=100 ? v.toFixed(2): Math.abs(v)>=10? v.toFixed(3): v.toFixed(d));
+
+  // ======= Estado =======
+  const state = {
+    data: [],
+    xlim: [-5,5], ypad:0.2,
+    // pesos
+    w1:4, b1:0, w2:-4, b2:0, v1:1.2, v2:-1, c:1,
+    // datos
+    target:'piecewise', sigma:0.6, n:120, seed:1234,
+    // activación
+    act:'sigmoid', alpha:0.01,
+    // training
+    opt:'adam', batch:32, lr:0.05, epochs:500,
+  };
+
+  // DOM
+  const canvas=$('#plot'), ctx=canvas.getContext('2d');
+  const w1Inp=$('#w1'), b1Inp=$('#b1'), w2Inp=$('#w2'), b2Inp=$('#b2'), v1Inp=$('#v1'), v2Inp=$('#v2'), c0Inp=$('#c0');
+  const w1Val=$('#w1Val'), b1Val=$('#b1Val'), w2Val=$('#w2Val'), b2Val=$('#b2Val'), v1Val=$('#v1Val'), v2Val=$('#v2Val'), c0Val=$('#c0Val');
+  const targetSel=$('#target'), sigmaInp=$('#sigma'), nInp=$('#n'), seedInp=$('#seed');
+  const actSel=$('#act'), alphaInp=$('#alpha');
+  const regenBtn=$('#regen'), resetGoodBtn=$('#resetGood'), resetHeBtn=$('#resetHe');
+  const rmseEl=$('#rmse'), mseEl=$('#mse'), biasEl=$('#bias');
+  const lrInp=$('#lr'), epochsInp=$('#epochs'), optSel=$('#opt'), batchInp=$('#batch');
+  const trainBtn=$('#train'), stepBtn=$('#step');
+  const idxInp=$('#idx'), modeBatchChk=$('#modeBatch');
+  const mathBox=$('#math');
+
+  // Activaciones
+  const actSpec = {
+    sigmoid: {
+      name:'Sigmoide',
+      f:(z)=> sigmoid(z),
+      df_from_s:(s)=> s*(1-s),
+      needs_z:false
+    },
+    relu: {
+      name:'ReLU',
+      f:(z)=> z>0? z: 0,
+      df_from_z:(z,alpha)=> z>0? 1: alpha, // leaky en backward
+      needs_z:true
+    }
+  };
+
+  // ======= Datos =======
+  function genData(){
+    const rng = mulberry32(+state.seed || 0);
+    const N = Math.max(20, +state.n|0), s = Math.max(0, +state.sigma);
+    const data=[];
+    for(let i=0;i<N;i++){
+      const x = -4 + 8*rng();
+      let y;
+      if (state.target==='piecewise'){
+        const t=0, m1=1.1, q1=0.3, m2=-0.7, q2=2.0;
+        y = (x<t ? m1*x + q1 : m2*x + q2) + randn(rng)*s;
+      } else {
+        y = Math.sin(x) + 0.35*x + randn(rng)*s;
+      }
+      data.push({x,y});
+    }
+    state.data = data;
+
+    const xs = data.map(d=>d.x);
+    const xMin = Math.min(...xs), xMax = Math.max(...xs);
+    const pad = 0.10*(xMax - xMin || 1);
+    state.xlim = [xMin - pad, xMax + pad];
+  }
+
+  // ======= Modelo =======
+  function fhat(x, params=state){
+    const spec = actSpec[params.act];
+    const z1 = params.w1*x + params.b1;
+    const z2 = params.w2*x + params.b2;
+    const s1 = spec.f(z1);
+    const s2 = spec.f(z2);
+    return params.v1*s1 + params.v2*s2 + params.c;
+  }
+
+  // Métricas
+  function metrics(){
+    const n = state.data.length;
+    if (!n) return {rmse:NaN, mse:NaN, bias:NaN};
+    let sse=0, se=0;
+    for (let i=0;i<n;i++){
+      const {x,y} = state.data[i];
+      const yhat = fhat(x);
+      const e = y - yhat;
+      sse += e*e; se += e;
+    }
+    const mse = sse/n, rmse=Math.sqrt(mse), bias=se/n;
+    return {rmse,mse,bias};
+  }
+
+  // ======= Backprop (por muestra) =======
+  function backpropOne(x, y, params=state){
+    const {w1,w2,b1,b2,v1,v2,c, act, alpha} = params;
+    const spec = actSpec[act];
+
+    // Forward
+    const z1 = w1*x + b1;
+    const z2 = w2*x + b2;
+    const s1 = spec.f(z1);
+    const s2 = spec.f(z2);
+    const yhat = v1*s1 + v2*s2 + c;
+    const e = y - yhat;       // residuo
+    const L = e*e;            // (y - yhat)^2
+
+    // Gradientes salida
+    const dL_dyhat = -2*e;    // ∂(y-ŷ)²/∂ŷ = 2(ŷ-y) = -2e
+    const dL_dv1 = dL_dyhat * s1;
+    const dL_dv2 = dL_dyhat * s2;
+    const dL_dc  = dL_dyhat * 1;
+
+    // Gradientes ocultas
+    let ds1, ds2;
+    if (act==='sigmoid'){
+      ds1 = s1*(1-s1);
+      ds2 = s2*(1-s2);
+    } else {
+      ds1 = spec.df_from_z(z1, alpha);
+      ds2 = spec.df_from_z(z2, alpha);
+    }
+
+    const dL_dz1 = dL_dyhat * v1 * ds1;
+    const dL_dz2 = dL_dyhat * v2 * ds2;
+
+    const dL_dw1 = dL_dz1 * x;
+    const dL_db1 = dL_dz1 * 1;
+    const dL_dw2 = dL_dz2 * x;
+    const dL_db2 = dL_dz2 * 1;
+
+    return {
+      forward:{x,y,z1,z2,s1,s2,yhat,e,L},
+      grads:{
+        dL_dyhat, dL_dv1, dL_dv2, dL_dc,
+        dL_dz1, dL_dz2, dL_dw1, dL_db1, dL_dw2, dL_db2
+      }
+    };
+  }
+
+  // Gradientes promedio en batch de índices idxs[]
+  function backpropBatch(idxs, params=state){
+    const acc = {dL_dv1:0,dL_dv2:0,dL_dc:0,dL_dw1:0,dL_db1:0,dL_dw2:0,dL_db2:0, loss:0};
+    for(const i of idxs){
+      const {x,y} = params.data[i];
+      const bp = backpropOne(x,y,params);
+      acc.dL_dv1 += bp.grads.dL_dv1;
+      acc.dL_dv2 += bp.grads.dL_dv2;
+      acc.dL_dc  += bp.grads.dL_dc;
+      acc.dL_dw1 += bp.grads.dL_dw1;
+      acc.dL_db1 += bp.grads.dL_db1;
+      acc.dL_dw2 += bp.grads.dL_dw2;
+      acc.dL_db2 += bp.grads.dL_db2;
+      acc.loss   += bp.forward.L;
+    }
+    const n = idxs.length || 1;
+    for (const k of Object.keys(acc)) acc[k] /= n;
+    return acc;
+  }
+
+  // ======= Entrenamiento (GD/Adam + minibatch) =======
+  async function trainEpochs(epochs){
+    const lr     = +state.lr || 0.05;
+    const batch  = Math.max(1, +state.batch|0);
+    const useAdam = (state.opt === 'adam');
+    const beta1=0.9, beta2=0.999, eps=1e-8;
+    let {w1,w2,b1,b2,v1,v2,c} = state;
+    let m = {w1:0,w2:0,b1:0,b2:0,v1:0,v2:0,c:0};
+    let v = {w1:0,w2:0,b1:0,b2:0,v1:0,v2:0,c:0};
+    let t = 0;
+
+    const N = state.data.length;
+    let best=Infinity, stall=0, patience=8;
+
+    for (let e=0; e<epochs; e++){
+      const idxs=[...Array(N).keys()];
+      for (let i=N-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [idxs[i],idxs[j]]=[idxs[j],idxs[i]]; }
+
+      for (let k=0;k<N;k+=batch){
+        const end=Math.min(N,k+batch), cur=idxs.slice(k,end);
+        const g = backpropBatch(cur, {...state,w1,w2,b1,b2,v1,v2,c});
+
+        if (useAdam){
+          t+=1;
+          const grads = {w1:g.dL_dw1,w2:g.dL_dw2,b1:g.dL_db1,b2:g.dL_db2,v1:g.dL_dv1,v2:g.dL_dv2,c:g.dL_dc};
+          for (const key of Object.keys(grads)){
+            m[key]=beta1*m[key]+(1-beta1)*grads[key];
+            v[key]=beta2*v[key]+(1-beta2)*grads[key]*grads[key];
+            const mhat=m[key]/(1-Math.pow(beta1,t));
+            const vhat=v[key]/(1-Math.pow(beta2,t));
+            const step= lr*mhat/(Math.sqrt(vhat)+eps);
+            if (key==='w1') w1-=step; if (key==='w2') w2-=step; if (key==='b1') b1-=step;
+            if (key==='b2') b2-=step; if (key==='v1') v1-=step; if (key==='v2') v2-=step; if (key==='c') c-=step;
+          }
+        } else {
+          w1 -= lr*g.dL_dw1; w2 -= lr*g.dL_dw2; b1 -= lr*g.dL_db1; b2 -= lr*g.dL_db2; v1 -= lr*g.dL_dv1; v2 -= lr*g.dL_dv2; c -= lr*g.dL_dc;
+        }
+      }
+
+      Object.assign(state,{w1,w2,b1,b2,v1,v2,c});
+      if ((e+1)%50===0 || e===epochs-1){
+        refresh(false);
+        const {mse}=metrics();
+        if (mse<best-1e-6){best=mse; stall=0;} else {stall+=1;}
+        await new Promise(r=>requestAnimationFrame(r));
+        if (stall>=patience) break;
+      }
+    }
+    Object.assign(state,{w1,w2,b1,b2,v1,v2,c});
+    refresh(false);
+  }
+
+  function oneStep(){
+    const lr     = +state.lr || 0.05;
+    const batch  = Math.max(1, +state.batch|0);
+    const useAdam = (state.opt === 'adam');
+    const beta1=0.9, beta2=0.999, eps=1e-8;
+
+    let {w1,w2,b1,b2,v1,v2,c} = state;
+    if (!state._m){ state._m={w1:0,w2:0,b1:0,b2:0,v1:0,v2:0,c:0}; state._v={w1:0,w2:0,b1:0,b2:0,v1:0,v2:0,c:0}; state._t=0; }
+    const N = state.data.length;
+    const idxs=[...Array(N).keys()];
+    for (let i=N-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [idxs[i],idxs[j]]=[idxs[j],idxs[i]]; }
+    const cur=idxs.slice(0,Math.min(batch,N));
+    const g = backpropBatch(cur, state);
+
+    if (useAdam){
+      state._t += 1;
+      const grads = {w1:g.dL_dw1,w2:g.dL_dw2,b1:g.dL_db1,b2:g.dL_db2,v1:g.dL_dv1,v2:g.dL_dv2,c:g.dL_dc};
+      for (const key of Object.keys(grads)){
+        state._m[key]=0.9*state._m[key]+0.1*grads[key];
+        state._v[key]=0.999*state._v[key]+0.001*grads[key]*grads[key];
+        const mhat=state._m[key]/(1-Math.pow(0.9,state._t));
+        const vhat=state._v[key]/(1-Math.pow(0.999,state._t));
+        const step= lr*mhat/(Math.sqrt(vhat)+eps);
+        if (key==='w1') w1-=step; if (key==='w2') w2-=step; if (key==='b1') b1-=step;
+        if (key==='b2') b2-=step; if (key==='v1') v1-=step; if (key==='v2') v2-=step; if (key==='c') c-=step;
+      }
+    } else {
+      w1 -= lr*g.dL_dw1; w2 -= lr*g.dL_dw2; b1 -= lr*g.dL_db1; b2 -= lr*g.dL_db2; v1 -= lr*g.dL_dv1; v2 -= lr*g.dL_dv2; c -= lr*g.dL_dc;
+    }
+    Object.assign(state,{w1,w2,b1,b2,v1,v2,c});
+    refresh(false);
+  }
+
+  // ======= Dibujo =======
+  function draw(){
+    const [xmin,xmax]=state.xlim;
+
+    let ymin= Infinity, ymax=-Infinity;
+    for (const {y} of state.data){ if (y<ymin) ymin=y; if (y>ymax) ymax=y; }
+    const S=300, dx=(xmax-xmin)/S;
+    for (let i=0;i<=S;i++){
+      const y = fhat(xmin + i*dx);
+      if (y<ymin) ymin=y; if (y>ymax) ymax=y;
+    }
+    const padY = state.ypad * (ymax - ymin || 1);
+    ymin -= padY; ymax += padY;
+
+    const W=canvas.width, H=canvas.height;
+    const m={l:48, r:16, t:18, b:44};
+    const plotW=W-m.l-m.r, plotH=H-m.t-m.b;
+
+    const x2px=(x)=> m.l + (x - xmin)/(xmax-xmin)*plotW;
+    const y2px=(y)=> m.t + (1 - (y - ymin)/(ymax-ymin))*plotH;
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0c1226'; roundRect(ctx, m.l, m.t, plotW, plotH, 10); ctx.fill();
+
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    drawGrid(ctx, x2px, y2px, xmin, xmax, ymin, ymax, m, W, H);
+
+    ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.2;
+    if (ymin<0 && ymax>0){ line(ctx, m.l, y2px(0), m.l+plotW, y2px(0)); }
+    if (xmin<0 && xmax>0){ line(ctx, x2px(0), m.t, x2px(0), m.t+plotH); }
+
+    // residuos
+    ctx.strokeStyle = getVar('--c-res'); ctx.lineWidth=1.2;
+    for (const {x,y} of state.data){
+      const yhat = fhat(x);
+      line(ctx, x2px(x), y2px(y), x2px(x), y2px(yhat));
+    }
+
+    // puntos
+    ctx.fillStyle=getVar('--c-point');
+    for (const {x,y} of state.data){ dot(ctx, x2px(x), y2px(y), 3.0); }
+
+    // curva predicha
+    ctx.strokeStyle=getVar('--c-line'); ctx.lineWidth=2;
+    ctx.beginPath();
+    const S2=400, dxx=(xmax-xmin)/S2;
+    for (let i=0;i<=S2;i++){
+      const x = xmin + i*dxx, y = fhat(x);
+      const X=x2px(x), Y=y2px(y);
+      if (i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+    }
+    ctx.stroke();
+
+    drawTicks(ctx, x2px, y2px, xmin, xmax, ymin, ymax, m, W, H);
+  }
+
+  // Helpers de dibujo
+  function roundRect(ctx, x,y,w,h,r){
+    ctx.beginPath(); ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function dot(ctx,x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+  function niceTicks(min,max,count=6){
+    const span=max-min; if (span<=0 || !isFinite(span)) return {start:min, step:1, count:1};
+    const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+    const nice = norm<1.5?1: norm<3?2: norm<7?5:10;
+    const step=nice*mag; const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+    const n=Math.max(1, Math.round((end-start)/step)+1); return {start, step, count:n};
+  }
+  function drawGrid(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H){
+    const xt=niceTicks(xmin,xmax,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctx, x2px(x), m.t, x2px(x), H-m.b); }
+    const yt=niceTicks(ymin,ymax,6);
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctx, m.l, y2px(y), W-m.r, y2px(y)); }
+  }
+  function drawTicks(ctx,x2px,y2px,xmin,xmax,ymin,ymax,m,W,H){
+    ctx.fillStyle='rgba(231,236,243,0.9)'; ctx.font='12px system-ui, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    const xt=niceTicks(xmin,xmax,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctx.fillText(fmt(x,3), x2px(x), H-m.b+6); }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    const yt=niceTicks(ymin,ymax,6);
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctx.fillText(fmt(y,3), m.l-6, y2px(y)); }
+  }
+
+  // ======= UI/Sync =======
+  function syncSlidersFromState(){
+    w1Inp.value=state.w1; b1Inp.value=state.b1; w2Inp.value=state.w2; b2Inp.value=state.b2; v1Inp.value=state.v1; v2Inp.value=state.v2; c0Inp.value=state.c;
+  }
+  function refresh(resize=true){
+    w1Val.textContent=(+state.w1).toFixed(2); b1Val.textContent=(+state.b1).toFixed(2);
+    w2Val.textContent=(+state.w2).toFixed(2); b2Val.textContent=(+state.b2).toFixed(2);
+    v1Val.textContent=(+state.v1).toFixed(2); v2Val.textContent=(+state.v2).toFixed(2);
+    c0Val.textContent=(+state.c ).toFixed(2);
+
+    const {rmse,mse,bias}=metrics();
+    rmseEl.textContent = isFinite(rmse)? rmse.toFixed(4) : '–';
+    rmseEl.className = (isFinite(rmse))? (rmse<state.sigma*1.4? 'ok' : 'warn') : '';
+    mseEl.textContent  = isFinite(mse)?  mse.toFixed(6)  : '–';
+    biasEl.textContent = isFinite(bias)? bias.toFixed(4) : '–';
+
+    if (resize) resizeCanvasToDisplaySize();
+    draw();
+    renderMath();
+  }
+
+  function resizeCanvasToDisplaySize(){
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(1, canvas.clientWidth);
+    const cssH = Math.max(1, canvas.clientHeight);
+    const wantW = Math.round(cssW * dpr);
+    const wantH = Math.round(cssH * dpr);
+    if (canvas.width!==wantW || canvas.height!==wantH){
+      canvas.width=wantW; canvas.height=wantH;
+    }
+    ctx.setTransform(1,0,0,1,0,0);
+  }
+
+  // ======= Render "Backprop paso a paso" =======
+  function renderMath(){
+    const modeBatch = modeBatchChk.checked;
+    const idx = Math.min(Math.max(1, +idxInp.value|0), state.data.length) - 1;
+
+    if (!modeBatch){
+      const {x,y} = state.data[idx];
+      const bp = backpropOne(x,y,state);
+
+      // Fórmulas + números
+      mathBox.innerHTML = `
+      <div>
+        <div><strong>Forward (muestra #${idx+1})</strong></div>
+        <div>z₁ = w₁·x + b₁ = ${fmt(state.w1)}·${fmt(x)} + ${fmt(state.b1)} = <strong>${fmt(bp.forward.z1)}</strong></div>
+        <div>s₁ = ϕ(z₁) = ${actSpec[state.act].name}(z₁) = <strong>${fmt(bp.forward.s1)}</strong></div>
+        <div>z₂ = w₂·x + b₂ = ${fmt(state.w2)}·${fmt(x)} + ${fmt(state.b2)} = <strong>${fmt(bp.forward.z2)}</strong></div>
+        <div>s₂ = ϕ(z₂) = ${actSpec[state.act].name}(z₂) = <strong>${fmt(bp.forward.s2)}</strong></div>
+        <div>ŷ = v₁·s₁ + v₂·s₂ + c = ${fmt(state.v1)}·${fmt(bp.forward.s1)} + ${fmt(state.v2)}·${fmt(bp.forward.s2)} + ${fmt(state.c)} = <strong>${fmt(bp.forward.yhat)}</strong></div>
+        <div>e = y − ŷ = ${fmt(y)} − ${fmt(bp.forward.yhat)} = <strong>${fmt(bp.forward.e)}</strong></div>
+        <div>L = (y − ŷ)² = <strong>${fmt(bp.forward.L)}</strong></div>
+      </div>
+      <hr style="border-color:#141a33; margin:10px 0;">
+      <div>
+        <div><strong>Backward (derivadas parciales, muestra #${idx+1})</strong></div>
+        <div>∂L/∂ŷ = -2·e = <strong>${fmt(bp.grads.dL_dyhat)}</strong></div>
+        <div>∂L/∂v₁ = (∂L/∂ŷ)·s₁ = <strong>${fmt(bp.grads.dL_dv1)}</strong></div>
+        <div>∂L/∂v₂ = (∂L/∂ŷ)·s₂ = <strong>${fmt(bp.grads.dL_dv2)}</strong></div>
+        <div>∂L/∂c  = (∂L/∂ŷ)·1  = <strong>${fmt(bp.grads.dL_dc)}</strong></div>
+        <div>∂L/∂z₁ = (∂L/∂ŷ)·v₁·ϕ'(z₁) = <strong>${fmt(bp.grads.dL_dz1)}</strong></div>
+        <div>∂L/∂z₂ = (∂L/∂ŷ)·v₂·ϕ'(z₂) = <strong>${fmt(bp.grads.dL_dz2)}</strong></div>
+        <div>∂L/∂w₁ = (∂L/∂z₁)·x = <strong>${fmt(bp.grads.dL_dw1)}</strong></div>
+        <div>∂L/∂b₁ = (∂L/∂z₁)·1 = <strong>${fmt(bp.grads.dL_db1)}</strong></div>
+        <div>∂L/∂w₂ = (∂L/∂z₂)·x = <strong>${fmt(bp.grads.dL_dw2)}</strong></div>
+        <div>∂L/∂b₂ = (∂L/∂z₂)·1 = <strong>${fmt(bp.grads.dL_db2)}</strong></div>
+      </div>
+      `;
+    } else {
+      // Modo batch: promedio de gradientes
+      const N = state.data.length;
+      const idxs = [...Array(N).keys()];
+      const g = backpropBatch(idxs, state);
+
+      mathBox.innerHTML = `
+      <div><strong>Gradientes promedio (sobre batch = N=${N})</strong></div>
+      <table>
+        <thead><tr><th>Parámetro</th><th>Gradiente medio</th></tr></thead>
+        <tbody>
+          <tr><td>∂L/∂v₁</td><td>${fmt(g.dL_dv1)}</td></tr>
+          <tr><td>∂L/∂v₂</td><td>${fmt(g.dL_dv2)}</td></tr>
+          <tr><td>∂L/∂c</td><td>${fmt(g.dL_dc)}</td></tr>
+          <tr><td>∂L/∂w₁</td><td>${fmt(g.dL_dw1)}</td></tr>
+          <tr><td>∂L/∂b₁</td><td>${fmt(g.dL_db1)}</td></tr>
+          <tr><td>∂L/∂w₂</td><td>${fmt(g.dL_dw2)}</td></tr>
+          <tr><td>∂L/∂b₂</td><td>${fmt(g.dL_db2)}</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:8px;">Pérdida media (L̄): <strong>${fmt(g.loss)}</strong></div>
+      <div class="muted" style="margin-top:6px;">Nota: si la activación es ReLU, en el backward usamos leak α=${fmt(state.alpha,3)} para evitar gradientes nulos cuando z≤0.</div>
+      `;
+    }
+  }
+
+  // ======= Listeners =======
+  w1Inp.addEventListener('input',()=>{ state.w1=+w1Inp.value; refresh(false); });
+  b1Inp.addEventListener('input',()=>{ state.b1=+b1Inp.value; refresh(false); });
+  w2Inp.addEventListener('input',()=>{ state.w2=+w2Inp.value; refresh(false); });
+  b2Inp.addEventListener('input',()=>{ state.b2=+b2Inp.value; refresh(false); });
+  v1Inp.addEventListener('input',()=>{ state.v1=+v1Inp.value; refresh(false); });
+  v2Inp.addEventListener('input',()=>{ state.v2=+v2Inp.value; refresh(false); });
+  c0Inp.addEventListener('input',()=>{ state.c =+c0Inp.value; refresh(false); });
+
+  targetSel.addEventListener('change',()=>{ state.target=targetSel.value; });
+  sigmaInp.addEventListener('change',()=>{ state.sigma=Math.max(0,+sigmaInp.value); });
+  nInp.addEventListener('change',()=>{ state.n=Math.max(20,+nInp.value|0); idxInp.max=state.n; });
+  seedInp.addEventListener('change',()=>{ state.seed=+seedInp.value|0; });
+
+  actSel.addEventListener('change',()=>{ state.act=actSel.value; refresh(false); });
+  alphaInp.addEventListener('change',()=>{ state.alpha=Math.max(0,+alphaInp.value); });
+
+  regenBtn.addEventListener('click',()=>{ genData(); idxInp.max=state.n; refresh(); });
+  resetGoodBtn.addEventListener('click',()=>{
+    if (state.act==='relu'){
+      const rng = mulberry32((+state.seed||0)+321);
+      const he = ()=> randn(rng)*Math.sqrt(2/1);
+      state.w1=he(); state.b1=0; state.v1=he();
+      state.w2=he(); state.b2=0; state.v2=he();
+      state.c=0;
+    } else {
+      state.w1= 4.0; state.b1= 0.0; state.v1= 1.2;
+      state.w2=-4.0; state.b2= 0.0; state.v2=-1.0;
+      state.c = 1.0;
+    }
+    syncSlidersFromState(); refresh(false);
+  });
+  resetHeBtn.addEventListener('click',()=>{
+    const rng = mulberry32((+state.seed||0)+999);
+    const he = ()=> randn(rng)*Math.sqrt(2/1);
+    state.w1 = he(); state.w2 = he();
+    state.b1 = 0; state.b2 = 0;
+    state.v1 = he(); state.v2 = he();
+    state.c  = 0;
+    syncSlidersFromState(); refresh(false);
+  });
+
+  lrInp.addEventListener('change',()=>{ state.lr=+lrInp.value; });
+  epochsInp.addEventListener('change',()=>{ state.epochs=+epochsInp.value|0; });
+  optSel.addEventListener('change',()=>{ state.opt=optSel.value; });
+  batchInp.addEventListener('change',()=>{ state.batch=Math.max(1,+batchInp.value|0); });
+
+  trainBtn.addEventListener('click',()=>{ trainEpochs(Math.max(1, +state.epochs|0)); });
+  stepBtn.addEventListener('click',()=>{ oneStep(); });
+
+  idxInp.addEventListener('change',()=>{ idxInp.value = Math.min(Math.max(1, +idxInp.value|0), state.data.length); renderMath(); });
+  modeBatchChk.addEventListener('change',()=> renderMath());
+
+  window.addEventListener('resize', ()=>{ resizeCanvasToDisplaySize(); draw(); });
+
+  // ======= Init =======
+  function init(){
+    genData();
+    idxInp.max = state.n;
+    refresh();
+  }
+  init();
+</script>
+</body>
+</html>
+
