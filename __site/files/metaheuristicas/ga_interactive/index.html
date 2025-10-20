@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Algoritmo Genético — Demo Interactiva</title>
+<style>
+  :root{
+    --bg:#0f1221; --panel:#171a2e; --mut:#ffd166; --ok:#06d6a0; --accent:#8ecae6; --text:#e9eef5; --sub:#a7b1c4; --bad:#ef476f;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial; background:var(--bg); color:var(--text)}
+  header{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid #232746;background:linear-gradient(180deg,#141736, #0f1221)}
+  header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
+  .badge{padding:2px 8px;border-radius:999px;background:#202546;color:var(--sub);font-size:12px}
+
+  .wrap{display:grid;grid-template-columns:330px 1fr; gap:16px; padding:16px; height:calc(100% - 66px)}
+  .panel{background:var(--panel);border:1px solid #262b4d;border-radius:14px; padding:14px; box-shadow:0 10px 24px rgba(0,0,0,.24)}
+  .panel h2{margin:2px 0 10px;font-size:14px;color:var(--sub);font-weight:700;letter-spacing:.2px}
+  .controls label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font-size:13px;color:var(--sub)}
+  .controls input[type="number"], .controls input[type="range"], .controls select{width:160px}
+  .controls input[type="number"], select{background:#0e1125;border:1px solid #2a2f58;color:var(--text);border-radius:8px;padding:6px 8px}
+  .controls input[type="range"]{accent-color:var(--accent)}
+  .btnbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  button{background:#1f2446;border:1px solid #2a2f58;color:var(--text);padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer;transition:transform .05s ease, background .2s;}
+  button:hover{background:#272d5a}
+  button:active{transform:translateY(1px)}
+  .run{background:#3153a3;border-color:#3b60bd}
+  .danger{background:#5a2033;border-color:#7a2a43}
+  .small{font-size:12px;padding:6px 8px}
+
+  .viz{display:grid;grid-template-rows:auto 1fr auto; gap:16px; height:100%}
+  .pop{height:46%;min-height:240px}
+  .ops{height:38%;min-height:200px}
+  .chart{height:180px}
+
+  .poplist{height:100%;overflow:auto;border-radius:10px;border:1px solid #232746;background:#11142a;padding:10px}
+  .row{display:grid;grid-template-columns:30px 1fr 140px 140px; gap:10px; align-items:center; padding:6px 6px; border-radius:8px;}
+  .row.best{background:rgba(6,214,160,.06)}
+  .row .idx{color:#8da1c7;font-weight:700;text-align:center}
+  .row .num{font-variant-numeric:tabular-nums}
+
+  .chrom{height:24px;background:#0b0f23;border:1px solid #1f2a5a;border-radius:8px;display:flex;overflow:hidden}
+  .gene{flex:1;border-right:1px solid #1a2146;background:#1b2352}
+  .gene.one{background:#3948a8}
+  .gene.mut{animation:blink .6s ease 0s 3 alternate;background:linear-gradient(90deg,var(--mut),#ffe39a)}
+  @keyframes blink{from{filter:saturate(2)} to{filter:saturate(1)} }
+
+  .opsgrid{display:grid;grid-template-columns:1fr 1fr; gap:12px}
+  .opcard{background:#11142a;border:1px solid #232746;border-radius:10px;padding:10px}
+  .opcard h3{margin:0 0 6px;font-size:13px;color:var(--sub)}
+  .legend{font-size:12px;color:var(--sub)}
+  .cpmark{position:relative}
+  .cpmark::after{content:"";position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--bad);left:var(--cp-px);box-shadow:0 0 0 1px rgba(239,71,111,.3)}
+
+  canvas{width:100%;height:100%;display:block;background:#0e1229;border:1px solid #232746;border-radius:10px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr); gap:12px}
+  .hint{color:var(--sub);font-size:12px}
+
+  @media (max-width: 1100px){
+    .wrap{grid-template-columns:1fr}
+    .viz{grid-template-rows:auto auto auto}
+    .pop,.ops{height:auto}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Algoritmo Genético — Visual Interactiva</h1>
+    <span class="badge">binario · f(x)=x² · torneo · 1 punto · bit‑flip</span>
+  </header>
+
+  <div class="wrap">
+    <div class="panel">
+      <h2>Controles</h2>
+      <div class="controls">
+        <label>Semilla RNG <input id="seed" type="number" value="1" min="1" max="9999"/></label>
+        <label>Población N <input id="popN" type="number" value="24" min="6" max="200"/></label>
+        <label>Bits por cromosoma (L) <input id="L" type="number" value="12" min="4" max="32"/></label>
+        <label>Rango a <input id="a" type="number" value="-5" step="0.1"/></label>
+        <label>Rango b <input id="b" type="number" value="5" step="0.1"/></label>
+        <label>pc (crossover) <input id="pc" type="range" min="0" max="1" step="0.05" value="0.9"/></label>
+        <label>pm (mutación/bit) <input id="pm" type="range" min="0" max="0.5" step="0.01" value="0.03"/></label>
+        <label>k (torneo) <input id="k" type="number" value="3" min="2" max="6"/></label>
+        <label>Elitismo (1) <input id="elit" type="checkbox" checked/></label>
+        <div class="btnbar">
+          <button id="init">Inicializar</button>
+          <button id="step">Generación +1</button>
+          <button id="run" class="run">▶ Ejecutar</button>
+          <button id="reset" class="danger">Reiniciar</button>
+          <button id="demo" class="small">Demostrar operadores</button>
+        </div>
+        <div class="hint">Consejo: empezá con L=12, N=24, pc=0.9, pm=0.03, k=3. Bajá L a 5 para mostrar convergencia prematura.</div>
+      </div>
+    </div>
+
+    <div class="viz">
+      <div class="panel pop">
+        <h2>Población (mejor → peor)</h2>
+        <div id="pop" class="poplist"></div>
+      </div>
+      <div class="panel ops">
+        <h2>Operadores (selección, cruzamiento, mutación)</h2>
+        <div class="opsgrid">
+          <div class="opcard">
+            <h3>Selección por torneo (k)</h3>
+            <div class="legend" id="selLegend">—</div>
+          </div>
+          <div class="opcard cpmark" id="cpCard">
+            <h3>Cruzamiento de 1 punto (pc)</h3>
+            <div class="legend">Línea roja = punto de corte; amarillo = bits mutados</div>
+            <div id="opsChrom"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel chart">
+        <h2>Convergencia (mejor y promedio)</h2>
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ======= Utilidades RNG determinísticas =======
+function mulberry32(a){return function(){let t = a += 0x6D2B79F5;t = Math.imul(t ^ t >>> 15, t | 1);t ^= t + Math.imul(t ^ t >>> 7, t | 61);return ((t ^ t >>> 14) >>> 0) / 4294967296}}
+let RNG = mulberry32(1);
+function srand(seed){RNG = mulberry32(seed>>>0)}
+function rand(){return RNG()}
+function randi(lo, hi){return Math.floor(lo + rand() * (hi - lo + 1))}
+
+// ======= Modelo GA =======
+const state = {
+  gen: 0,
+  L: 12, N: 24, a: -5, b: 5, pc: .9, pm: .03, k: 3, elit: true,
+  pop: [], costs: [],
+  histBest: [], histAvg: [],
+  lastOps: null,
+  running: false, raf: null
+};
+
+function bitWeights(L){const w=[]; for(let i=L-1;i>=0;--i) w.push(2**i); return w}
+function bin2real(bits, a, b){const L=bits.length; const w=bitWeights(L); let bin=0; for(let i=0;i<L;i++) bin += (bits[i]?1:0)*w[i]; const x = a + bin/(2**L-1)*(b-a); return {x,bin}}
+function fx(x){return x*x}
+
+function initPop(){const {N,L} = state; state.pop = Array.from({length:N}, _=> Array.from({length:L}, __=> rand()<.5));
+  evalPop(); state.gen = 0; state.histBest = []; state.histAvg = []; recordHistory(); drawAll();}
+
+function evalPop(){const {pop,a,b} = state; state.costs = pop.map(bits=> fx(bin2real(bits,a,b).x))}
+function argmin(arr){let m=Infinity, idx=0; for(let i=0;i<arr.length;i++){if(arr[i]<m){m=arr[i]; idx=i}} return idx}
+function recordHistory(){const best = Math.min(...state.costs); const avg = state.costs.reduce((s,c)=>s+c,0)/state.costs.length; state.histBest.push(best); state.histAvg.push(avg)}
+
+function tournamentIndex(k){const {costs,N} = state; let bestIdx = randi(0,N-1); for(let t=1;t<k;t++){const i=randi(0,N-1); if(costs[i]<costs[bestIdx]) bestIdx=i} return bestIdx}
+function onePointCrossover(p1,p2){const L=p1.length; const cp=randi(1,L-2); const c1=p1.slice(0,cp).concat(p2.slice(cp)); const c2=p2.slice(0,cp).concat(p1.slice(cp)); return {c1,c2,cp}}
+function mutate(bits, pm){const L=bits.length; const child = bits.slice(); const muts=[]; for(let i=0;i<L;i++){if(rand()<pm){child[i]=!child[i]; muts.push(i)}} return {child, muts}}
+
+function nextGeneration(){const {pop,costs,N,k,pc,pm,elit} = state; const newPop=[]; const order = [...costs.keys()].sort((i,j)=>costs[i]-costs[j]);
+  if(elit) newPop.push(pop[order[0]].slice());
+  let lastOps=null;
+  while(newPop.length < N){const i = tournamentIndex(k); const j = tournamentIndex(k); const p1=pop[i], p2=pop[j]; let c1, c2, cp=null; if(rand()<pc){const res = onePointCrossover(p1,p2); c1=res.c1; c2=res.c2; cp=res.cp;} else {c1=p1.slice(); c2=p2.slice();}
+    const m1 = mutate(c1,pm); const m2 = mutate(c2,pm); newPop.push(m1.child); if(newPop.length<N) newPop.push(m2.child);
+    lastOps = {p1, p2, cp, child1:m1.child, child2:m2.child, muts1:m1.muts, muts2:m2.muts, i,j};
+  }
+  state.pop = newPop; evalPop(); state.gen++; recordHistory(); state.lastOps = lastOps; drawAll();}
+
+// ======= Dibujo población =======
+const popDiv = document.getElementById('pop');
+function drawPopulation(){const {pop,costs} = state; const order = [...costs.keys()].sort((i,j)=>costs[i]-costs[j]); popDiv.innerHTML = '';
+  order.forEach((idx,rank)=>{
+    const bits = pop[idx]; const {x} = bin2real(bits,state.a,state.b); const row = document.createElement('div'); row.className='row'+(rank===0?' best':'');
+    const idxEl = el('div','idx',String(rank+1));
+    const chromEl = drawChrom(bits, {mut:[], cp:null}); chromEl.style.setProperty('--cp-px', '0px');
+    const xEl = el('div','num','x='+x.toFixed(6)); const fEl = el('div','num','f='+costs[idx].toFixed(6));
+    row.append(idxEl, chromEl, xEl, fEl); popDiv.appendChild(row);
+  })
+}
+function drawChrom(bits, {mut, cp}){const wrap=document.createElement('div'); wrap.className='chrom'+(cp!=null?' cpmark':''); if(cp!=null){ // we compute pixel for pseudo-element
+    const w = 260; wrap.style.width=w+'px'; const px = Math.round((cp/ bits.length) * w); wrap.style.setProperty('--cp-px', px+'px');
+  }
+  bits.forEach((b,i)=>{const g=document.createElement('div'); g.className='gene '+(b?'one':'zero'); if(mut && mut.includes(i)) g.classList.add('mut'); wrap.appendChild(g)});
+  return wrap;
+}
+function el(tag, cls, txt){const d=document.createElement(tag); if(cls) d.className=cls; if(txt!=null) d.textContent=txt; return d}
+
+// ======= Operadores demo =======
+const selLegend = document.getElementById('selLegend');
+const opsChrom = document.getElementById('opsChrom');
+const cpCard = document.getElementById('cpCard');
+function drawOperators(){opsChrom.innerHTML=''; const op=state.lastOps; if(!op){selLegend.textContent='— (aún no hay selección)'; cpCard.style.setProperty('--cp-px','0px'); return;}
+  selLegend.textContent = `ganadores del torneo → padres i=${op.i}, j=${op.j}`;
+  const p1 = drawChrom(op.p1,{mut:[],cp:op.cp}); const p2=drawChrom(op.p2,{mut:[],cp:op.cp});
+  const c1 = drawChrom(op.child1,{mut:op.muts1,cp:op.cp}); const c2=drawChrom(op.child2,{mut:op.muts2,cp:op.cp});
+  const grid = document.createElement('div'); grid.className='grid';
+  grid.append(el('div',null,'Padre A')); grid.append(el('div',null,'Padre B'));
+  grid.append(p1); grid.append(p2);
+  grid.append(el('div',null,'Hijo 1')); grid.append(el('div',null,'Hijo 2'));
+  grid.append(c1); grid.append(c2);
+  opsChrom.appendChild(grid);
+}
+
+// ======= Chart simple (canvas) =======
+const chart = document.getElementById('chart'); const ctx = chart.getContext('2d');
+function drawChart(){const w=chart.clientWidth, h=chart.clientHeight; chart.width=w; chart.height=h; ctx.clearRect(0,0,w,h);
+  const {histBest,histAvg} = state; if(histBest.length===0) return; const max = Math.max(...histAvg); const min = Math.min(...histBest); const pad=10;
+  function yv(v){return h - pad - (v-min)/(max-min+1e-9)*(h-2*pad)}
+  function xv(i){return pad + i/(Math.max(histBest.length-1,1))*(w-2*pad)}
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth=1; for(let i=0;i<=5;i++){const yy=pad+i*(h-2*pad)/5; ctx.beginPath(); ctx.moveTo(pad,yy); ctx.lineTo(w-pad,yy); ctx.stroke()}
+  // best (green)
+  ctx.strokeStyle = '#06d6a0'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xv(0), yv(histBest[0])); for(let i=1;i<histBest.length;i++){ctx.lineTo(xv(i), yv(histBest[i]))} ctx.stroke();
+  // avg (blue)
+  ctx.strokeStyle = '#8ecae6'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xv(0), yv(histAvg[0])); for(let i=1;i<histAvg.length;i++){ctx.lineTo(xv(i), yv(histAvg[i]))} ctx.stroke();
+  // labels
+  ctx.fillStyle='#a7b1c4'; ctx.font='12px system-ui'; ctx.fillText('mejor', 10, 14); ctx.fillStyle='#06d6a0'; ctx.fillRect(52,6,16,4); ctx.fillStyle='#a7b1c4'; ctx.fillText('promedio', 80, 14); ctx.fillStyle='#8ecae6'; ctx.fillRect(150,6,16,4)
+}
+
+// ======= UI handlers =======
+function readControls(){state.L = parseInt(L.value); state.N=parseInt(popN.value); state.a=parseFloat(a.value); state.b=parseFloat(b.value); state.pc=parseFloat(pc.value); state.pm=parseFloat(pm.value); state.k=parseInt(k.value); state.elit=elit.checked; srand(parseInt(seed.value)||1)}
+
+function drawAll(){drawPopulation(); drawOperators(); drawChart();}
+function stepOnce(){readControls(); nextGeneration()}
+
+function runLoop(){if(!state.running) return; stepOnce(); state.raf = requestAnimationFrame(()=>setTimeout(runLoop, 30))}
+
+// Buttons
+const seed = document.getElementById('seed');
+const popN = document.getElementById('popN');
+const L = document.getElementById('L');
+const a = document.getElementById('a');
+const b = document.getElementById('b');
+const pc = document.getElementById('pc');
+const pm = document.getElementById('pm');
+const k = document.getElementById('k');
+const elit = document.getElementById('elit');
+
+document.getElementById('init').onclick = ()=>{readControls(); initPop()};
+document.getElementById('step').onclick = ()=> stepOnce();
+document.getElementById('run').onclick = (e)=>{state.running = !state.running; e.target.textContent = state.running?'⏸ Pausar':'▶ Ejecutar'; if(state.running){runLoop()} else {cancelAnimationFrame(state.raf)}};
+document.getElementById('reset').onclick = ()=>{readControls(); initPop(); state.histBest=[]; state.histAvg=[]; drawAll()};
+document.getElementById('demo').onclick = ()=>{if(state.pop.length===0) initPop(); // fuerza una muestra de operadores sin avanzar generación
+  // simular una selección/crossover sin cambiar población
+  const i = tournamentIndex(state.k), j = tournamentIndex(state.k); const p1=state.pop[i], p2=state.pop[j]; const res = onePointCrossover(p1,p2); const m1=mutate(res.c1,state.pm); const m2=mutate(res.c2,state.pm);
+  state.lastOps = {p1,p2,cp:res.cp, child1:m1.child, child2:m2.child, muts1:m1.muts, muts2:m2.muts, i,j}; drawOperators() };
+
+// Init first view
+readControls(); initPop();
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>
