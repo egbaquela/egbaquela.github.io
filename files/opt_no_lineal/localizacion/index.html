@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Problema de Localización Tipo Weber — Interactivo (GRG)</title>
+<style>
+    :root {
+        --bg-main: #0f172a;
+        --bg-card: #1e253a;
+        --accent: #38bdf8;
+        --accent-light: rgba(56,189,248,0.15);
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+        --radius-xl: 1rem;
+        --radius-lg: .75rem;
+        --radius-md: .5rem;
+        --border-card: #334155;
+        --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                      Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: var(--font-stack);
+        line-height: 1.4;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    header h1 {
+        margin: 0 0 .25rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .5rem;
+    }
+    header p {
+        margin: 0;
+        color: var(--text-dim);
+        font-size: .9rem;
+        max-width: 900px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 360px) 1fr;
+        grid-template-rows: auto auto;
+        gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ---- Card styling ---- */
+    .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 30px 60px rgb(0 0 0 / 0.6);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        position: relative;
+        min-width: 0;
+    }
+
+    .card-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .5rem;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .card-sub {
+        font-size: .8rem;
+        color: var(--text-dim);
+        margin: 0;
+    }
+
+    .cost-display {
+        font-size: .95rem;
+        font-weight: 500;
+        color: var(--accent);
+        background: var(--accent-light);
+        padding: .5rem .75rem;
+        border-radius: var(--radius-md);
+        display: inline-block;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+        max-width: max-content;
+    }
+
+    /* ---- Controls ---- */
+    .sliders-block {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .slider-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: .75rem;
+        align-items: center;
+        font-size: .9rem;
+        color: var(--text-main);
+    }
+
+    .slider-row label {
+        color: var(--text-dim);
+        font-size: .8rem;
+        font-weight: 500;
+        line-height: 1.2;
+        min-width: 4rem;
+    }
+
+    .slider-row output {
+        min-width: 3.5rem;
+        text-align: right;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        font-size: .8rem;
+        background: var(--accent-light);
+        border-radius: var(--radius-md);
+        padding: .25rem .5rem;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        appearance: none;
+        height: 4px;
+        border-radius: 999px;
+        background: #475569;
+        outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.6);
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.6);
+    }
+
+    /* ---- Charts ---- */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        width: 100%;
+    }
+    @media (max-width: 900px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-card {
+        background: radial-gradient(circle at 20% 20%, #2a364f 0%, #1e253a 60%);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1rem 1.25rem;
+        box-shadow: inset 0 0 60px rgb(0 0 0 / 0.4);
+        position: relative;
+        min-width: 0;
+    }
+
+    .chart-card h3 {
+        margin: 0 0 .5rem 0;
+        font-size: .9rem;
+        font-weight: 500;
+        color: var(--text-dim);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: .5rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 240px;
+        border-radius: var(--radius-md);
+        background-color: #0f172a;
+        border: 1px solid #475569;
+        box-shadow: 0 20px 40px rgb(0 0 0 / .8);
+        overflow: hidden;
+    }
+
+    .chart-wrapper.tall {
+        height: 300px;
+    }
+
+    canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* ---- Clientes table ---- */
+    .clients-wrapper {
+        overflow-x: auto;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-card);
+        background-color: #111827;
+        box-shadow: 0 30px 60px rgb(0 0 0 / .7);
+    }
+
+    table {
+        border-collapse: collapse;
+        min-width: 600px;
+        width: 100%;
+        font-size: .8rem;
+        color: var(--text-main);
+    }
+
+    thead {
+        background-color: #1e253a;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    th {
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-dim);
+        padding: .75rem .75rem;
+        white-space: nowrap;
+        border-bottom: 1px solid #475569;
+    }
+    tbody tr:nth-child(even) {
+        background-color: rgba(30,37,58,0.4);
+    }
+    tbody td {
+        padding: .5rem .75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #1e253a;
+    }
+
+    .client-flexcell {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem .75rem;
+    }
+
+    .client-flexcell input[type="range"] {
+        flex: 1 1 140px;
+        min-width: 120px;
+    }
+
+    .client-flexcell .val-box {
+        font-variant-numeric: tabular-nums;
+        font-size: .75rem;
+        font-weight: 500;
+        padding: .25rem .5rem;
+        border-radius: var(--radius-md);
+        background: var(--accent-light);
+        color: var(--accent);
+        line-height: 1.2;
+        min-width: 2.5rem;
+        text-align: right;
+    }
+
+    .w-badge {
+        font-size: .7rem;
+        font-weight: 600;
+        padding: .25rem .4rem;
+        border-radius: var(--radius-md);
+        line-height: 1.2;
+        background: #374151;
+        color: #e2e8f0;
+        min-width: 2rem;
+        text-align: center;
+        box-shadow: 0 10px 20px rgb(0 0 0 / .7);
+    }
+
+    footer {
+        font-size: .7rem;
+        color: var(--text-dim);
+        text-align: center;
+        line-height: 1.4;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>
+        Problema de localización tipo Weber (GRG)
+        <span style="color:var(--accent);font-size:.8rem;font-weight:500;background:var(--accent-light);padding:.25rem .5rem;border-radius:.5rem;">
+            Minimizar Σ wᵢ · dist((x_f,y_f),(xᵢ,yᵢ))
+        </span>
+    </h1>
+    <p>
+        Ajustá manualmente la ubicación del centro candidato <strong>(x_f, y_f)</strong> con sliders.
+        El costo total es la suma de las distancias euclídeas ponderadas por demanda.
+        Abajo podés mover las posiciones y pesos de cada cliente.
+        A la derecha:
+        <ul style="margin:.5rem 0 0 1.25rem;padding:0;color:var(--text-dim);font-size:.8rem;line-height:1.4;">
+            <li>Gráficas costo vs x_f e y_f.</li>
+            <li>Mapa (x,y): clientes y centro, tamaño ∝ wᵢ.</li>
+            <li>Superficie 3D de la función objetivo costo(x_f,y_f).</li>
+        </ul>
+    </p>
+</header>
+
+<main class="layout">
+
+    <!-- CONTROL PANEL -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Centro candidato (x_f, y_f)</h2>
+            <div class="card-sub">Movelo y mirá el impacto en costo total</div>
+        </div>
+
+        <div class="cost-display">
+            Costo total actual = <span id="totalCost">0.00</span>
+        </div>
+
+        <div class="sliders-block">
+            <div class="slider-row">
+                <label for="xfSlider">x_f</label>
+                <input id="xfSlider" type="range" min="0" max="100" step="1" />
+                <output id="xfVal">0</output>
+            </div>
+
+            <div class="slider-row">
+                <label for="yfSlider">y_f</label>
+                <input id="yfSlider" type="range" min="0" max="100" step="1" />
+                <output id="yfVal">0</output>
+            </div>
+        </div>
+
+        <div style="font-size:.7rem;color:var(--text-dim);line-height:1.4;">
+            Nota: las coordenadas del centro son las variables de decisión.
+            La suma ponderada de distancias es la función objetivo a minimizar.
+        </div>
+    </section>
+
+    <!-- CHARTS + MAP + 3D -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Sensibilidad y mapa espacial</h2>
+            <div class="card-sub">Curvas de costo, plano euclídeo y superficie 3D</div>
+        </div>
+
+        <div class="charts-grid">
+            <!-- Costo vs x_f -->
+            <div class="chart-card">
+                <h3>
+                    Costo total vs x_f
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        y_f fijo = <span id="chartFixedY">?</span>
+                    </span>
+                </h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartX" width="500" height="240"></canvas>
+                </div>
+            </div>
+
+            <!-- Costo vs y_f -->
+            <div class="chart-card">
+                <h3>
+                    Costo total vs y_f
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        x_f fijo = <span id="chartFixedX">?</span>
+                    </span>
+                </h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartY" width="500" height="240"></canvas>
+                </div>
+            </div>
+
+            <!-- XY MAP -->
+            <div class="chart-card">
+                <h3>
+                    Plano (x, y) — clientes y centro
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        Centro = ● azul &nbsp;&nbsp; Clientes = ● gris (tamaño ∝ wᵢ)
+                    </span>
+                </h3>
+                <div class="chart-wrapper tall">
+                    <canvas id="chartMap" width="500" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- SUPERFICIE 3D -->
+            <div class="chart-card">
+                <h3>
+                    Superficie costo(x_f, y_f)
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        Punto actual resaltado. 
+                    </span>
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        Mostrando costo * (-1), para mayor claridad en la gráfica. 
+                    </span>
+                </h3>
+                <div class="chart-wrapper tall">
+                    <canvas id="chart3D" width="500" height="300"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- CLIENTS TABLE -->
+    <section class="card" style="grid-column:1 / -1;">
+        <div class="card-header">
+            <h2 class="card-title">Clientes / Demanda</h2>
+            <div class="card-sub">Mové ubicaciones (xᵢ, yᵢ) y pesos wᵢ de cada cliente.</div>
+        </div>
+
+        <div class="clients-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Posición en X</th>
+                        <th>Posición en Y</th>
+                        <th>Demanda wᵢ</th>
+                    </tr>
+                </thead>
+                <tbody id="clientsBody">
+                    <!-- JS va a inyectar filas -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="font-size:.7rem;color:var(--text-dim);line-height:1.4;">
+            Nota: En el Weber clásico, wᵢ representa demanda o “importancia”
+            del cliente i. Minimizamos Σ wᵢ · distancia.
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div>
+        Enrique Gabriel Baquela
+    </div>
+</footer>
+
+<script>
+/*
+    ==========================================================
+    MODELO
+    ----------------------------------------------------------
+    - Objetivo:  sum_i w_i * dist((x_f,y_f),(x_i,y_i))
+    - x_f, y_f sliders
+    - x_i, y_i, w_i sliders por cliente
+    - Vemos:
+        * costo vs x_f e y_f
+        * mapa (x,y)
+        * superficie 3D de costo(x_f,y_f)
+    ==========================================================
+*/
+
+// Datos iniciales
+const customers = [
+    { id: 1,  x: 10, y: 90, w: 8 },
+    { id: 2,  x: 20, y: 75, w: 6 },
+    { id: 3,  x: 30, y: 60, w: 5 },
+    { id: 4,  x: 40, y: 40, w: 7 },
+    { id: 5,  x: 55, y: 65, w: 9 },
+    { id: 6,  x: 65, y: 30, w: 4 },
+    { id: 7,  x: 80, y: 55, w: 6 },
+    { id: 8,  x: 85, y: 15, w: 3 },
+    { id: 9,  x: 15, y: 25, w: 5 },
+    { id: 10, x: 50, y: 10, w: 7 },
+];
+
+// Estado del centro candidato
+const state = {
+    xf: 50,
+    yf: 50,
+};
+
+// Referencias a elementos del DOM
+const xfSlider    = document.getElementById("xfSlider");
+const yfSlider    = document.getElementById("yfSlider");
+const xfVal       = document.getElementById("xfVal");
+const yfVal       = document.getElementById("yfVal");
+const totalCostEl = document.getElementById("totalCost");
+
+const clientsBody = document.getElementById("clientsBody");
+
+const chartXCanvas   = document.getElementById("chartX");
+const chartYCanvas   = document.getElementById("chartY");
+const chartMapCanvas = document.getElementById("chartMap");
+const chart3DCanvas  = document.getElementById("chart3D");
+
+const chartFixedY  = document.getElementById("chartFixedY");
+const chartFixedX  = document.getElementById("chartFixedX");
+
+/*
+    ======================================
+    CÁLCULO DEL COSTO TOTAL
+    ======================================
+*/
+function distance(x1, y1, x2, y2) {
+    const dx = x1 - x2;
+    const dy = y1 - y2;
+    return Math.sqrt(dx*dx + dy*dy);
+}
+
+function totalCost(xf, yf) {
+    let acc = 0;
+    for (const c of customers) {
+        acc += c.w * distance(xf, yf, c.x, c.y);
+    }
+    return acc;
+}
+
+/*
+    ======================================
+    RENDER TABLA DE CLIENTES + SLIDERS
+    ======================================
+*/
+function buildClientsTable() {
+    clientsBody.innerHTML = "";
+
+    customers.forEach((c) => {
+        const tr = document.createElement("tr");
+
+        // Cliente
+        const tdClient = document.createElement("td");
+        tdClient.textContent = "Cliente " + c.id;
+        tr.appendChild(tdClient);
+
+        // X
+        const tdX = document.createElement("td");
+        const xSlider = document.createElement("input");
+        xSlider.type = "range";
+        xSlider.min = "0";
+        xSlider.max = "100";
+        xSlider.step = "1";
+        xSlider.value = c.x;
+        xSlider.id = `cust-x-${c.id}`;
+        const xValBox = document.createElement("span");
+        xValBox.className = "val-box";
+        xValBox.id = `cust-x-val-${c.id}`;
+        xValBox.textContent = c.x.toString();
+
+        xSlider.addEventListener("input", () => {
+            const newX = parseFloat(xSlider.value);
+            c.x = newX;
+            xValBox.textContent = newX.toString();
+            updateAll();
+        });
+
+        tdX.appendChild(xSlider);
+        tdX.appendChild(xValBox);
+        tr.appendChild(tdX);
+
+        // Y
+        const tdY = document.createElement("td");
+        const ySlider = document.createElement("input");
+        ySlider.type = "range";
+        ySlider.min = "0";
+        ySlider.max = "100";
+        ySlider.step = "1";
+        ySlider.value = c.y;
+        ySlider.id = `cust-y-${c.id}`;
+        const yValBox = document.createElement("span");
+        yValBox.className = "val-box";
+        yValBox.id = `cust-y-val-${c.id}`;
+        yValBox.textContent = c.y.toString();
+
+        ySlider.addEventListener("input", () => {
+            const newY = parseFloat(ySlider.value);
+            c.y = newY;
+            yValBox.textContent = newY.toString();
+            updateAll();
+        });
+
+        tdY.appendChild(ySlider);
+        tdY.appendChild(yValBox);
+        tr.appendChild(tdY);
+
+        // w_i
+        const tdW = document.createElement("td");
+        const wSlider = document.createElement("input");
+        wSlider.type = "range";
+        wSlider.min = "1";
+        wSlider.max = "10";
+        wSlider.step = "1";
+        wSlider.value = c.w;
+        wSlider.id = `cust-w-${c.id}`;
+        const wValBox = document.createElement("span");
+        wValBox.className = "val-box";
+        wValBox.id = `cust-w-val-${c.id}`;
+        wValBox.textContent = c.w.toString();
+
+        wSlider.addEventListener("input", () => {
+            const newW = parseFloat(wSlider.value);
+            c.w = newW;
+            wValBox.textContent = newW.toString();
+            updateAll();
+        });
+
+        tdW.appendChild(wSlider);
+        tdW.appendChild(wValBox);
+        tr.appendChild(tdW);
+
+        clientsBody.appendChild(tr);
+    });
+}
+
+/*
+    ======================================
+    CÁLCULO DE CURVAS COSTO VS x_f / y_f
+    ======================================
+*/
+function computeCurveX(fixedY) {
+    const data = [];
+    for (let xf = 0; xf <= 100; xf += 1) {
+        data.push({
+            x: xf,
+            cost: totalCost(xf, fixedY)
+        });
+    }
+    return data;
+}
+
+function computeCurveY(fixedX) {
+    const data = [];
+    for (let yf = 0; yf <= 100; yf += 1) {
+        data.push({
+            y: yf,
+            cost: totalCost(fixedX, yf)
+        });
+    }
+    return data;
+}
+
+/*
+    ======================================
+    DRAW LINE CHARTS 2D
+    ======================================
+*/
+function drawLineChart(canvas, arrXY, currentVal, isXChart, fixedVal) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const margin = {left: 45, right: 15, top: 15, bottom: 30};
+    const domMinX = 0;
+    const domMaxX = 100;
+
+    let minCost = Infinity;
+    let maxCost = -Infinity;
+    for (const p of arrXY) {
+        if (p.cost < minCost) minCost = p.cost;
+        if (p.cost > maxCost) maxCost = p.cost;
+    }
+    if (minCost === maxCost) {
+        maxCost = minCost + 1;
+    }
+
+    function scaleX(v) {
+        return margin.left + ((v - domMinX)/(domMaxX - domMinX)) * (W - margin.left - margin.right);
+    }
+    function scaleY(v) {
+        return H - margin.bottom - ((v - minCost)/(maxCost - minCost)) * (H - margin.top - margin.bottom);
+    }
+
+    // fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, W, H);
+
+    // ejes
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left, H - margin.bottom);
+    ctx.lineTo(W - margin.right, H - margin.bottom);
+    ctx.stroke();
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    // ticks X
+    const xticks = [0,25,50,75,100];
+    xticks.forEach(v => {
+        const xPix = scaleX(v);
+        const yPixAxis = H - margin.bottom;
+        ctx.strokeStyle = "#475569";
+        ctx.beginPath();
+        ctx.moveTo(xPix, yPixAxis);
+        ctx.lineTo(xPix, yPixAxis+4);
+        ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(v.toString(), xPix, yPixAxis+6);
+    });
+
+    // ticks Y
+    const nYTicks = 4;
+    for (let t = 0; t <= nYTicks; t++) {
+        const frac = t / nYTicks;
+        const val = minCost + frac*(maxCost-minCost);
+        const yPix = scaleY(val);
+
+        ctx.strokeStyle = t === 0 ? "#475569" : "rgba(148,163,184,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(margin.left, yPix);
+        ctx.lineTo(W - margin.right, yPix);
+        ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(val.toFixed(0), margin.left - 6, yPix);
+    }
+
+    // curva
+    ctx.beginPath();
+    arrXY.forEach((p, idx) => {
+        const xVal = isXChart ? p.x : p.y;
+        const xPix = scaleX(xVal);
+        const yPix = scaleY(p.cost);
+        if (idx === 0) ctx.moveTo(xPix, yPix);
+        else ctx.lineTo(xPix, yPix);
+    });
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#38bdf8";
+    ctx.stroke();
+
+    // línea vertical en valor actual
+    const curPix = scaleX(currentVal);
+    ctx.strokeStyle = "rgba(56,189,248,0.5)";
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(curPix, margin.top);
+    ctx.lineTo(curPix, H - margin.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // punto actual y etiqueta
+    const curCost = totalCost(
+        isXChart ? currentVal : fixedVal,
+        isXChart ? fixedVal   : currentVal
+    );
+    const curYPix = scaleY(curCost);
+
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(curPix, curYPix, 4, 0, Math.PI*2);
+    ctx.fill();
+
+    const labelText = curCost.toFixed(2);
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText(labelText, curPix + 6, curYPix - 6);
+}
+
+/*
+    ======================================
+    DIBUJO DEL MAPA (x,y)
+    ======================================
+*/
+function drawXYMap(canvas, xf, yf) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const margin = {left: 45, right: 20, top: 20, bottom: 40};
+
+    function scaleX(v){
+        return margin.left + (v / 100) * (W - margin.left - margin.right);
+    }
+    function scaleY(v){
+        return H - margin.bottom - (v / 100) * (H - margin.top - margin.bottom);
+    }
+
+    // fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, W, H);
+
+    // ejes
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1;
+
+    const yAxisPix = scaleY(0);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, yAxisPix);
+    ctx.lineTo(W - margin.right, yAxisPix);
+    ctx.stroke();
+
+    const xAxisPix = scaleX(0);
+    ctx.beginPath();
+    ctx.moveTo(xAxisPix, margin.top);
+    ctx.lineTo(xAxisPix, H - margin.bottom);
+    ctx.stroke();
+
+    // ticks y rejilla
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    const ticks = [0,25,50,75,100];
+    // X ticks
+    ticks.forEach(v => {
+        const xPix = scaleX(v);
+        ctx.strokeStyle = "#475569";
+        ctx.beginPath();
+        ctx.moveTo(xPix, yAxisPix);
+        ctx.lineTo(xPix, yAxisPix+4);
+        ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(v.toString(), xPix, yAxisPix+6);
+
+        ctx.strokeStyle = "rgba(148,163,184,0.07)";
+        ctx.beginPath();
+        ctx.moveTo(xPix, margin.top);
+        ctx.lineTo(xPix, H - margin.bottom);
+        ctx.stroke();
+    });
+
+    // Y ticks
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ticks.forEach(v => {
+        const yPix = scaleY(v);
+
+        ctx.strokeStyle = "#475569";
+        ctx.beginPath();
+        ctx.moveTo(xAxisPix-4, yPix);
+        ctx.lineTo(xAxisPix, yPix);
+        ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(v.toString(), xAxisPix-6, yPix);
+
+        ctx.strokeStyle = "rgba(148,163,184,0.07)";
+        ctx.beginPath();
+        ctx.moveTo(margin.left, yPix);
+        ctx.lineTo(W - margin.right, yPix);
+        ctx.stroke();
+    });
+
+    // radio ∝ demanda
+    function radiusFromDemand(w) {
+        return 2 + 0.5 * w;
+    }
+
+    // clientes
+    for (const c of customers) {
+        const cx = scaleX(c.x);
+        const cy = scaleY(c.y);
+        const r  = radiusFromDemand(c.w);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText("C"+c.id+"(w="+c.w+")", cx+5, cy-4);
+    }
+
+    // centro candidato
+    const fx = scaleX(xf);
+    const fy = scaleY(yf);
+
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(fx, fy, 6, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText(`(${xf.toFixed(0)}, ${yf.toFixed(0)})`, fx+8, fy+6);
+}
+
+/*
+    ======================================
+    === 3D SURFACE: costo(x_f, y_f)    ===
+    ======================================
+*/
+function drawSurface3D(canvas, xf, yf) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, W, H);
+
+    // 1. Construimos una grilla de puntos (x,y,z=costo)
+    const step = 10; // más chico = más denso (pero más pesado)
+    const grid = []; // grid[ix][iy] = {x,y,z}
+    for (let gx = 0; gx <= 100; gx += step) {
+        const col = [];
+        for (let gy = 0; gy <= 100; gy += step) {
+            col.push({
+                x: gx,
+                y: gy,
+                z: totalCost(gx, gy)
+            });
+        }
+        grid.push(col);
+    }
+
+    // 2. Encontrar min/max z para escalar altura
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (let ix = 0; ix < grid.length; ix++) {
+        for (let iy = 0; iy < grid[ix].length; iy++) {
+            const zv = grid[ix][iy].z;
+            if (zv < minZ) minZ = zv;
+            if (zv > maxZ) maxZ = zv;
+        }
+    }
+    const zRange = (maxZ - minZ) || 1;
+    const zScale = 100 / zRange; // controla la "altura" visual en px
+
+    // 3. Función de proyección isométrica
+    function projectPoint(pt) {
+        // isométrico base
+        const isoScaleXY = 2.0;
+        const sxRaw = (pt.x - pt.y) * isoScaleXY;
+        // Muestro Max -f(x)
+        const syRaw = (pt.x + pt.y) * (isoScaleXY * 0.5)
+                      - ( (pt.z - minZ) * zScale );
+
+        // Si quiero mostrar Min f(x)
+        //const syRaw = (pt.x + pt.y) * (isoScaleXY * 0.5)
+        //              + ( (pt.z - minZ) * zScale );         
+
+        // desplazamiento para centrar
+        const offsetX = W * 0.5;
+        const offsetY = H * 0.8;
+
+        return {
+            sx: offsetX + sxRaw,
+            sy: offsetY - syRaw
+        };
+    }
+
+    // 4. Preparamos celdas (polígonos) de la superficie y las ordenamos
+    const cells = [];
+    for (let ix = 0; ix < grid.length-1; ix++) {
+        for (let iy = 0; iy < grid[ix].length-1; iy++) {
+            const p00 = grid[ix][iy];
+            const p10 = grid[ix+1][iy];
+            const p11 = grid[ix+1][iy+1];
+            const p01 = grid[ix][iy+1];
+
+            const avgZ = (p00.z+p10.z+p11.z+p01.z)/4;
+            const avgXY = (
+                (p00.x+p00.y) +
+                (p10.x+p10.y) +
+                (p11.x+p11.y) +
+                (p01.x+p01.y)
+            ) / 4;
+
+            cells.push({
+                pts: [p00,p10,p11,p01],
+                avgZ,
+                avgXY
+            });
+        }
+    }
+
+    // orden tipo "pintor": dibujar primero lo lejano
+    // en esta proyección, mayor (x+y) está "más atrás"
+    cells.sort((a,b)=> b.avgXY - a.avgXY);
+
+    // 5. Dibujar cada celda como un polígono relleno
+    for (const cell of cells) {
+        // color según z promedio
+        const t = (cell.avgZ - minZ) / zRange; // 0..1
+        // interpolo entre #38bdf8 (56,189,248) y #be123c (190,18,60)
+        function lerp(a,b,t){ return a + (b-a)*t; }
+        const r = lerp(56,190,t);
+        const g = lerp(189,18,t);
+        const bcol = lerp(248,60,t);
+        const fillCol = `rgba(${r.toFixed(0)},${g.toFixed(0)},${bcol.toFixed(0)},0.7)`;
+
+        // proyectar esquinas
+        const poly = cell.pts.map(p => projectPoint(p));
+
+        // pintar
+        ctx.beginPath();
+        ctx.moveTo(poly[0].sx, poly[0].sy);
+        for (let k=1; k<poly.length; k++) {
+            ctx.lineTo(poly[k].sx, poly[k].sy);
+        }
+        ctx.closePath();
+        ctx.fillStyle = fillCol;
+        ctx.fill();
+
+        // borde suave
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.stroke();
+    }
+
+    // 6. Ejes de referencia (x_f e y_f crecientes)
+    const origin = {x:0, y:0, z:minZ};
+    const axisX  = {x:100,y:0, z:minZ};
+    const axisY  = {x:0, y:100,z:minZ};
+
+    const oP = projectPoint(origin);
+    const xP = projectPoint(axisX);
+    const yP = projectPoint(axisY);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#94a3b8";
+    ctx.beginPath();
+    ctx.moveTo(oP.sx, oP.sy);
+    ctx.lineTo(xP.sx, xP.sy);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(oP.sx, oP.sy);
+    ctx.lineTo(yP.sx, yP.sy);
+    ctx.stroke();
+
+    ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("x_f →", xP.sx+4, xP.sy);
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("y_f →", yP.sx+4, yP.sy);
+
+    // 7. Punto actual (xf,yf) sobre la superficie
+    const zNow = totalCost(xf, yf);
+    const pNow = projectPoint({x:xf,y:yf,z:zNow});
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(pNow.sx, pNow.sy, 4, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(pNow.sx, pNow.sy, 4, 0, Math.PI*2);
+    ctx.stroke();
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#38bdf8";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(zNow.toFixed(1), pNow.sx+6, pNow.sy-6);
+}
+
+/*
+    ======================================
+    UPDATE GENERAL
+    ======================================
+*/
+function updateAll() {
+    // leer sliders de centro
+    state.xf = parseFloat(xfSlider.value);
+    state.yf = parseFloat(yfSlider.value);
+
+    // actualizar numeritos de centro
+    xfVal.textContent = state.xf.toString();
+    yfVal.textContent = state.yf.toString();
+
+    // costo total
+    const costNow = totalCost(state.xf, state.yf);
+    totalCostEl.textContent = costNow.toFixed(2);
+
+    // actualizar leyendas
+    chartFixedY.textContent = state.yf.toString();
+    chartFixedX.textContent = state.xf.toString();
+
+    // recomputar curvas
+    const curveX = computeCurveX(state.yf);
+    const curveY = computeCurveY(state.xf);
+
+    // redibujar charts 2D
+    drawLineChart(chartXCanvas, curveX, state.xf, true,  state.yf);
+    drawLineChart(chartYCanvas, curveY, state.yf, false, state.xf);
+
+    // redibujar mapa XY (con radios por demanda)
+    drawXYMap(chartMapCanvas, state.xf, state.yf);
+
+    // redibujar superficie 3D
+    drawSurface3D(chart3DCanvas, state.xf, state.yf);
+}
+
+/*
+    ======================================
+    INIT
+    ======================================
+*/
+function init() {
+    // Valores iniciales
+    xfSlider.value = state.xf;
+    yfSlider.value = state.yf;
+    xfVal.textContent = state.xf;
+    yfVal.textContent = state.yf;
+
+    // Construir tabla interactiva de clientes
+    buildClientsTable();
+
+    // Handlers sliders globales
+    xfSlider.addEventListener("input", updateAll);
+    yfSlider.addEventListener("input", updateAll);
+
+    // Primera actualización global
+    updateAll();
+}
+
+// Lanzar
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
+
