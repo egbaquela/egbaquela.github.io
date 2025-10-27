@@ -170,6 +170,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/files/opt_no_lineal/localizacion_con_seleccion/</loc>
+    <lastmod>2025-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/files/ml/clasificacion_arbol/</loc>
     <lastmod>2025-08-14</lastmod>
     <changefreq>monthly</changefreq>

@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Localización Discreta con Presupuesto (Heurística Evolutiva estilo Solver)</title>
+<style>
+    :root {
+        --bg-main: #0f172a;
+        --bg-card: #1e253a;
+        --accent: #38bdf8;
+        --accent-light: rgba(56,189,248,0.15);
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+        --radius-xl: 1rem;
+        --radius-lg: .75rem;
+        --radius-md: .5rem;
+        --border-card: #334155;
+        --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                      Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: var(--font-stack);
+        line-height: 1.4;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    header h1 {
+        margin: 0 0 .25rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .5rem;
+    }
+
+    header p {
+        margin: 0;
+        color: var(--text-dim);
+        font-size: .9rem;
+        max-width: 900px;
+    }
+
+    header ul {
+        margin:.5rem 0 0 1.25rem;
+        padding:0;
+        color:var(--text-dim);
+        font-size:.8rem;
+        line-height:1.4;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: minmax(300px,360px) 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ---- Card styling ---- */
+    .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 30px 60px rgb(0 0 0 / 0.6);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .card-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .5rem;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .card-sub {
+        font-size: .8rem;
+        color: var(--text-dim);
+        margin: 0;
+    }
+
+    /* ---- Facility selector / sliders ---- */
+    .facility-list-block {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .facility-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: .75rem;
+        background-color: #111827;
+        border: 1px solid #475569;
+        border-radius: var(--radius-md);
+        padding: .5rem .75rem;
+        box-shadow: 0 10px 20px rgb(0 0 0 / .6);
+        font-size: .8rem;
+    }
+
+    .facility-checkbox {
+        align-self: flex-start;
+        display: flex;
+        align-items: flex-start;
+        padding-top: .25rem;
+    }
+
+    .facility-checkbox input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: var(--accent);
+    }
+
+    .facility-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.3;
+        font-size: .75rem;
+    }
+
+    .facility-title {
+        color: var(--text-main);
+        font-weight: 500;
+        font-size: .8rem;
+    }
+
+    .facility-meta {
+        color: var(--text-dim);
+        font-size: .7rem;
+    }
+
+    .facility-cost {
+        color: var(--accent);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        font-size: .8rem;
+        background: var(--accent-light);
+        border-radius: var(--radius-md);
+        padding: .25rem .5rem;
+        line-height:1.2;
+    }
+
+    .sliders-block {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .slider-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: .75rem;
+        align-items: center;
+        font-size: .9rem;
+        color: var(--text-main);
+    }
+
+    .slider-row label {
+        color: var(--text-dim);
+        font-size: .8rem;
+        font-weight: 500;
+        line-height: 1.2;
+        min-width: 5.5rem;
+    }
+
+    .slider-row output {
+        min-width: 3.5rem;
+        text-align: right;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        font-size: .8rem;
+        background: var(--accent-light);
+        border-radius: var(--radius-md);
+        padding: .25rem .5rem;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        appearance: none;
+        height: 4px;
+        border-radius: 999px;
+        background: #475569;
+        outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.6);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.6);
+    }
+
+    /* ---- Metrics ---- */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+        gap: .75rem;
+        font-size: .8rem;
+        width: 100%;
+    }
+
+    .metrics-grid > div {
+        background: var(--accent-light);
+        border-radius: var(--radius-md);
+        padding: .5rem .75rem;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        box-shadow: 0 10px 20px rgb(0 0 0 / 0.5);
+    }
+
+    .metrics-label {
+        color: var(--text-dim);
+        font-size: .7rem;
+        line-height: 1.2;
+    }
+
+    .metrics-value {
+        color: var(--accent);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .status-pill {
+        padding: .25rem .5rem;
+        border-radius: var(--radius-md);
+        font-size: .7rem;
+        font-weight: 600;
+        line-height: 1.2;
+        display: inline-block;
+    }
+
+    .status-ok {
+        color: #10b981;
+        background: #10b98133;
+    }
+
+    .status-bad {
+        color: #ef4444;
+        background: #ef444433;
+    }
+
+    /* ---- Map card ---- */
+    .chart-card {
+        background: radial-gradient(circle at 20% 20%, #2a364f 0%, #1e253a 60%);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1rem 1.25rem;
+        box-shadow: inset 0 0 60px rgb(0 0 0 / 0.4);
+        position: relative;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .chart-card h3 {
+        margin: 0 0 .5rem 0;
+        font-size: .9rem;
+        font-weight: 500;
+        color: var(--text-dim);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: .5rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 320px;
+        border-radius: var(--radius-md);
+        background-color: #0f172a;
+        border: 1px solid #475569;
+        box-shadow: 0 20px 40px rgb(0 0 0 / .8);
+        overflow: hidden;
+    }
+
+    canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* ---- Clientes table ---- */
+    .clients-wrapper {
+        overflow-x: auto;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-card);
+        background-color: #111827;
+        box-shadow: 0 30px 60px rgb(0 0 0 / .7);
+    }
+
+    table {
+        border-collapse: collapse;
+        min-width: 650px;
+        width: 100%;
+        font-size: .8rem;
+        color: var(--text-main);
+    }
+
+    thead {
+        background-color: #1e253a;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    th {
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-dim);
+        padding: .75rem .75rem;
+        white-space: nowrap;
+        border-bottom: 1px solid #475569;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: rgba(30,37,58,0.4);
+    }
+
+    tbody td {
+        padding: .5rem .75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #1e253a;
+    }
+
+    .client-flexcell {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem .75rem;
+    }
+
+    .client-flexcell input[type="range"] {
+        flex: 1 1 140px;
+        min-width: 120px;
+    }
+
+    .val-box {
+        font-variant-numeric: tabular-nums;
+        font-size: .75rem;
+        font-weight: 500;
+        padding: .25rem .5rem;
+        border-radius: var(--radius-md);
+        background: var(--accent-light);
+        color: var(--accent);
+        line-height: 1.2;
+        min-width: 2.5rem;
+        text-align: right;
+    }
+
+    .w-badge {
+        font-size: .7rem;
+        font-weight: 600;
+        padding: .25rem .4rem;
+        border-radius: var(--radius-md);
+        line-height: 1.2;
+        background: #374151;
+        color: #e2e8f0;
+        min-width: 2rem;
+        text-align: center;
+        box-shadow: 0 10px 20px rgb(0 0 0 / .7);
+    }
+
+    .assign-badge {
+        font-size: .7rem;
+        font-weight: 600;
+        padding: .25rem .4rem;
+        border-radius: var(--radius-md);
+        line-height: 1.2;
+        background: var(--accent-light);
+        color: var(--accent);
+        min-width: 2rem;
+        text-align: center;
+        box-shadow: 0 10px 20px rgb(0 0 0 / .7);
+        font-variant-numeric: tabular-nums;
+    }
+
+    footer {
+        font-size: .7rem;
+        color: var(--text-dim);
+        text-align: center;
+        line-height: 1.4;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>
+        Localización discreta con presupuesto
+        <span style="color:var(--accent);font-size:.8rem;font-weight:500;background:var(--accent-light);padding:.25rem .5rem;border-radius:.5rem;line-height:1.2;">
+            Abrir centros (binario) + asignar clientes al más cercano
+        </span>
+    </h1>
+    <p>
+        Elegís qué instalaciones abrir (0/1), pagás su costo fijo,
+        y cada cliente se atiende desde el centro abierto más cercano.
+        <ul>
+            <li>Presupuesto máximo para costos fijos.</li>
+            <li>Asignación automática al centro abierto más cercano.</li>
+            <li>Objetivo = costo fijo + distancias ponderadas por demanda.</li>
+        </ul>
+    </p>
+</header>
+
+<main class="layout">
+
+    <!-- IZQUIERDA: Controles -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Centros candidatos y presupuesto</h2>
+            <div class="card-sub">Tildá qué centros abrís. Ajustá el presupuesto permitido.</div>
+        </div>
+
+        <!-- Lista de facilities -->
+        <div id="facilityList" class="facility-list-block">
+            <!-- JS inyecta filas -->
+        </div>
+
+        <!-- Presupuesto -->
+        <div class="sliders-block" style="margin-top:.5rem;">
+            <div class="slider-row">
+                <label for="budgetSlider">Presupuesto</label>
+                <input id="budgetSlider" type="range" min="0" max="300" step="5" />
+                <output id="budgetVal">0</output>
+            </div>
+        </div>
+
+        <div style="font-size:.7rem;color:var(--text-dim);line-height:1.4;">
+            <br>- Variables binarias = qué centros abrir.
+            <br>- Restricción de presupuesto = suma costos fijos ≤ presupuesto.
+        </div>
+    </section>
+
+    <!-- DERECHA: resultados y mapa -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Costo total y mapa</h2>
+            <div class="card-sub">Asignación automática de clientes al centro más cercano abierto.</div>
+        </div>
+
+        <div class="metrics-grid">
+            <div>
+                <div class="metrics-label">Costo distancia ponderada</div>
+                <div class="metrics-value" id="distCostVal">0.00</div>
+            </div>
+            <div>
+                <div class="metrics-label">Costo fijo usado</div>
+                <div class="metrics-value" id="fixedCostVal">0.00</div>
+            </div>
+            <div>
+                <div class="metrics-label">Costo total</div>
+                <div class="metrics-value" id="grandCostVal">0.00</div>
+            </div>
+            <div>
+                <div class="metrics-label">Presupuesto</div>
+                <div class="metrics-value" id="budgetShown">0</div>
+            </div>
+            <div>
+                <div class="metrics-label">Factible (presupuesto & centros)</div>
+                <div class="metrics-value">
+                    <span id="feasStatus" class="status-pill status-ok">Sí</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card" style="margin-top:1rem;">
+            <h3>
+                Plano (x, y) — Clientes, centros abiertos y asignaciones
+                <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                    Clientes = círculos (radio ∝ demanda) • Centros = cuadrados
+                </span>
+            </h3>
+            <div class="chart-wrapper" style="height:320px;">
+                <canvas id="mapCanvas" width="500" height="320"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABAJO: tabla de clientes -->
+    <section class="card" style="grid-column:1 / -1;">
+        <div class="card-header">
+            <h2 class="card-title">Clientes / Demanda / Asignación</h2>
+            <div class="card-sub">
+                Podés mover la posición de los clientes; se reasignan solos. El peso wᵢ es fijo.
+            </div>
+        </div>
+
+        <div class="clients-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Posición en X</th>
+                        <th>Posición en Y</th>
+                        <th>Demanda wᵢ</th>
+                        <th>Asignado a centro</th>
+                    </tr>
+                </thead>
+                <tbody id="clientsBody">
+                    <!-- JS inyecta filas -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="font-size:.7rem;color:var(--text-dim);line-height:1.4;">
+            Nota: Si no abrís ningún centro, el costo es cero, pero no se puede servir a nadie.
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div>
+        Enrique Gabriel Baquela
+    </div>
+</footer>
+
+<script>
+/*
+    ==========================================================
+    MODELO
+    ----------------------------------------------------------
+    - Tenemos centros candidatos j, cada uno con (x_j, y_j) y costo fijo F_j.
+    - Podemos abrir o no cada centro (binario).
+    - Hay un presupuesto máximo permitido para la suma de costos fijos.
+    - Cada cliente i tiene (x_i, y_i), demanda/peso w_i.
+    - Asignamos cada cliente al centro ABIERTO más cercano (distancia euclídea).
+    - Objetivo: costo_total = sum_i w_i * dist_i + sum_centros_abiertos F_j.
+
+    En Excel Solver:
+    - Variables binarias open_j.
+    - Restricción presupuesto.
+    - Función objetivo: costo_total.
+    - Método recomendado: Evolutionary (por no-linealidad / MIN / IF).
+    ==========================================================
+*/
+
+/* ---------- Datos iniciales ---------- */
+// Centros candidatos
+const facilities = [
+    { id: 1, x: 15, y: 80, fixed: 70, open: true  },
+    { id: 2, x: 35, y: 35, fixed: 60, open: true  },
+    { id: 3, x: 70, y: 70, fixed: 90, open: false },
+    { id: 4, x: 85, y: 20, fixed: 85, open: false },
+];
+
+// Clientes (mismo dataset del ejercicio)
+const customers = [
+    { id: 1,  x: 10, y: 90, w: 9 },
+    { id: 2,  x: 20, y: 60, w: 6 },
+    { id: 3,  x: 28, y: 38, w: 7 },
+    { id: 4,  x: 42, y: 70, w: 8 },
+    { id: 5,  x: 55, y: 65, w: 5 },
+    { id: 6,  x: 63, y: 25, w: 6 },
+    { id: 7,  x: 75, y: 55, w: 7 },
+    { id: 8,  x: 82, y: 18, w: 4 },
+    { id: 9,  x: 18, y: 18, w: 5 },
+    { id: 10, x: 50, y: 12, w: 6 },
+    { id: 11, x: 90, y: 80, w: 4 },
+    { id: 12, x: 33, y: 88, w: 5 },
+];
+
+// Estado global
+const state = {
+    budget: 200,
+};
+
+/* ---------- Referencias DOM ---------- */
+const facilityListEl   = document.getElementById("facilityList");
+const budgetSliderEl   = document.getElementById("budgetSlider");
+const budgetValEl      = document.getElementById("budgetVal");
+
+const distCostValEl    = document.getElementById("distCostVal");
+const fixedCostValEl   = document.getElementById("fixedCostVal");
+const grandCostValEl   = document.getElementById("grandCostVal");
+const feasStatusEl     = document.getElementById("feasStatus");
+const budgetShownEl    = document.getElementById("budgetShown");
+
+const clientsBodyEl    = document.getElementById("clientsBody");
+const mapCanvas        = document.getElementById("mapCanvas");
+
+let assignmentSpans = {}; // custId -> span element that shows assigned facility
+
+/* ---------- Utilidades ---------- */
+function distance(x1, y1, x2, y2) {
+    const dx = x1 - x2;
+    const dy = y1 - y2;
+    return Math.sqrt(dx*dx + dy*dy);
+}
+
+function getOpenFacilities(){
+    return facilities.filter(f => f.open);
+}
+
+/**
+ * Para cada cliente:
+ *   - busca centro abierto más cercano
+ *   - acumula costo distancia ponderado
+ * Devuelve {assignments[], totalDistCost}
+ * assignments[k] = {
+ *    custId, cx, cy, w,
+ *    fid (facility id o null),
+ *    fx, fy,
+ *    dist, wCost
+ * }
+ */
+function assignCustomers(openFacs){
+    let totalDistCost = 0;
+    const assignments = [];
+
+    for(const c of customers){
+        let best = null;
+        for(const f of openFacs){
+            const distCF = distance(c.x, c.y, f.x, f.y);
+            if(best === null || distCF < best.dist){
+                best = {
+                    fid: f.id,
+                    fx: f.x,
+                    fy: f.y,
+                    dist: distCF
+                };
+            }
+        }
+
+        if(best === null){
+            // no hay centros abiertos
+            assignments.push({
+                custId: c.id,
+                cx: c.x,
+                cy: c.y,
+                w:  c.w,
+                fid: null,
+                fx: null,
+                fy: null,
+                dist: null,
+                wCost: null
+            });
+        } else {
+            const wCost = c.w * best.dist;
+            totalDistCost += wCost;
+            assignments.push({
+                custId: c.id,
+                cx: c.x,
+                cy: c.y,
+                w:  c.w,
+                fid: best.fid,
+                fx: best.fx,
+                fy: best.fy,
+                dist: best.dist,
+                wCost: wCost
+            });
+        }
+    }
+
+    return { assignments, totalDistCost };
+}
+
+/* ---------- Construir UI dinámica ---------- */
+
+// Lista de facilities con checkboxes
+function buildFacilityList(){
+    facilityListEl.innerHTML = "";
+
+    facilities.forEach(f => {
+        const row = document.createElement("div");
+        row.className = "facility-row";
+
+        const cboxWrap = document.createElement("div");
+        cboxWrap.className = "facility-checkbox";
+        const cbox = document.createElement("input");
+        cbox.type = "checkbox";
+        cbox.checked = f.open;
+        cbox.id = `fac-open-${f.id}`;
+        cbox.addEventListener("change", () => {
+            f.open = cbox.checked;
+            updateAll();
+        });
+        cboxWrap.appendChild(cbox);
+
+        const info = document.createElement("div");
+        info.className = "facility-info";
+        const title = document.createElement("div");
+        title.className = "facility-title";
+        title.textContent = `Centro F${f.id}`;
+        const meta = document.createElement("div");
+        meta.className = "facility-meta";
+        meta.textContent = `(${f.x}, ${f.y})`;
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        const cost = document.createElement("div");
+        cost.className = "facility-cost";
+        cost.textContent = `Fijo = ${f.fixed}`;
+
+        row.appendChild(cboxWrap);
+        row.appendChild(info);
+        row.appendChild(cost);
+
+        facilityListEl.appendChild(row);
+    });
+}
+
+// Tabla de clientes con sliders x,y y asignación
+function buildClientsTable(){
+    clientsBodyEl.innerHTML = "";
+    assignmentSpans = {};
+
+    customers.forEach(c => {
+        const tr = document.createElement("tr");
+
+        // Cliente
+        const tdClient = document.createElement("td");
+        tdClient.textContent = "Cliente " + c.id;
+        tr.appendChild(tdClient);
+
+        // Posición X
+        const tdX = document.createElement("td");
+        //tdX.className = "client-flexcell";
+        const xSlider = document.createElement("input");
+        xSlider.type = "range";
+        xSlider.min = "0";
+        xSlider.max = "100";
+        xSlider.step = "1";
+        xSlider.value = c.x;
+        const xValBox = document.createElement("span");
+        xValBox.className = "val-box";
+        xValBox.textContent = c.x.toString();
+        xSlider.addEventListener("input", () => {
+            c.x = parseFloat(xSlider.value);
+            xValBox.textContent = xSlider.value;
+            updateAll();
+        });
+        tdX.appendChild(xSlider);
+        tdX.appendChild(xValBox);
+        tr.appendChild(tdX);
+
+        // Posición Y
+        const tdY = document.createElement("td");
+        //tdY.className = "client-flexcell";
+        const ySlider = document.createElement("input");
+        ySlider.type = "range";
+        ySlider.min = "0";
+        ySlider.max = "100";
+        ySlider.step = "1";
+        ySlider.value = c.y;
+        const yValBox = document.createElement("span");
+        yValBox.className = "val-box";
+        yValBox.textContent = c.y.toString();
+        ySlider.addEventListener("input", () => {
+            c.y = parseFloat(ySlider.value);
+            yValBox.textContent = ySlider.value;
+            updateAll();
+        });
+        tdY.appendChild(ySlider);
+        tdY.appendChild(yValBox);
+        tr.appendChild(tdY);
+
+        // Demanda w_i
+        const tdW = document.createElement("td");
+        const wBadge = document.createElement("span");
+        wBadge.className = "w-badge";
+        wBadge.textContent = c.w.toString();
+        tdW.appendChild(wBadge);
+        tr.appendChild(tdW);
+
+        // Centro asignado
+        const tdAssign = document.createElement("td");
+        const assignSpan = document.createElement("span");
+        assignSpan.className = "assign-badge";
+        assignSpan.textContent = "-";
+        tdAssign.appendChild(assignSpan);
+        tr.appendChild(tdAssign);
+
+        assignmentSpans[c.id] = assignSpan;
+
+        clientsBodyEl.appendChild(tr);
+    });
+}
+
+/* ---------- Dibujo del mapa ---------- */
+/*
+    - Eje cartesiano 0..100 x 0..100.
+    - Clientes: círculos grises con radio proporcional a demanda w_i.
+    - Centros: cuadrados. Azul si abierto, gris si cerrado.
+    - Líneas: del cliente al centro asignado más cercano.
+*/
+function drawFacilityMap(canvas, assignments){
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0,0,W,H);
+
+    const margin = {left:45,right:20,top:20,bottom:40};
+
+    function scaleX(v){
+        return margin.left + (v/100) * (W - margin.left - margin.right);
+    }
+    function scaleY(v){
+        return H - margin.bottom - (v/100) * (H - margin.top - margin.bottom);
+    }
+
+    // Fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0,0,W,H);
+
+    // Ejes
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1;
+
+    const y0 = scaleY(0);
+    ctx.beginPath();
+    ctx.moveTo(margin.left,y0);
+    ctx.lineTo(W-margin.right,y0);
+    ctx.stroke();
+
+    const x0 = scaleX(0);
+    ctx.beginPath();
+    ctx.moveTo(x0,margin.top);
+    ctx.lineTo(x0,H-margin.bottom);
+    ctx.stroke();
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    const ticks = [0,25,50,75,100];
+
+    // ticks X
+    ticks.forEach(v=>{
+        const xPix = scaleX(v);
+        ctx.strokeStyle="#475569";
+        ctx.beginPath();
+        ctx.moveTo(xPix,y0);
+        ctx.lineTo(xPix,y0+4);
+        ctx.stroke();
+
+        ctx.fillStyle="#94a3b8";
+        ctx.fillText(String(v), xPix, y0+6);
+
+        // grid vertical clara
+        ctx.strokeStyle="rgba(148,163,184,0.07)";
+        ctx.beginPath();
+        ctx.moveTo(xPix,margin.top);
+        ctx.lineTo(xPix,H-margin.bottom);
+        ctx.stroke();
+    });
+
+    // ticks Y
+    ctx.textAlign="right";
+    ctx.textBaseline="middle";
+    ticks.forEach(v=>{
+        const yPix = scaleY(v);
+        ctx.strokeStyle="#475569";
+        ctx.beginPath();
+        ctx.moveTo(x0-4,yPix);
+        ctx.lineTo(x0,yPix);
+        ctx.stroke();
+
+        ctx.fillStyle="#94a3b8";
+        ctx.fillText(String(v), x0-6, yPix);
+
+        ctx.strokeStyle="rgba(148,163,184,0.07)";
+        ctx.beginPath();
+        ctx.moveTo(margin.left,yPix);
+        ctx.lineTo(W-margin.right,yPix);
+        ctx.stroke();
+    });
+
+    // Primero, líneas cliente->centro asignado
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = "rgba(56,189,248,0.35)";
+    assignments.forEach(a => {
+        if(a.fid !== null){
+            const cx = scaleX(a.cx);
+            const cy = scaleY(a.cy);
+            const fx = scaleX(a.fx);
+            const fy = scaleY(a.fy);
+
+            ctx.beginPath();
+            ctx.moveTo(cx,cy);
+            ctx.lineTo(fx,fy);
+            ctx.stroke();
+        }
+    });
+
+    // Luego, dibujar centros (cuadrados)
+    facilities.forEach(f => {
+        const fx = scaleX(f.x);
+        const fy = scaleY(f.y);
+        const size = 6;
+
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        if(f.open){
+            ctx.fillStyle = "#38bdf8";
+            ctx.strokeStyle = "#38bdf8";
+        } else {
+            ctx.fillStyle = "rgba(0,0,0,0)";
+            ctx.strokeStyle = "#64748b";
+        }
+        ctx.rect(fx-size, fy-size, size*2, size*2);
+        ctx.fill();
+        ctx.stroke();
+
+        // etiqueta F#
+        ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.fillStyle = f.open ? "#38bdf8" : "#64748b";
+        ctx.fillText("F"+f.id, fx+size+3, fy-size-2);
+    });
+
+    // Luego, clientes (círculos escalados por demanda)
+    function radiusFromDemand(w) {
+        return 2 + 0.4*w; // w grande => círculo más grande
+    }
+
+    customers.forEach(c => {
+        const cx = scaleX(c.x);
+        const cy = scaleY(c.y);
+        const r = radiusFromDemand(c.w);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText("C"+c.id, cx+r+3, cy+r+3);
+    });
+}
+
+/* ---------- Update general ---------- */
+function updateAll(){
+    // Leer presupuesto
+    state.budget = parseFloat(budgetSliderEl.value);
+    budgetValEl.textContent   = state.budget.toString();
+    budgetShownEl.textContent = state.budget.toString();
+
+    const openFacs = getOpenFacilities();
+
+    // Calcular asignaciones y costos de distancia
+    const {assignments, totalDistCost} = assignCustomers(openFacs);
+
+    // Costos fijos usados
+    let fixedCostUsed = 0;
+    for(const f of openFacs){
+        fixedCostUsed += f.fixed;
+    }
+
+    // Actualizar asignación mostrada en la tabla
+    assignments.forEach(a => {
+        const span = assignmentSpans[a.custId];
+        if(span){
+            span.textContent = (a.fid === null) ? "-" : "F"+a.fid;
+        }
+    });
+
+    // Calcular costos totales
+    let distDisplay, totalDisplay;
+    if(openFacs.length === 0){
+        distDisplay  = "0";
+        totalDisplay = "0";
+    } else {
+        distDisplay  = totalDistCost.toFixed(2);
+        totalDisplay = (totalDistCost + fixedCostUsed).toFixed(2);
+    }
+
+    distCostValEl.textContent  = distDisplay;
+    fixedCostValEl.textContent = fixedCostUsed.toFixed(2);
+    grandCostValEl.textContent = totalDisplay;
+
+    // Factibilidad
+    let feasText, feasClass;
+    if(openFacs.length === 0){
+        feasText  = "No (sin centros)";
+        feasClass = "status-pill status-bad";
+    } else if(fixedCostUsed > state.budget){
+        feasText  = "No (presupuesto)";
+        feasClass = "status-pill status-bad";
+    } else {
+        feasText  = "Sí";
+        feasClass = "status-pill status-ok";
+    }
+    feasStatusEl.textContent = feasText;
+    feasStatusEl.className   = feasClass;
+
+    // Redibujo del mapa
+    drawFacilityMap(mapCanvas, assignments);
+}
+
+/* ---------- Init ---------- */
+function init(){
+    // Presupuesto inicial
+    budgetSliderEl.value = state.budget;
+    budgetValEl.textContent   = state.budget.toString();
+    budgetShownEl.textContent = state.budget.toString();
+    budgetSliderEl.addEventListener("input", updateAll);
+
+    // Construir UI
+    buildFacilityList();
+    buildClientsTable();
+
+    // Escuchar cambios en facility checkboxes (ya seteado en buildFacilityList via addEventListener)
+    // Escuchar cambios en sliders de clientes (ya seteado en buildClientsTable via addEventListener)
+
+    // Primera actualización
+    updateAll();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
+
