@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Selección de Portafolio (x₁, x₂, θ) — Riesgo vs Retorno</title>
+<style>
+    :root {
+        --bg-main: #0f172a;
+        --bg-card: #1e253a;
+        --accent: #38bdf8;
+        --accent-light: rgba(56,189,248,0.15);
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+        --radius-xl: 1rem;
+        --radius-lg: .75rem;
+        --radius-md: .5rem;
+        --border-card: #334155;
+        --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                      Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: var(--font-stack);
+        line-height: 1.4;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    header h1 {
+        margin: 0 0 .25rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .5rem;
+    }
+
+    header p {
+        margin: 0;
+        color: var(--text-dim);
+        font-size: .9rem;
+        max-width: 900px;
+        line-height: 1.4;
+    }
+
+    header ul {
+        margin:.5rem 0 0 1.25rem;
+        padding:0;
+        color:var(--text-dim);
+        font-size:.8rem;
+        line-height:1.4;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: minmax(300px,360px) 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ---- Card styling ---- */
+    .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 30px 60px rgb(0 0 0 / 0.6);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .card-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .5rem;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .card-sub {
+        font-size: .8rem;
+        color: var(--text-dim);
+        margin: 0;
+    }
+
+    /* ---- Sliders ---- */
+    .sliders-block {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .slider-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: .75rem;
+        align-items: center;
+        font-size: .9rem;
+        color: var(--text-main);
+    }
+
+    .slider-row label {
+        color: var(--text-dim);
+        font-size: .8rem;
+        font-weight: 500;
+        line-height: 1.2;
+        min-width: 6rem;
+    }
+
+    .slider-row output {
+        min-width: 3.5rem;
+        text-align: right;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        font-size: .8rem;
+        background: var(--accent-light);
+        border-radius: var(--radius-md);
+        padding: .25rem .5rem;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        appearance: none;
+        height: 4px;
+        border-radius: 999px;
+        background: #475569;
+        outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.6);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.6);
+    }
+
+    /* ---- Metrics ---- */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+        gap: .75rem;
+        font-size: .8rem;
+        width: 100%;
+    }
+
+    .metrics-grid > div {
+        background: var(--accent-light);
+        border-radius: var(--radius-md);
+        padding: .5rem .75rem;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        box-shadow: 0 10px 20px rgb(0 0 0 / 0.5);
+    }
+
+    .metrics-label {
+        color: var(--text-dim);
+        font-size: .7rem;
+        line-height: 1.2;
+    }
+
+    .metrics-value {
+        color: var(--accent);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .status-pill {
+        padding: .25rem .5rem;
+        border-radius: var(--radius-md);
+        font-size: .7rem;
+        font-weight: 600;
+        line-height: 1.2;
+        display: inline-block;
+    }
+
+    .status-ok {
+        color: #10b981;
+        background: #10b98133;
+    }
+
+    .status-bad {
+        color: #ef4444;
+        background: #ef444433;
+    }
+
+    /* ---- Charts grid ---- */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        width: 100%;
+    }
+
+    @media (max-width: 900px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ---- Chart card ---- */
+    .chart-card {
+        background: radial-gradient(circle at 20% 20%, #2a364f 0%, #1e253a 60%);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1rem 1.25rem;
+        box-shadow: inset 0 0 60px rgb(0 0 0 / 0.4);
+        position: relative;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .chart-card h3 {
+        margin: 0 0 .5rem 0;
+        font-size: .9rem;
+        font-weight: 500;
+        color: var(--text-dim);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: .5rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 240px;
+        border-radius: var(--radius-md);
+        background-color: #0f172a;
+        border: 1px solid #475569;
+        box-shadow: 0 20px 40px rgb(0 0 0 / .8);
+        overflow: hidden;
+    }
+
+    .chart-wrapper.tall {
+        height: 260px;
+    }
+
+    canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    footer {
+        font-size: .7rem;
+        color: var(--text-dim);
+        text-align: center;
+        line-height: 1.4;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>
+        Selección de portafolio (2 activos)
+        <span style="color:var(--accent);font-size:.8rem;font-weight:500;background:var(--accent-light);padding:.25rem .5rem;border-radius:.5rem;line-height:1.2;">
+            Max f(x) = 20·x₁ + 16·x₂ − θ·[2x₁² + x₂² + (x₁+x₂)²]
+        </span>
+    </h1>
+    <p>
+        Tenés $5000 para invertir entre dos instrumentos. x₁ y x₂ son miles de dólares (x₁ + x₂ ≤ 5).
+        θ controla cuánto penalizás el riesgo.
+        <ul>
+            <li><strong>Retorno esperado</strong>: 20% en inversión 1, 16% en inversión 2.</li>
+            <li><strong>Riesgo</strong>: 2x₁² + x₂² + (x₁ + x₂)².</li>
+            <li><strong>θ</strong>: aversión al riesgo. θ alto ⇒ te importa más el riesgo.</li>
+        </ul>
+    </p>
+</header>
+
+<main class="layout">
+
+    <!-- PANEL IZQUIERDO: DECISIONES -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Decisiones del inversor</h2>
+            <div class="card-sub">
+                Ajustá x₁, x₂ (miles USD) y θ. Probá violar x₁+x₂ ≤ 5.
+            </div>
+        </div>
+
+        <div class="sliders-block">
+            <div class="slider-row">
+                <label for="x1Slider">x₁ (inv 1)</label>
+                <input id="x1Slider" type="range" min="0" max="5" step="0.1" />
+                <output id="x1Val">0.0</output>
+            </div>
+
+            <div class="slider-row">
+                <label for="x2Slider">x₂ (inv 2)</label>
+                <input id="x2Slider" type="range" min="0" max="5" step="0.1" />
+                <output id="x2Val">0.0</output>
+            </div>
+
+            <div class="slider-row">
+                <label for="thetaSlider">θ (aversión)</label>
+                <input id="thetaSlider" type="range" min="0" max="5" step="0.1" />
+                <output id="thetaVal">0.0</output>
+            </div>
+        </div>
+
+        <div style="font-size:.7rem;color:var(--text-dim);line-height:1.4;">
+            <br>Variables: x₁, x₂.
+            <br>Restricciones: x₁ ≥ 0, x₂ ≥ 0, x₁+x₂ ≤ 5.
+            <br>Objetivo: max f(x).
+            <br>θ se fija, se resuelve, y luego se barre de nuevo.
+        </div>
+    </section>
+
+    <!-- PANEL DERECHO: MÉTRICAS + GRÁFICOS -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Resultados actuales</h2>
+            <div class="card-sub">Rendimiento vs Riesgo para tu mezcla (x₁, x₂) y tu θ.</div>
+        </div>
+
+        <!-- Métricas -->
+        <div class="metrics-grid">
+            <div>
+                <div class="metrics-label">Retorno = 20·x₁ + 16·x₂</div>
+                <div class="metrics-value" id="returnVal">0.00</div>
+            </div>
+            <div>
+                <div class="metrics-label">Riesgo = 2x₁² + x₂² + (x₁+x₂)²</div>
+                <div class="metrics-value" id="riskVal">0.00</div>
+            </div>
+            <div>
+                <div class="metrics-label">f(x) = retorno − θ·riesgo</div>
+                <div class="metrics-value" id="objectiveVal">0.00</div>
+            </div>
+            <div>
+                <div class="metrics-label">x₁ + x₂ (miles USD)</div>
+                <div class="metrics-value" id="sumVal">0.0</div>
+            </div>
+            <div>
+                <div class="metrics-label">Factible (x₁+x₂ ≤ 5)</div>
+                <div class="metrics-value">
+                    <span id="feasStatus" class="status-pill status-ok">Sí</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- === CHARTS GRID 2x2 === -->
+        <div class="charts-grid">
+
+            <!-- Región factible -->
+            <div class="chart-card">
+                <h3>
+                    Región factible en el plano (x₁, x₂)
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        x₁ ≥ 0, x₂ ≥ 0, x₁+x₂ ≤ 5
+                    </span>
+                </h3>
+                <div class="chart-wrapper tall">
+                    <canvas id="feasibleCanvas" width="400" height="260"></canvas>
+                </div>
+            </div>
+
+            <!-- Superficie 3D -->
+            <div class="chart-card">
+                <h3>
+                    Superficie f(x₁,x₂) con θ actual
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        Toda la región [0,5]×[0,5]
+                    </span>
+                </h3>
+                <div class="chart-wrapper tall">
+                    <canvas id="obj3DCanvas" width="400" height="260"></canvas>
+                </div>
+            </div>
+
+            <!-- f(x) vs x1 -->
+            <div class="chart-card">
+                <h3>
+                    f(x) vs x₁
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        x₂ fijo = <span id="fixedX2">?</span>,
+                        θ = <span id="fixedTheta1">?</span>
+                    </span>
+                </h3>
+                <div class="chart-wrapper">
+                    <canvas id="objX1Canvas" width="400" height="240"></canvas>
+                </div>
+            </div>
+
+            <!-- f(x) vs x2 -->
+            <div class="chart-card">
+                <h3>
+                    f(x) vs x₂
+                    <span style="color:var(--text-main);font-size:.8rem;font-weight:500;">
+                        x₁ fijo = <span id="fixedX1">?</span>,
+                        θ = <span id="fixedTheta2">?</span>
+                    </span>
+                </h3>
+                <div class="chart-wrapper">
+                    <canvas id="objX2Canvas" width="400" height="240"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div>
+        Enrique Gabriel Baquela
+    </div>
+</footer>
+
+<script>
+/*
+    ==========================================================
+    MODELO
+    ----------------------------------------------------------
+    f(x) = 20 x1 + 16 x2 − θ [ 2 x1² + x2² + (x1 + x2)² ]
+
+    Restricciones:
+        x1 ≥ 0
+        x2 ≥ 0
+        x1 + x2 ≤ 5   (5 miles = $5000)
+
+    Métricas:
+        Retorno R = 20 x1 + 16 x2
+        Riesgo   V = 2 x1² + x2² + (x1 + x2)²
+        Objetivo F = R − θ·V
+    ==========================================================
+*/
+
+// Estado inicial
+const state = {
+    x1: 2.0,      // miles de USD en inversión 1
+    x2: 3.0,      // miles de USD en inversión 2
+    theta: 0.5,   // aversión al riesgo
+};
+
+// Referencias DOM
+const x1Slider    = document.getElementById("x1Slider");
+const x2Slider    = document.getElementById("x2Slider");
+const thetaSlider = document.getElementById("thetaSlider");
+
+const x1ValEl     = document.getElementById("x1Val");
+const x2ValEl     = document.getElementById("x2Val");
+const thetaValEl  = document.getElementById("thetaVal");
+
+const returnValEl    = document.getElementById("returnVal");
+const riskValEl      = document.getElementById("riskVal");
+const objectiveValEl = document.getElementById("objectiveVal");
+const sumValEl       = document.getElementById("sumVal");
+const feasStatusEl   = document.getElementById("feasStatus");
+
+const feasibleCanvas = document.getElementById("feasibleCanvas");
+const obj3DCanvas    = document.getElementById("obj3DCanvas");
+
+// 2D charts
+const objX1Canvas    = document.getElementById("objX1Canvas");
+const objX2Canvas    = document.getElementById("objX2Canvas");
+const fixedX2Span    = document.getElementById("fixedX2");
+const fixedTheta1    = document.getElementById("fixedTheta1");
+const fixedX1Span    = document.getElementById("fixedX1");
+const fixedTheta2    = document.getElementById("fixedTheta2");
+
+/* ===================== Funciones de modelo ===================== */
+
+// Retorno esperado R(x1,x2) = 20 x1 + 16 x2
+function expectedReturn(x1, x2) {
+    return 20 * x1 + 16 * x2;
+}
+
+// Riesgo V(x1,x2) = 2 x1^2 + x2^2 + (x1 + x2)^2
+function risk(x1, x2) {
+    return (2 * x1 * x1) + (x2 * x2) + Math.pow(x1 + x2, 2);
+}
+
+// Objetivo F(x1,x2,theta)
+function objective(x1, x2, theta) {
+    return expectedReturn(x1, x2) - theta * risk(x1, x2);
+}
+
+// factibilidad: x1>=0, x2>=0, x1+x2<=5
+function isFeasible(x1, x2) {
+    return (x1 >= 0) && (x2 >= 0) && (x1 + x2 <= 5);
+}
+
+/* ===================== Dibujo del plano (x1,x2) ===================== */
+function drawFeasibleRegion(canvas, x1, x2) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0,0,W,H);
+
+    const margin = {left:45,right:20,top:20,bottom:40};
+
+    // Escalas: x1, x2 en [0,5]
+    function scaleX(v) {
+        return margin.left + (v / 5) * (W - margin.left - margin.right);
+    }
+    function scaleY(v) {
+        return H - margin.bottom - (v / 5) * (H - margin.top - margin.bottom);
+    }
+
+    // Fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0,0,W,H);
+
+    // Ejes
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1;
+
+    const y0 = scaleY(0);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, y0);
+    ctx.lineTo(W - margin.right, y0);
+    ctx.stroke();
+
+    const x0 = scaleX(0);
+    ctx.beginPath();
+    ctx.moveTo(x0, margin.top);
+    ctx.lineTo(x0, H - margin.bottom);
+    ctx.stroke();
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+
+    const ticks = [0,1,2,3,4,5];
+
+    // ticks en X (x1)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ticks.forEach(v => {
+        const xPix = scaleX(v);
+        ctx.strokeStyle = "#475569";
+        ctx.beginPath();
+        ctx.moveTo(xPix, y0);
+        ctx.lineTo(xPix, y0+4);
+        ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(String(v), xPix, y0+6);
+
+        // rejilla vertical suave
+        ctx.strokeStyle = "rgba(148,163,184,0.07)";
+        ctx.beginPath();
+        ctx.moveTo(xPix, margin.top);
+        ctx.lineTo(xPix, H - margin.bottom);
+        ctx.stroke();
+    });
+
+    // ticks en Y (x2)
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ticks.forEach(v => {
+        const yPix = scaleY(v);
+
+        ctx.strokeStyle = "#475569";
+        ctx.beginPath();
+        ctx.moveTo(x0-4, yPix);
+        ctx.lineTo(x0,   yPix);
+        ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(String(v), x0-6, yPix);
+
+        ctx.strokeStyle = "rgba(148,163,184,0.07)";
+        ctx.beginPath();
+        ctx.moveTo(margin.left, yPix);
+        ctx.lineTo(W - margin.right, yPix);
+        ctx.stroke();
+    });
+
+    // Región factible: triángulo [(0,0),(5,0),(0,5)]
+    ctx.fillStyle = "rgba(56,189,248,0.08)";
+    ctx.beginPath();
+    ctx.moveTo(scaleX(0), scaleY(0));
+    ctx.lineTo(scaleX(5), scaleY(0));
+    ctx.lineTo(scaleX(0), scaleY(5));
+    ctx.closePath();
+    ctx.fill();
+
+    // Frontera x1 + x2 = 5
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(scaleX(5), scaleY(0));
+    ctx.lineTo(scaleX(0), scaleY(5));
+    ctx.stroke();
+
+    // Punto actual
+    const px = scaleX(x1);
+    const py = scaleY(x2);
+    const feasible = isFeasible(x1, x2);
+
+    ctx.fillStyle = feasible ? "#38bdf8" : "#ef4444";
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI*2);
+    ctx.fill();
+
+    // etiqueta (x1,x2)
+    ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = feasible ? "#38bdf8" : "#ef4444";
+    ctx.fillText(
+        `(${x1.toFixed(1)}, ${x2.toFixed(1)})`,
+        px + 8,
+        py + 8
+    );
+
+    // Etiquetas de ejes
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillText("x₁ (miles USD)", W - margin.right, y0 + 20);
+
+    ctx.save();
+    ctx.translate(x0 - 30, margin.top);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText("x₂ (miles USD)", 0, 0);
+    ctx.restore();
+}
+
+/* ===================== Superficie 3D f(x1,x2) ===================== */
+/*
+   Ahora:
+   - Barrer x1, x2 en todo [0,5]×[0,5] con paso fijo.
+   - Calcular f(x1,x2,theta) en TODOS los puntos, sin importar factibilidad.
+   - Proyectar isométricamente en 2D.
+   - Colorear por altura (valor de f).
+   - Señalar el punto actual y marcarlo azul si factible, rojo si infactible.
+*/
+function drawSurface3D(canvas, theta, xCur, yCur) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // Fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0,0,W,H);
+
+    // 1. Construimos grilla en [0,5]x[0,5]
+    const step = 0.25; // más chico => más suave, más caro
+    const grid = [];   // grid[ix][iy] = {x,y,z}
+    for (let gx = 0; gx <= 5 + 1e-9; gx += step) {
+        const col = [];
+        for (let gy = 0; gy <= 5 + 1e-9; gy += step) {
+            col.push({
+                x: gx,
+                y: gy,
+                z: objective(gx, gy, theta)
+            });
+        }
+        grid.push(col);
+    }
+
+    // 2. min/max z globales
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (let ix = 0; ix < grid.length; ix++) {
+        for (let iy = 0; iy < grid[ix].length; iy++) {
+            const zv = grid[ix][iy].z;
+            if (zv < minZ) minZ = zv;
+            if (zv > maxZ) maxZ = zv;
+        }
+    }
+    if (!isFinite(minZ) || !isFinite(maxZ)) {
+        minZ = 0;
+        maxZ = 1;
+    }
+    const zRange = (maxZ - minZ) || 1;
+    const zScale = 40 / zRange; // altura visual
+
+    // 3. Proyección isométrica
+    function projectPoint(pt) {
+        const isoScaleXY = 30; // escala horizontal
+        // proyección "tipo diamétrica"
+        const sxRaw = (pt.x - pt.y) * isoScaleXY;
+        // mayor z => más alto => pico
+        const syRaw = (pt.x + pt.y) * (isoScaleXY * 0.5)
+                    + ((pt.z - minZ) * zScale);
+
+        // centrado
+        const offsetX = W * 0.5;
+        const offsetY = H * 0.8;
+
+        return {
+            sx: offsetX + sxRaw,
+            sy: offsetY - syRaw
+        };
+    }
+
+    // 4. Celdas y orden "pintor"
+    const cells = [];
+    for (let ix = 0; ix < grid.length-1; ix++) {
+        for (let iy = 0; iy < grid[ix].length-1; iy++) {
+            const p00 = grid[ix][iy];
+            const p10 = grid[ix+1][iy];
+            const p11 = grid[ix+1][iy+1];
+            const p01 = grid[ix][iy+1];
+
+            const avgZ = (p00.z+p10.z+p11.z+p01.z)/4;
+            const avgXY = (
+                (p00.x+p00.y) +
+                (p10.x+p10.y) +
+                (p11.x+p11.y) +
+                (p01.x+p01.y)
+            )/4;
+
+            cells.push({
+                pts:[p00,p10,p11,p01],
+                avgZ,
+                avgXY
+            });
+        }
+    }
+
+    // Orden de pintado: lo "lejano" primero
+    cells.sort((a,b)=> b.avgXY - a.avgXY);
+
+    // 5. Dibujar cada celda con color según f
+    for (const cell of cells) {
+        const t = (cell.avgZ - minZ) / zRange; // 0..1
+        function lerp(a,b,t){ return a + (b-a)*t; }
+        const r = lerp(56,190,t);
+        const g = lerp(189,18,t);
+        const bcol = lerp(248,60,t);
+        const fillCol = `rgba(${r.toFixed(0)},${g.toFixed(0)},${bcol.toFixed(0)},0.7)`;
+
+        const poly = cell.pts.map(p => projectPoint(p));
+
+        ctx.beginPath();
+        ctx.moveTo(poly[0].sx, poly[0].sy);
+        for (let k=1; k<poly.length; k++) {
+            ctx.lineTo(poly[k].sx, poly[k].sy);
+        }
+        ctx.closePath();
+
+        ctx.fillStyle = fillCol;
+        ctx.fill();
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.stroke();
+    }
+
+    // 6. Ejes base en el plano z = minZ
+    const origin = {x:0, y:0, z:minZ};
+    const axisX  = {x:5, y:0, z:minZ};
+    const axisY  = {x:0, y:5, z:minZ};
+
+    const oP = projectPoint(origin);
+    const xP = projectPoint(axisX);
+    const yP = projectPoint(axisY);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#94a3b8";
+    ctx.beginPath();
+    ctx.moveTo(oP.sx, oP.sy);
+    ctx.lineTo(xP.sx, xP.sy);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(oP.sx, oP.sy);
+    ctx.lineTo(yP.sx, yP.sy);
+    ctx.stroke();
+
+    ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("x₁ →", xP.sx+4, xP.sy);
+    ctx.fillText("x₂ →", yP.sx+4, yP.sy);
+
+    // 7. Punto actual (x1,x2)
+    const zNow = objective(xCur, yCur, theta);
+    const pNow = projectPoint({x:xCur,y:yCur,z:zNow});
+
+    const feasibleNow = isFeasible(xCur, yCur);
+
+    // círculo relleno
+    ctx.fillStyle = feasibleNow ? "#ffffff" : "#ef4444";
+    ctx.beginPath();
+    ctx.arc(pNow.sx, pNow.sy, 4, 0, Math.PI*2);
+    ctx.fill();
+
+    // borde
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = feasibleNow ? "#38bdf8" : "#ef4444";
+    ctx.beginPath();
+    ctx.arc(pNow.sx, pNow.sy, 4, 0, Math.PI*2);
+    ctx.stroke();
+
+    // etiqueta
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = feasibleNow ? "#38bdf8" : "#ef4444";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(zNow.toFixed(2), pNow.sx+6, pNow.sy-6);
+
+    if (!feasibleNow) {
+        ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+        ctx.textBaseline = "top";
+        ctx.fillText("infactible", pNow.sx+6, pNow.sy+2);
+    }
+}
+
+/* ===================== Curvas f(x) vs x1 y vs x2 ===================== */
+
+// Devuelve lista variando x1 en [0,5] con x2 y theta fijos
+function computeCurveX1(x2_fixed, theta_fixed) {
+    const arr = [];
+    for (let xv = 0; xv <= 5.0001; xv += 0.1) {
+        arr.push({
+            arg: xv,
+            obj: objective(xv, x2_fixed, theta_fixed)
+        });
+    }
+    return arr;
+}
+
+// Devuelve lista variando x2 en [0,5] con x1 y theta fijos
+function computeCurveX2(x1_fixed, theta_fixed) {
+    const arr = [];
+    for (let yv = 0; yv <= 5.0001; yv += 0.1) {
+        arr.push({
+            arg: yv,
+            obj: objective(x1_fixed, yv, theta_fixed)
+        });
+    }
+    return arr;
+}
+
+// Dibuja gráfico lineal genérico para f(x) vs arg (arg = x1 o x2)
+function drawObjectiveChart(canvas, arr, currentVal, isX1Chart, otherVal, thetaVal) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0,0,W,H);
+
+    const margin = {left:45,right:15,top:15,bottom:30};
+
+    // Dominio eje horizontal: 0..5
+    const domMin = 0;
+    const domMax = 5;
+
+    // Rango de f(x)
+    let minF = Infinity;
+    let maxF = -Infinity;
+    for (const p of arr) {
+        if (p.obj < minF) minF = p.obj;
+        if (p.obj > maxF) maxF = p.obj;
+    }
+    if (minF === maxF) {
+        maxF = minF + 1;
+    }
+
+    const scaleX = (v) =>
+        margin.left + ((v - domMin)/(domMax - domMin))*(W - margin.left - margin.right);
+    const scaleY = (v) =>
+        H - margin.bottom - ((v - minF)/(maxF - minF))*(H - margin.top - margin.bottom);
+
+    // Fondo
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0,0,W,H);
+
+    // Ejes
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left, H - margin.bottom);
+    ctx.lineTo(W - margin.right, H - margin.bottom);
+    ctx.stroke();
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+
+    // ticks horizontales (0..5)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    [0,1,2,3,4,5].forEach(v=>{
+        const xPix = scaleX(v);
+        const yAxisPix = H - margin.bottom;
+        ctx.strokeStyle="#475569";
+        ctx.beginPath();
+        ctx.moveTo(xPix, yAxisPix);
+        ctx.lineTo(xPix, yAxisPix+4);
+        ctx.stroke();
+
+        ctx.fillStyle="#94a3b8";
+        ctx.fillText(String(v), xPix, yAxisPix+6);
+    });
+
+    // ticks verticales
+    const nTicks = 4;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (let t=0; t<=nTicks; t++) {
+        const frac = t / nTicks;
+        const val = minF + frac*(maxF-minF);
+        const yPix = scaleY(val);
+
+        ctx.strokeStyle = t===0 ? "#475569" : "rgba(148,163,184,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(margin.left, yPix);
+        ctx.lineTo(W - margin.right, yPix);
+        ctx.stroke();
+
+        ctx.fillStyle="#94a3b8";
+        ctx.fillText(val.toFixed(1), margin.left-6, yPix);
+    }
+
+    // Curva
+    ctx.beginPath();
+    arr.forEach((p,idx)=>{
+        const xPix = scaleX(p.arg);
+        const yPix = scaleY(p.obj);
+        if(idx===0) ctx.moveTo(xPix,yPix); else ctx.lineTo(xPix,yPix);
+    });
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#38bdf8";
+    ctx.stroke();
+
+    // Línea vertical actual
+    const curPix = scaleX(currentVal);
+    ctx.strokeStyle = "rgba(56,189,248,0.5)";
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(curPix, margin.top);
+    ctx.lineTo(curPix, H - margin.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Punto actual + etiqueta
+    const curF = isX1Chart
+        ? objective(currentVal, otherVal, thetaVal)
+        : objective(otherVal, currentVal, thetaVal);
+    const curYPix = scaleY(curF);
+
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(curPix, curYPix, 4, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText(curF.toFixed(2), curPix+6, curYPix-6);
+
+    // Etiquetas de ejes
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillText(isX1Chart ? "x₁ (miles USD)" : "x₂ (miles USD)", W - margin.right, H - margin.bottom + 20);
+
+    ctx.save();
+    ctx.translate(margin.left - 35, margin.top);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText("f(x)", 0, 0);
+    ctx.restore();
+}
+
+/* ===================== Update general ===================== */
+function updateAll(){
+    // Leer sliders
+    state.x1    = parseFloat(x1Slider.value);
+    state.x2    = parseFloat(x2Slider.value);
+    state.theta = parseFloat(thetaSlider.value);
+
+    // Mostrar valores actuales
+    x1ValEl.textContent    = state.x1.toFixed(1);
+    x2ValEl.textContent    = state.x2.toFixed(1);
+    thetaValEl.textContent = state.theta.toFixed(1);
+
+    // Calcular métricas
+    const R = expectedReturn(state.x1, state.x2);
+    const V = risk(state.x1, state.x2);
+    const F = objective(state.x1, state.x2, state.theta);
+    const S = state.x1 + state.x2;
+    const feas = isFeasible(state.x1, state.x2);
+
+    returnValEl.textContent    = R.toFixed(2);
+    riskValEl.textContent      = V.toFixed(2);
+    objectiveValEl.textContent = F.toFixed(2);
+    sumValEl.textContent       = S.toFixed(1);
+
+    if (feas) {
+        feasStatusEl.textContent = "Sí";
+        feasStatusEl.className = "status-pill status-ok";
+    } else {
+        feasStatusEl.textContent = "No";
+        feasStatusEl.className = "status-pill status-bad";
+    }
+
+    // Redibujar el plano factible
+    drawFeasibleRegion(feasibleCanvas, state.x1, state.x2);
+
+    // Redibujar superficie 3D de f(x1,x2) en toda la región
+    drawSurface3D(obj3DCanvas, state.theta, state.x1, state.x2);
+
+    // Actualizar spans en títulos de gráficos 1D
+    fixedX2Span.textContent     = state.x2.toFixed(1);
+    fixedTheta1.textContent     = state.theta.toFixed(1);
+    fixedX1Span.textContent     = state.x1.toFixed(1);
+    fixedTheta2.textContent     = state.theta.toFixed(1);
+
+    // Curva f(x) vs x1 con x2 y theta fijos
+    const curveX1 = computeCurveX1(state.x2, state.theta);
+    drawObjectiveChart(
+        objX1Canvas,
+        curveX1,
+        state.x1,
+        true,            // isX1Chart
+        state.x2,
+        state.theta
+    );
+
+    // Curva f(x) vs x2 con x1 y theta fijos
+    const curveX2 = computeCurveX2(state.x1, state.theta);
+    drawObjectiveChart(
+        objX2Canvas,
+        curveX2,
+        state.x2,
+        false,           // isX1Chart = false => x2 chart
+        state.x1,
+        state.theta
+    );
+}
+
+/* ===================== Init ===================== */
+function init(){
+    // Set sliders to initial state
+    x1Slider.value    = state.x1;
+    x2Slider.value    = state.x2;
+    thetaSlider.value = state.theta;
+
+    x1ValEl.textContent    = state.x1.toFixed(1);
+    x2ValEl.textContent    = state.x2.toFixed(1);
+    thetaValEl.textContent = state.theta.toFixed(1);
+
+    // Listeners
+    x1Slider.addEventListener("input", updateAll);
+    x2Slider.addEventListener("input", updateAll);
+    thetaSlider.addEventListener("input", updateAll);
+
+    // Primer render
+    updateAll();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
+

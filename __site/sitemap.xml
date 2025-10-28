@@ -134,6 +134,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/files/opt_no_lineal/portfolio/</loc>
+    <lastmod>2025-10-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/files/ml/regresion_nn_backprop/</loc>
     <lastmod>2025-09-23</lastmod>
     <changefreq>monthly</changefreq>
