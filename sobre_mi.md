@@ -27,6 +27,7 @@ Llevo más de dos décadas de actividad profesional ininterrumpida, en empresas 
 ## Formas de contacto
 
 * [Linkedin](https://ar.linkedin.com/in/egbaquela)
+* [Google Scholar](https://scholar.google.com/citations?user=j_c7ZkIAAAAJ&hl=en)
 * Email UTN: [ebaquela@frsn.utn.edu.ar](mailto:ebaquela@frsn.utn.edu.ar)
 * Email Austral: [ebaquela-ext@austral.edu.ar](mailto:ebaquela-ext@austral.edu.ar)
 * Email Furgens Research: [contact@furgensresearch.com](mailto:contact@furgensresearch.com)
