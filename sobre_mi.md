@@ -18,7 +18,7 @@ Inicié en 2006 mis actividades docentes en la [Facultad Regional San Nicolás](
 
 Me recibí en 2005 de Ingeniero Industrial en la [FRSN-UTN](https://www.frsn.utn.edu.ar/), y en 2020 me doctoré en Ingeniería (en la [Universidad Nacional de Rosario](https://unr.edu.ar/)), esto último con foco en algoritmos de optimización y simulación. Actualmente curso una especialización en docencia universitaria.
 
-Presenté varios trabajos a revistas internacionales y congresos, participé como escritor de capítulos de varios libros y tengo un libro publicado sobre optimización.
+Presenté varios trabajos a revistas internacionales y congresos, participé como escritor de capítulos de varios libros y tengo un libro publicado sobre optimización. Aquí mi perfil de [Google Scholar](https://scholar.google.com/citations?user=j_c7ZkIAAAAJ&hl=en).
 
 Dirijo tesis de doctorado y maestría, en temáticas relacionadas a la Investigación Operativa, la Ciencia de Datos y la Ingeniería Industrial.
 
@@ -27,7 +27,6 @@ Llevo más de dos décadas de actividad profesional ininterrumpida, en empresas 
 ## Formas de contacto
 
 * [Linkedin](https://ar.linkedin.com/in/egbaquela)
-* [Google Scholar](https://scholar.google.com/citations?user=j_c7ZkIAAAAJ&hl=en)
 * Email UTN: [ebaquela@frsn.utn.edu.ar](mailto:ebaquela@frsn.utn.edu.ar)
 * Email Austral: [ebaquela-ext@austral.edu.ar](mailto:ebaquela-ext@austral.edu.ar)
 * Email Furgens Research: [contact@furgensresearch.com](mailto:contact@furgensresearch.com)
