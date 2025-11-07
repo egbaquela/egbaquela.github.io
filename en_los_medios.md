@@ -20,6 +20,22 @@ El jueves 31 de julio de 2025 fui invitado al programa San Nicolás Debate para 
 * Video del programa: [https://www.youtube.com/live/tv6QP1IrCvY](https://www.youtube.com/live/tv6QP1IrCvY)
 * Instagram _Diario El Norte_: [https://www.instagram.com/reel/DNT662wgOga/](https://www.instagram.com/reel/DNT662wgOga/)
 
+## UPAEP Press - Sobre ciencia de datos y logística - 2023-08-09
+Reseña sobre la estancia de investigación
+
+* Link artículo: [https://upress.mx/innovacion-y-tecnologia/10967-las-voces-de-ingenierias-la-importancia-de-la-ciencia-de-datos-en-la-logistica-2](https://upress.mx/innovacion-y-tecnologia/10967-las-voces-de-ingenierias-la-importancia-de-la-ciencia-de-datos-en-la-logistica-2)
+
+## UPAEP Press - Sobre ciencia de datos y cadenas de suministros en Latinoamérica - 2023-07-19
+Nota realizada durante estancia de investigación en UPAEP
+
+* Link artículo: [https://upress.mx/secciones/academia/10913-ciencia-de-datos-y-cadena-de-suministro-en-latinoamerica-oportunidades-para-el-desarrollo](https://upress.mx/secciones/academia/10913-ciencia-de-datos-y-cadena-de-suministro-en-latinoamerica-oportunidades-para-el-desarrollo)
+
+## UPAEP Press - Economía y Pymes - 2021-07-07
+Nota por proyecto de colaboración con UPAEP.
+
+* Link artículo: [https://upress.mx/secciones/academia/7792-la-econom%C3%ADa-de-un-pa%C3%ADs-la-mueven-las-peque%C3%B1as-y-medianas-empresas](https://upress.mx/secciones/academia/7792-la-econom%C3%ADa-de-un-pa%C3%ADs-la-mueven-las-peque%C3%B1as-y-medianas-empresas)
+
+
 ## San Nicolás web - Reseña de la charla sobre Inteligencia Artificial - UTN-FRSN - 2017-09-20
 Reseña de charla de Inteligencia Artificial dada en conjunto con miembros del departamento de Ingeniería Electrónica.
 
@@ -29,6 +45,7 @@ Reseña de charla de Inteligencia Artificial dada en conjunto con miembros del d
 Reseña sobre el congreso de enseñanza de la matemática en carreras de ingeniería, en 2015.
 
 * Link nota diario: [https://diarioelinformante.com.ar/nota-38781_encuentro-sobre-matemticas-en-la-ftrsn](https://diarioelinformante.com.ar/nota-38781_encuentro-sobre-matemticas-en-la-ftrsn)
+
 
 ## El Informante - Proyecto Energía Ternium - UTN-FRSN - 2011-10-16
 Una de mis primeras actividades en el GISOI, la creación de un simulador para la compra, consumo y venta de energía por parte de Ternium Siderar.
