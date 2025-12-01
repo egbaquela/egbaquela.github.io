@@ -20,18 +20,6 @@
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/menu1/index.html</loc>
-    <lastmod>2025-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/menu3/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/en_los_medios/index.html</loc>
     <lastmod>2025-11-07</lastmod>
     <changefreq>monthly</changefreq>
@@ -58,6 +46,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html</loc>
     <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/lista_posts/index.html</loc>
+    <lastmod>2025-12-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -92,8 +86,8 @@
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/menu4/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
+    <loc>https://www.egbaquela.com.ar/posts/20251201_sitios_basados_en_pluto/index.html</loc>
+    <lastmod>2025-12-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -112,12 +106,6 @@
 <url>
     <loc>https://www.egbaquela.com.ar/sobre_mi/index.html</loc>
     <lastmod>2025-11-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/menu2/index.html</loc>
-    <lastmod>2024-06-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -226,12 +214,6 @@
 <url>
     <loc>https://www.egbaquela.com.ar/files/ml/regresion_lineal/</loc>
     <lastmod>2025-08-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/files/cv/20250830_cv/</loc>
-    <lastmod>2025-08-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
