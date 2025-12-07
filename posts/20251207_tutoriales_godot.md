@@ -26,11 +26,11 @@ No hay mucho material sobre [Godot](https://godotengine.org/es/), pero lo que ha
 * GodotLand - GDScript Básico (ultra-básico): [https://www.youtube.com/playlist?list=PLgI0I_tQQ38LFw7SZX2U3S-eKT-FrC1-Y](https://www.youtube.com/playlist?list=PLgI0I_tQQ38LFw7SZX2U3S-eKT-FrC1-Y).
 * GodotLand - Creación de personajes: [https://www.youtube.com/playlist?list=PLgI0I_tQQ38JKeJTRGmaMpLhTfjfr3Ccg](https://www.youtube.com/playlist?list=PLgI0I_tQQ38JKeJTRGmaMpLhTfjfr3Ccg).
 
-## Específicos
+### Específicos
 * Como exportar a HTML y subirlo a Itch.io: [https://www.youtube.com/watch?v=RiQcnVgBhFE](https://www.youtube.com/watch?v=RiQcnVgBhFE).
 * Como usar la pantalla táctil como input: [https://www.youtube.com/watch?v=K8MDPR5yxV0](https://www.youtube.com/watch?v=K8MDPR5yxV0).
 
-# Documentación
+## Documentación
 
 * Documentación oficial de GODOT Engine: [https://docs.godotengine.org/es/4.x/index.html](https://docs.godotengine.org/es/4.x/index.html)
 

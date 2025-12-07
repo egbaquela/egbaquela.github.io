@@ -51,7 +51,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/lista_posts/index.html</loc>
-    <lastmod>2025-12-01</lastmod>
+    <lastmod>2025-12-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -82,6 +82,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250225_links_licencias/index.html</loc>
     <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251207_material_supply_chain/index.html</loc>
+    <lastmod>2025-12-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>

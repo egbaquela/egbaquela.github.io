@@ -12,6 +12,10 @@ tags = ["general"]
 
 \toc
 
+## Docencia
+
+* [Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial](../posts/20250505_inteligencia_artificial_en_ingenieria_industrial)
+
 ## Investigación Operativa
 
 * [Juegos sobre el problema de la mochila](../posts/20250425_juegos_sobre_el_problema_de_la_mochila)
@@ -30,28 +34,28 @@ tags = ["general"]
 * [Generar tablas en markdown](../posts/20250602_tablas_markdown)
 * [Links acerca de licencias para libros y blogs](../posts/20250225_links_licencias)
 
-## Matemática
-
-* [Acerca de la Open Source Society University (OSSU)](../posts/20250310_ossu)
-* [Links sobre material de autoaprendizaje](../posts/20250307_links_matematica)
-
-## Machine Learning
-
-* [Links sobre material de autoaprendizaje](../posts/20250307_links_machine_learning)
-
 ## Linux
 
 * [¿Como recortar un video por línea de comandos?](../posts/20250904_recortar_video_linux)
 * [¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
 
-## Docencia
+## Machine Learning
 
-* [Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial](../posts/20250505_inteligencia_artificial_en_ingenieria_industrial)
+* [Links sobre material de autoaprendizaje](../posts/20250307_links_machine_learning)
+
+## Matemática
+
+* [Acerca de la Open Source Society University (OSSU)](../posts/20250310_ossu)
+* [Links sobre material de autoaprendizaje](../posts/20250307_links_matematica)
+
+## Supply Chain
+* [Material de estudio sobre cadenas de suministros](../posts/20251207_material_supply_chain)
 
 ## Varios
 
 * [Murió Bigote Acosta](../posts/20250526_murio_bigote_acosta)
 
 ## Videojuegos
+
 * [Tutoriales y material de estudio sobre Godot](../posts/20251207_tutoriales_godot)
 * [Mi primer videojuego en Godot](../posts/20251122_primer_juego_godot)
