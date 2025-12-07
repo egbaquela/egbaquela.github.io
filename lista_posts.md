@@ -19,6 +19,7 @@ tags = ["general"]
 
 ## Julia
 
+* [Links sobre como desarrollar un sitio basado en Pluto](../posts/20251201_sitios_basados_en_pluto)
 * [Como usar Julia en Google Colab (¡en forma nativa!)](../posts/20250323_julia_en_google_colab_nativo)
 * [Tips para el lenguaje de programación Julia](../posts/20250311_julialang_tips)
 * [Links sobre material de interesante sobre Julia, principalmente para autoaprendizaje](../posts/20250307_links_julia_lang)
@@ -50,3 +51,7 @@ tags = ["general"]
 ## Varios
 
 * [Murió Bigote Acosta](../posts/20250526_murio_bigote_acosta)
+
+## Videojuegos
+* [Tutoriales y material de estudio sobre Godot](../posts/20251207_tutoriales_godot)
+* [Mi primer videojuego en Godot](../posts/20251122_primer_juego_godot)
