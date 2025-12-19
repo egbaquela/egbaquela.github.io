@@ -48,6 +48,10 @@ tags = ["general"]
 * [Acerca de la Open Source Society University (OSSU)](../posts/20250310_ossu)
 * [Links sobre material de autoaprendizaje](../posts/20250307_links_matematica)
 
+## Mis cursos
+
+* [Apuntes de mis clases de Investigación Operativa y de IA](../posts/20251219_apuntes_clases_io_e_ia)
+
 ## Supply Chain
 * [Material de estudio sobre cadenas de suministros](../posts/20251207_material_supply_chain)
 

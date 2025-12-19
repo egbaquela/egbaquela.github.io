@@ -53,7 +53,7 @@
 using XLSX
 
 XLSX.writetable&#40;&quot;new_file.xlsx&quot;, &quot;sheet1&quot; &#61;&gt; df&#41;</code></pre>
-<p>Extraido de: <a href="https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel">https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel</a></p>
+<p>Extraído de: <a href="https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel">https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel</a></p>
 <h2 id="leer_un_dataframe_desde_un_archivo_excel"><a href="#leer_un_dataframe_desde_un_archivo_excel" class="header-anchor">Leer un dataframe desde un archivo excel</a></h2>
 <pre><code class="language-julia">using DataFrames
 using XLSX
@@ -129,7 +129,7 @@ df &#61; DataFrame&#40;
 
 nodenames &#61; &#91;&quot;columna1&quot;, &quot;columna2&quot;, &quot;columna3&quot;&#93;
 df &#61; DataFrame&#40;&#91;&#91;&#93; for _ &#61; nodenames&#93; , nodenames&#41;</code></pre>
-<p>Extraido de <a href="https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936">https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936</a>, hay que adaptarlo si queremos definir tipos tambien.</p>
+<p>Extraído de <a href="https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936">https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936</a>, hay que adaptarlo si queremos definir tipos tambien.</p>
 <h2 id="averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj"><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj" class="header-anchor">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></h2>
 <p>Dado un conjunto de predictores <em>Xtrain</em> y una variable a predecir <em>ytrain</em>, el siguiente código nos lista &#40;en un dataframe&#41; todos los modelos que permiten el tipo de datos asociado a las features y al target:</p>
 <pre><code class="language-julia">using MLJ
@@ -159,7 +159,7 @@ save_object&#40;&quot;mytuple.jld2&quot;, x&#41;</code></pre>
 <pre><code class="language-julia">using JLD2
 
 x &#61; load_object&#40;&quot;mytuple.jld2&quot;&#41;</code></pre>
-<p>&#40;extraido de <a href="https://stackoverflow.com/questions/67143280/save-data-in-julia">https://stackoverflow.com/questions/67143280/save-data-in-julia</a>&#41;.</p>
+<p>&#40;extraído de <a href="https://stackoverflow.com/questions/67143280/save-data-in-julia">https://stackoverflow.com/questions/67143280/save-data-in-julia</a>&#41;.</p>
 <h2 id="sumar_listas_por_comprensión_que_podrían_estar_vacías"><a href="#sumar_listas_por_comprensión_que_podrían_estar_vacías" class="header-anchor">Sumar listas por comprensión que podrían estar vacías</a></h2>
 <p>Cuando hacemos algo como:</p>
 <pre><code class="language-julia">sum&#40;x for x in X&#41;</code></pre>
@@ -184,7 +184,7 @@ Closest candidates are:
 <p>Otra es usar <em>reduce</em>:</p>
 <pre><code class="language-julia">reduce&#40;&#43;, x for x in X; init&#61;0.0&#41;</code></pre>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: September 04, 2025.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: December 16, 2025.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

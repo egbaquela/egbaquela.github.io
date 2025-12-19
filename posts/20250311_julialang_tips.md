@@ -21,7 +21,7 @@ using XLSX
 XLSX.writetable("new_file.xlsx", "sheet1" => df)
 ```
 
-Extraido de: [https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel](https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel)
+Extraído de: [https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel](https://stackoverflow.com/questions/76090037/how-to-save-changes-of-dataframe-from-julia-to-excel-as-new-excel)
 
 ## Leer un dataframe desde un archivo excel
 
@@ -151,7 +151,7 @@ nodenames = ["columna1", "columna2", "columna3"]
 df = DataFrame([[] for _ = nodenames] , nodenames)
 ```
 
-Extraido de [https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936](https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936), hay que adaptarlo si queremos definir tipos tambien.
+Extraído de [https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936](https://discourse.julialang.org/t/how-to-make-empty-dataframe-with-column-names/77936), hay que adaptarlo si queremos definir tipos tambien.
 
 ## Averiguar que modelos de aprendizaje automático puedo usar con mis datos (usando MLJ)
 Dado un conjunto de predictores _Xtrain_ y una variable a predecir _ytrain_, el siguiente código nos lista (en un dataframe) todos los modelos que permiten el tipo de datos asociado a las features y al target:
@@ -204,7 +204,7 @@ using JLD2
 x = load_object("mytuple.jld2")
 ```
 
-(extraido de [https://stackoverflow.com/questions/67143280/save-data-in-julia](https://stackoverflow.com/questions/67143280/save-data-in-julia)).
+(extraído de [https://stackoverflow.com/questions/67143280/save-data-in-julia](https://stackoverflow.com/questions/67143280/save-data-in-julia)).
 
 ## Sumar listas por comprensión que podrían estar vacías
 
