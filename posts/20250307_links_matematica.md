@@ -15,6 +15,7 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 ## General
  * OSSU (en inglés, repositorio): [https://github.com/ossu](https://github.com/ossu)
  * Matemática a distancia - COMALes - Facultad de Ciencias de la UNAM (en español, en video): [https://www.mdistancia.com/comales](https://www.mdistancia.com/comales)
+ * Ciencia Aplicada, ejemplos interactivos en HTML: [https://applied-science.com.ar/](https://applied-science.com.ar/)
 
 ## Álgebra
 
@@ -41,3 +42,6 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 ## Optimización lineal
 
 ## Optimización no-lineal
+
+## Simulación
+* SEN9110 Simulation Masterclass (curso avanzado de simulación): [https://simulation.tudelft.nl/SEN9110/index.php](https://simulation.tudelft.nl/SEN9110/index.php)

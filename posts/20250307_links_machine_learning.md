@@ -14,23 +14,34 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 
 ## Fundamentos
-
  * Curso introductorio (en inglés, en video): [https://www.youtube.com/playlist?list=PLOU2XLYxmsII9mzQ-Xxug4l2o04JBrkLV](https://www.youtube.com/playlist?list=PLOU2XLYxmsII9mzQ-Xxug4l2o04JBrkLV)
  * Curso introductorio, de Bloomberg (en inglés, libro web): [https://bloomberg.github.io/foml/#home](https://bloomberg.github.io/foml/#home)
  * _Made with ML_. Otro curso introductorio (en ingles, libro web): [https://madewithml.com/#course](https://madewithml.com/#course)
  * Repositorio de _Made with ML_ (en inglés, repo): [https://github.com/GokuMohandas/Made-With-ML](https://github.com/GokuMohandas/Made-With-ML)
 
 ## Ciencia de datos con Julia
-
 * Repo del libro _Julia Data Science_ (en inglés, repositorio): [https://github.com/JuliaDataScience/JuliaDataScience](https://github.com/JuliaDataScience/JuliaDataScience)
 * Blog (desactualizado) sobre el uso de Julia para ciencia de datos (en inglés, blog): [https://www.juliafordatascience.com/](https://www.juliafordatascience.com/)
 * Discusión en Discourse acerca de como iniciarse en la ciencia de datos con Julia (en inglés, foro): [https://discourse.julialang.org/t/whats-the-current-spring-2024-canonical-approach-to-data-science-in-julia/112427](https://discourse.julialang.org/t/whats-the-current-spring-2024-canonical-approach-to-data-science-in-julia/112427)
 * Repo de un curso de _Julia Academy_ sobre Julia para Machine Learning (en ingles, repo): [https://github.com/JuliaAcademy/DataScience](https://github.com/JuliaAcademy/DataScience)
 
-## Redes neuronales
+## Deep learning
+* Curso de Deep Learning: [https://atcold.github.io/NYU-DLSP21/](https://atcold.github.io/NYU-DLSP21/)
+* Cursos de CAMLab: [https://www.youtube.com/@CAMLabETHZurich](https://www.youtube.com/@CAMLabETHZurich)
 
- * Curso _Neural Networks: Zero to Hero_ de _Andrej Karpathy_, uno de los desarrolladores de _GPT_ de (not)_Open AI_ (en inglés, en video): [https://karpathy.ai/zero-to-hero.html](https://karpathy.ai/zero-to-hero.html)
+## Physics informed neural networks
+* So, what is a physics-informed neural network?: [https://benmoseley.blog/my-research/so-what-is-a-physics-informed-neural-network/](https://benmoseley.blog/my-research/so-what-is-a-physics-informed-neural-network/)
+
+## Forecasting
+* Forecasting: Principles and Practice (libro online interactivo, en R): [https://otexts.com/fpp3/index.html](https://otexts.com/fpp3/index.html)
+* Forecasting: Principles and Practice (libro online interactivo, en Python): [https://otexts.com/fpppy/](https://otexts.com/fpppy/)
 
 ## LLM
-
 * _Nano-GPT_, de _Andrej Karpathy_ (en inglés, repositorio): [https://github.com/karpathy/nanoGPT](https://github.com/karpathy/nanoGPT)
+* Deep Dive into LLMs like ChatGPT, de _Andrej Karpathy_: [https://www.youtube.com/watch?v=7xTGNNLPyMI](https://www.youtube.com/watch?v=7xTGNNLPyMI)
+
+## Redes neuronales
+* Curso _Neural Networks: Zero to Hero_ de _Andrej Karpathy_, uno de los desarrolladores de _GPT_ de (not)_Open AI_ (en inglés, en video): [https://karpathy.ai/zero-to-hero.html](https://karpathy.ai/zero-to-hero.html)
+
+
+

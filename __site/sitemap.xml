@@ -20,8 +20,26 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_videojuegos_digital_twins/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_links_computacion_cientifica/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/en_los_medios/index.html</loc>
     <lastmod>2025-12-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_links_repositorios_paper_io/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -45,19 +63,25 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html</loc>
-    <lastmod>2025-04-25</lastmod>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/lista_posts/index.html</loc>
-    <lastmod>2025-12-19</lastmod>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250311_julialang_tips/index.html</loc>
     <lastmod>2025-12-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_otros_enfoques_aprendizaje_automatico/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -93,7 +117,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20251207_tutoriales_godot/index.html</loc>
-    <lastmod>2025-12-07</lastmod>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -105,13 +129,13 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20251201_sitios_basados_en_pluto/index.html</loc>
-    <lastmod>2025-12-01</lastmod>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_machine_learning/index.html</loc>
-    <lastmod>2025-04-25</lastmod>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -134,6 +158,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_links_fisica/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/posts/20251122_primer_juego_godot/index.html</loc>
     <lastmod>2025-11-22</lastmod>
     <changefreq>monthly</changefreq>
@@ -141,7 +171,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_julia_lang/index.html</loc>
-    <lastmod>2025-04-25</lastmod>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>

@@ -12,30 +12,27 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 \toc
 
+## Cheatsheets
+* The Fast Track to Julia: [https://cheatsheet.juliadocs.org/](https://cheatsheet.juliadocs.org/)
 
 ## Ciencia de datos con Julia
-
 * Repo del libro _Julia Data Science_ (en inglés, repositorio): [https://github.com/JuliaDataScience/JuliaDataScience](https://github.com/JuliaDataScience/JuliaDataScience)
 * Blog (desactualizado) sobre el uso de Julia para ciencia de datos (en inglés, blog): [https://www.juliafordatascience.com/](https://www.juliafordatascience.com/)
 * Discusión en Discourse acerca de como iniciarse en la ciencia de datos con Julia (en inglés, foro): [https://discourse.julialang.org/t/whats-the-current-spring-2024-canonical-approach-to-data-science-in-julia/112427](https://discourse.julialang.org/t/whats-the-current-spring-2024-canonical-approach-to-data-science-in-julia/112427)
 * Repo de un curso de _Julia Academy_ sobre Julia para Machine Learning (en ingles, repo): [https://github.com/JuliaAcademy/DataScience](https://github.com/JuliaAcademy/DataScience)
 
 ## Buenas prácticas
-
 * Flujo de trabajo con _Julia_ (en ingles, libro web): [https://modernjuliaworkflows.org/](https://modernjuliaworkflows.org/)
 * Creación de paquetes (en ingles, documentación web): [https://pkgdocs.julialang.org/v1/creating-packages/](https://pkgdocs.julialang.org/v1/creating-packages/)
 
 ## Performance
-
 * Tips generales de performance (en inglés, blog): [https://www.juliafordatascience.com/performance-tips/](https://www.juliafordatascience.com/performance-tips/)
 
 ## Crear publicaciones (libros, webs) con Julia
-
 * _Books.jl_, paquete utilizado para crear el libro _Julia Data Science_ (en ingles, repo): [https://github.com/JuliaBooks/Books.jl](https://github.com/JuliaBooks/Books.jl)
 * Manual de _Books.jl_ (en ingles, libro web): [https://huijzer.xyz/Books.jl/config](https://huijzer.xyz/Books.jl/config) 
 
 ## Interface Julia-Python
-
 * PyJulia (en inglés, documentación): [https://pyjulia.readthedocs.io/en/latest/index.html](https://pyjulia.readthedocs.io/en/latest/index.html)
 * Repo de PyJulia (en inglés, repositorio): [https://github.com/JuliaPy/pyjulia](https://github.com/JuliaPy/pyjulia)
 * PythonCall y JuliaCall (en inglés, documentación): [https://juliapy.github.io/PythonCall.jl/stable/](https://juliapy.github.io/PythonCall.jl/stable/)
@@ -45,7 +42,20 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 * Conversaciones en Discourse acerca del tema (en inglés, foro): [https://discourse.julialang.org/t/efficiency-for-calling-julia-from-python-and-purely-run-julia/81484/4](https://discourse.julialang.org/t/efficiency-for-calling-julia-from-python-and-purely-run-julia/81484/4)
 * Post en Stack Overflow acerca del tema (en inglés, foro): [https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall](https://stackoverflow.com/questions/74930922/how-to-load-a-custom-julia-package-in-python-using-pythons-juliacall)
 
-## Static compilation
+## Interfaces gráficas
+* CImGui, wrapper de [DearImGui](https://github.com/ocornut/imgui): [https://github.com/JuliaImGui/CImGui.jl](https://github.com/JuliaImGui/CImGui.jl)
 
+## Pluto
+* Repositorio: [https://github.com/fonsp/Pluto.jl](https://github.com/fonsp/Pluto.jl)
+* Ejemplos varios de Fonsp: [https://fonsp.com/disorganised-mess/](https://fonsp.com/disorganised-mess/)
+
+## Static compilation
+* Repo de JuliaC: [https://github.com/JuliaLang/JuliaC.jl](https://github.com/JuliaLang/JuliaC.jl)
 * Repo de _StaticCompiler.jl_ (en inglés, repo): [https://github.com/tshort/StaticCompiler.jl](https://github.com/tshort/StaticCompiler.jl)
 * Discusión en Discourse sobre el tema (en inglés, foro): [https://discourse.julialang.org/t/static-compilation-in-julia/124416/8](https://discourse.julialang.org/t/static-compilation-in-julia/124416/8) 
+
+## Distribución de versiones precompiladas
+* JUMBO, versión precompilada y repo que sirve de base para crear versiones precompiladas propias: [https://github.com/JanisErdmanis/Jumbo](https://github.com/JanisErdmanis/Jumbo)
+* Curso en Pluto precompilado: [https://github.com/jbrea/PrecompilePlutoCourse.jl](https://github.com/jbrea/PrecompilePlutoCourse.jl)
+* System Image Loader: [https://github.com/MichaelHatherly/SystemImageLoader.jl](https://github.com/MichaelHatherly/SystemImageLoader.jl)
+* Curated System Images (hermano del anterior): [https://github.com/MichaelHatherly/curated-system-images](https://github.com/MichaelHatherly/curated-system-images)

@@ -11,7 +11,7 @@ tags = ["godot", "videojuegos", "aprendizaje"]
 
 No hay mucho material sobre [Godot](https://godotengine.org/es/), pero lo que hay es muy bueno. Así que voy a usar este post para armar una lista de recursos de aprendizaje:
 
-
+\toc
 
 ## Videotutoriales:
 ### Generales
@@ -31,8 +31,14 @@ No hay mucho material sobre [Godot](https://godotengine.org/es/), pero lo que ha
 * Como usar la pantalla táctil como input: [https://www.youtube.com/watch?v=K8MDPR5yxV0](https://www.youtube.com/watch?v=K8MDPR5yxV0).
 
 ## Documentación
+* Documentación oficial de GODOT Engine: [https://docs.godotengine.org/es/4.x/index.html](https://docs.godotengine.org/es/4.x/index.html).
 
-* Documentación oficial de GODOT Engine: [https://docs.godotengine.org/es/4.x/index.html](https://docs.godotengine.org/es/4.x/index.html)
+## Simulaciones
+* Open Industry Project: [https://github.com/Open-Industry-Project/Open-Industry-Project](https://github.com/Open-Industry-Project/Open-Industry-Project)
+
+## Varios
+* Charla acerca del uso de GODOT para juegos serios: [https://www.youtube.com/watch?app=desktop&v=CWzElZfWxuI&t=677s&sttick=0](https://www.youtube.com/watch?app=desktop&v=CWzElZfWxuI&t=677s&sttick=0).
+* Charla sobre como crear aplicaciones (que no sean juegos) en GODOT: [https://www.youtube.com/watch?app=desktop&v=cJ5Rkk5fnGg&sttick=0](https://www.youtube.com/watch?app=desktop&v=cJ5Rkk5fnGg&sttick=0).
 
 
 

@@ -12,12 +12,21 @@ tags = ["general"]
 
 \toc
 
+## Computación científica en general
+
+* [Links sobre computacion científica](../posts/20251226_links_computacion_cientifica)
+
 ## Docencia
 
 * [Integrando contenido sobre Inteligencia Artificial en la curricula de Ingeniería Industrial](../posts/20250505_inteligencia_artificial_en_ingenieria_industrial)
 
+## Física
+
+* [Links sobre material de autoaprendizaje](../posts/20251226_links_fisica)
+
 ## Investigación Operativa
 
+* [Repositorios de papers interesantes de IO](../posts/20251226_links_repositorios_paper_io)
 * [Juegos sobre el problema de la mochila](../posts/20250425_juegos_sobre_el_problema_de_la_mochila)
 * [Links sobre el Knapsack problem](../posts/20250425_links_sobre_el_knapsack_problem)
 
@@ -41,6 +50,7 @@ tags = ["general"]
 
 ## Machine Learning
 
+* [Otros enfoques para aprendizaje automático](../posts/20251226_otros_enfoques_aprendizaje_automatico)
 * [Links sobre material de autoaprendizaje](../posts/20250307_links_machine_learning)
 
 ## Matemática
@@ -51,6 +61,10 @@ tags = ["general"]
 ## Mis cursos
 
 * [Apuntes de mis clases de Investigación Operativa y de IA](../posts/20251219_apuntes_clases_io_e_ia)
+
+## Simulaciones
+
+* [Links sobre implementación de Digital Twins usando motores de videoojuegos](../posts/20251226_videojuegos_digital_twins)
 
 ## Supply Chain
 * [Material de estudio sobre cadenas de suministros](../posts/20251207_material_supply_chain)
