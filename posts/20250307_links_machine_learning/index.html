@@ -46,9 +46,11 @@
 <div class="franklin-content">
 <h1 id="links_sobre_machine_learning"><a href="#links_sobre_machine_learning" class="header-anchor">Links sobre machine learning</a></h1>
 <p>El objetivo de este post es ir recolectando links útiles para el auto-aprendizaje de machine learning y data science. No solo para aprender cosas que todavía no se, sinó también para mis clases, siempre hay material interesante que aporta una nueva visión sobre algo que uno ya conoce. A medida que encuentre nuevo material lo voy a ir subiendo.</p>
-<div class="franklin-toc"><ol><li><a href="#fundamentos">Fundamentos</a></li><li><a href="#ciencia_de_datos_con_julia">Ciencia de datos con Julia</a></li><li><a href="#deep_learning">Deep learning</a></li><li><a href="#physics_informed_neural_networks">Physics informed neural networks</a></li><li><a href="#forecasting">Forecasting</a></li><li><a href="#llm">LLM</a></li><li><a href="#redes_neuronales">Redes neuronales</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#fundamentos">Fundamentos</a></li><li><a href="#diferenciación_automática">Diferenciación automática</a></li><li><a href="#ciencia_de_datos_con_julia">Ciencia de datos con Julia</a></li><li><a href="#convolución">Convolución</a></li><li><a href="#deep_learning">Deep learning</a></li><li><a href="#physics_informed_neural_networks">Physics informed neural networks</a></li><li><a href="#forecasting">Forecasting</a></li><li><a href="#llm">LLM</a></li><li><a href="#optimizadores">Optimizadores</a></li><li><a href="#transfer_learning">Transfer learning</a></li><li><a href="#redes_neuronales">Redes neuronales</a></li><li><a href="#redes_neuronales_bayesianas">Redes neuronales bayesianas</a></li></ol></div>
 <h2 id="fundamentos"><a href="#fundamentos" class="header-anchor">Fundamentos</a></h2>
 <ul>
+<li><p>Julia programming for Machine Learning &#40;curso en Pluto&#41;: <a href="https://adrianhill.de/julia-ml-course/">https://adrianhill.de/julia-ml-course/</a></p>
+</li>
 <li><p>Curso introductorio &#40;en inglés, en video&#41;: <a href="https://www.youtube.com/playlist?list&#61;PLOU2XLYxmsII9mzQ-Xxug4l2o04JBrkLV">https://www.youtube.com/playlist?list&#61;PLOU2XLYxmsII9mzQ-Xxug4l2o04JBrkLV</a></p>
 </li>
 <li><p>Curso introductorio, de Bloomberg &#40;en inglés, libro web&#41;: <a href="https://bloomberg.github.io/foml/#home">https://bloomberg.github.io/foml/#home</a></p>
@@ -58,6 +60,11 @@
 <li><p>Repositorio de <em>Made with ML</em> &#40;en inglés, repo&#41;: <a href="https://github.com/GokuMohandas/Made-With-ML">https://github.com/GokuMohandas/Made-With-ML</a></p>
 </li>
 <li><p>Computational and Inferential Thinking Course: <a href="https://inferentialthinking.com/">https://inferentialthinking.com/</a></p>
+</li>
+</ul>
+<h2 id="diferenciación_automática"><a href="#diferenciación_automática" class="header-anchor">Diferenciación automática</a></h2>
+<ul>
+<li><p>An Illustrated Guide to Automatic Sparse Differentiation: <a href="https://iclr-blogposts.github.io/2025/blog/sparse-autodiff/">https://iclr-blogposts.github.io/2025/blog/sparse-autodiff/</a></p>
 </li>
 </ul>
 <h2 id="ciencia_de_datos_con_julia"><a href="#ciencia_de_datos_con_julia" class="header-anchor">Ciencia de datos con Julia</a></h2>
@@ -71,8 +78,17 @@
 <li><p>Repo de un curso de <em>Julia Academy</em> sobre Julia para Machine Learning &#40;en ingles, repo&#41;: <a href="https://github.com/JuliaAcademy/DataScience">https://github.com/JuliaAcademy/DataScience</a></p>
 </li>
 </ul>
+<h2 id="convolución"><a href="#convolución" class="header-anchor">Convolución</a></h2>
+<ul>
+<li><p>Post acerca de como implementar convolución en Julia: &#91;https://medium.com/data-science/understanding-convolution-by-implementing-in-julia-3ed744e2e933&#93;&#91;https://medium.com/data-science/understanding-convolution-by-implementing-in-julia-3ed744e2e933&#93;</p>
+</li>
+</ul>
 <h2 id="deep_learning"><a href="#deep_learning" class="header-anchor">Deep learning</a></h2>
 <ul>
+<li><p>Julia for Deep Learning: <a href="https://apxml.com/courses/julia-deep-learning">https://apxml.com/courses/julia-deep-learning</a></p>
+</li>
+<li><p>Comparación entre Flux, TensorFlow y PyTorch &#40;sesgada hacia el lado de Julia&#41;: <a href="https://aicompetence.org/flux-jl-vs-pytorch-tensorflow-julia/">https://aicompetence.org/flux-jl-vs-pytorch-tensorflow-julia/</a></p>
+</li>
 <li><p>Curso de Deep Learning for Computer Vision: <a href="https://www.youtube.com/playlist?list&#61;PLoROMvodv4rOmsNzYBMe0gJY2XS8AQg16">https://www.youtube.com/playlist?list&#61;PLoROMvodv4rOmsNzYBMe0gJY2XS8AQg16</a></p>
 </li>
 <li><p>Curso de Deep Learning: <a href="https://atcold.github.io/NYU-DLSP21/">https://atcold.github.io/NYU-DLSP21/</a></p>
@@ -102,14 +118,35 @@
 <ul>
 <li><p>Building Large Language Models &#40;en inglés, video&#41;: <a href="https://www.youtube.com/watch?v&#61;9vM4p9NN0Ts">https://www.youtube.com/watch?v&#61;9vM4p9NN0Ts</a> </p>
 </li>
+<li><p><em>Nano-Chat</em>, de <em>Andrej Karpathy</em> &#40;en inglés, repositorio&#41;: <a href="https://github.com/karpathy/nanochat/tree/master">https://github.com/karpathy/nanochat/tree/master</a></p>
+</li>
 <li><p><em>Nano-GPT</em>, de <em>Andrej Karpathy</em> &#40;en inglés, repositorio&#41;: <a href="https://github.com/karpathy/nanoGPT">https://github.com/karpathy/nanoGPT</a></p>
 </li>
 <li><p>Deep Dive into LLMs like ChatGPT, de <em>Andrej Karpathy</em> &#40;en inglés, video&#41;: <a href="https://www.youtube.com/watch?v&#61;7xTGNNLPyMI">https://www.youtube.com/watch?v&#61;7xTGNNLPyMI</a></p>
 </li>
 </ul>
+<h2 id="optimizadores"><a href="#optimizadores" class="header-anchor">Optimizadores</a></h2>
+<ul>
+<li><p>Post sobre optimizadores para redes neuronales, desde <em>descenso por gradiente</em> hasta <em>ADAM</em>: &#91;https://medium.com/@abhishekjainindore24/story-about-optimizers-from-gradient-descent-to-adam-optimizer-94804f5a0614&#93;&#91;https://medium.com/@abhishekjainindore24/story-about-optimizers-from-gradient-descent-to-adam-optimizer-94804f5a0614&#93;</p>
+</li>
+</ul>
+<h2 id="transfer_learning"><a href="#transfer_learning" class="header-anchor">Transfer learning</a></h2>
+<ul>
+<li><p>Transfer learning with Flux: <a href="https://towardsdatascience.com/transfer-learning-and-twin-network-for-image-classification-using-flux-jl-cbe012ced146/">https://towardsdatascience.com/transfer-learning-and-twin-network-for-image-classification-using-flux-jl-cbe012ced146/</a></p>
+</li>
+<li><p>&#40;Another&#41; Transfer learning with Flux: <a href="https://medium.com/@mr.vladimir.markovic1979/introduction-revolutionizing-model-fine-tuning-with-julia-flux-jl-66a12d259b8a">https://medium.com/@mr.vladimir.markovic1979/introduction-revolutionizing-model-fine-tuning-with-julia-flux-jl-66a12d259b8a</a></p>
+</li>
+</ul>
 <h2 id="redes_neuronales"><a href="#redes_neuronales" class="header-anchor">Redes neuronales</a></h2>
 <ul>
 <li><p>Curso <em>Neural Networks: Zero to Hero</em> de <em>Andrej Karpathy</em>, uno de los desarrolladores de <em>GPT</em> de &#40;not&#41;<em>Open AI</em> &#40;en inglés, en video&#41;: <a href="https://karpathy.ai/zero-to-hero.html">https://karpathy.ai/zero-to-hero.html</a></p>
+</li>
+</ul>
+<h2 id="redes_neuronales_bayesianas"><a href="#redes_neuronales_bayesianas" class="header-anchor">Redes neuronales bayesianas</a></h2>
+<ul>
+<li><p>Un post &#40;viejito&#41; acerca de como implementarlas con Flux.jl: <a href="https://dm13450.github.io/2020/12/19/EdwardAndFlux.html">https://dm13450.github.io/2020/12/19/EdwardAndFlux.html</a></p>
+</li>
+<li><p>Un tutorial usando Turing y Flux: <a href="https://turing.ml/dev/tutorials/03-bayesian-neural-network/">https://turing.ml/dev/tutorials/03-bayesian-neural-network/</a></p>
 </li>
 </ul>
 <div class="page-foot">
