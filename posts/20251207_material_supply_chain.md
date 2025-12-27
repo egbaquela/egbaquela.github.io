@@ -11,6 +11,8 @@ tags = ["supply chain", "logistics", "cadena de suministros", "logística", "aut
 
 Recopilo en este post material de estudio sobre diseño, gestión, optimización y control de cadenas de suministros:
 
+\toc
+
 ## Libros:
 
 ### Generales sobre Supply Chain

@@ -39,4 +39,23 @@
   </atom:author>
         
 </item>
+
+<item>
+  <title>
+    <![CDATA[  Acerca de la Open Source Society University  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20250310_ossu/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20250310_ossu/index.html </guid>
+  <description>
+    <![CDATA[  Reseña de la Open Source Society University &#40;OSSU&#41;.  ]]>
+  </description>  
+    
+  <pubDate>Mon, 10 Mar 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
 </channel></rss>

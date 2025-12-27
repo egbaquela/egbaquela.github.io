@@ -24,8 +24,13 @@ tags = ["general"]
 
 * [Links sobre material de autoaprendizaje](../posts/20251226_links_fisica)
 
+## Inteligencia Artificial
+* [Algunos análisis sobre el estado de los LLMs al finalizar 2025](../posts/20251227_analisis_ia_2025)
+
 ## Investigación Operativa
 
+* [Recordatorios que el modelo de optimización es un medio, no un fin](../posts/20251227_io_modelos_medios)
+* [Links sobre material de autoaprendizaje](../posts/20251227_links_io)
 * [Repositorios de papers interesantes de IO](../posts/20251226_links_repositorios_paper_io)
 * [Juegos sobre el problema de la mochila](../posts/20250425_juegos_sobre_el_problema_de_la_mochila)
 * [Links sobre el Knapsack problem](../posts/20250425_links_sobre_el_knapsack_problem)
@@ -67,6 +72,7 @@ tags = ["general"]
 * [Links sobre implementación de Digital Twins usando motores de videoojuegos](../posts/20251226_videojuegos_digital_twins)
 
 ## Supply Chain
+* [Juego de la cerveza jugado por agentes de IA](20251227_juego_cerveza_con_agentes.)
 * [Material de estudio sobre cadenas de suministros](../posts/20251207_material_supply_chain)
 
 ## Varios

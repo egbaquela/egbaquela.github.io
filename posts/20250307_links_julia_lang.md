@@ -48,6 +48,7 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 ## Pluto
 * Repositorio: [https://github.com/fonsp/Pluto.jl](https://github.com/fonsp/Pluto.jl)
 * Ejemplos varios de Fonsp: [https://fonsp.com/disorganised-mess/](https://fonsp.com/disorganised-mess/)
+* Pluto Desktop: [https://github.com/JuliaPluto/PlutoDesktop](https://github.com/JuliaPluto/PlutoDesktop)
 
 ## Static compilation
 * Repo de JuliaC: [https://github.com/JuliaLang/JuliaC.jl](https://github.com/JuliaLang/JuliaC.jl)

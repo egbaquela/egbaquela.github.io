@@ -4,7 +4,7 @@ hascode = false
 date = Date(2025, 3, 7)
 rss = "Links sobre matemática. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 
-tags = ["autoaprendizaje", "matematica"]
+tags = ["autoaprendizaje", "matemática"]
 +++
 
 # Links sobre matemática
@@ -38,6 +38,9 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 ## Estadística
 
  * Curso introductorio (en inglés, en video): [https://www.youtube.com/playlist?list=PLC8478000586FA6F9](https://www.youtube.com/playlist?list=PLC8478000586FA6F9)
+
+## Economía cuantitativa
+ * Curso intermedio de economía cuantitativa: [https://python.quantecon.org/intro.html](https://python.quantecon.org/intro.html)
 
 ## Optimización lineal
 
