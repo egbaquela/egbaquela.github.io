@@ -12,6 +12,10 @@ tags = ["general"]
 
 \toc
 
+## Computación
+
+* [Links sobre material de autoaprendizaje](../posts/20251227_links_computacion)
+
 ## Computación científica en general
 
 * [Links sobre computacion científica](../posts/20251226_links_computacion_cientifica)

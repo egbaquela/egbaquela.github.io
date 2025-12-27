@@ -27,6 +27,9 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
  * Muy muy buena explicación intuitiva sobre que es la convolución (en inglés, blog): [https://betterexplained.com/articles/intuitive-convolution/](https://betterexplained.com/articles/intuitive-convolution/)
  * Acerca de la utilización de color en la explicación de fórmulas matemáticas (en inglés, blog): [https://betterexplained.com/articles/colorized-math-equations/](https://betterexplained.com/articles/colorized-math-equations/)
 
+## Diferenciación automática
+* An Illustrated Guide to Automatic Sparse Differentiation: [https://iclr-blogposts.github.io/2025/blog/sparse-autodiff/](https://iclr-blogposts.github.io/2025/blog/sparse-autodiff/)
+
 ## Geometría
 
  * Curso introductorio (en inglés, en video): [https://www.youtube.com/playlist?list=PL668AB35C6885A036](https://www.youtube.com/playlist?list=PL668AB35C6885A036)
@@ -41,10 +44,3 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 ## Economía cuantitativa
  * Curso intermedio de economía cuantitativa: [https://python.quantecon.org/intro.html](https://python.quantecon.org/intro.html)
-
-## Optimización lineal
-
-## Optimización no-lineal
-
-## Simulación
-* SEN9110 Simulation Masterclass (curso avanzado de simulación): [https://simulation.tudelft.nl/SEN9110/index.php](https://simulation.tudelft.nl/SEN9110/index.php)

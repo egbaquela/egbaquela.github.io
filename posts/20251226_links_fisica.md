@@ -1,7 +1,7 @@
 +++
 title = "Links sobre física"
 hascode = false
-date = Date(2025, 3, 7)
+date = Date(2025, 12, 26)
 rss = "Links sobre física. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 
 tags = ["autoaprendizaje", "física"]

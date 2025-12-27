@@ -19,6 +19,8 @@ Algunos ejemplos de cursos creados de esta manera se pueden ver en:
 
 * Computational Thinking (MIT): [https://computationalthinking.mit.edu/](https://computationalthinking.mit.edu/)
 * Ciência de Dados e Computação Científica com Julia: [https://storopoli.github.io/Computacao-Cientifica/](https://storopoli.github.io/Computacao-Cientifica/)
+* Julia for Deep Learning: [https://apxml.com/courses/julia-deep-learning](https://apxml.com/courses/julia-deep-learning)
+* Cuadernos interactivos de probabilidad y estadística: [https://github.com/Santymax98/Probabilidad_y_estadistica](https://github.com/Santymax98/Probabilidad_y_estadistica)
 
 Por otro lado, al momento de distribuir los materiales del curso, es buena idea precompilar los paquetes, para evitar la deserción de potenciales alumos por el tiempo de instalación de paquetes y primeras ejecuciones:
 

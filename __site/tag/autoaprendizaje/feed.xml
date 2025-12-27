@@ -23,6 +23,25 @@
 
 <item>
   <title>
+    <![CDATA[  Links sobre computación  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre computación. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+  </description>  
+    
+  <pubDate>Sat, 27 Dec 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Links sobre Investigación Operativa  ]]>
   </title>
   <link> https://www.egbaquela.com.ar/posts/20251227_links_io/index.html </link>
@@ -32,6 +51,25 @@
   </description>  
     
   <pubDate>Sat, 27 Dec 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Links sobre física  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20251226_links_fisica/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20251226_links_fisica/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre física. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+  </description>  
+    
+  <pubDate>Fri, 26 Dec 2025 00:00:00 +0000</pubDate>  
   
   
   <atom:author>
@@ -105,25 +143,6 @@
   <guid> https://www.egbaquela.com.ar/posts/20250307_links_machine_learning/index.html </guid>
   <description>
     <![CDATA[  Links sobre machine learning y data science. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
-  </description>  
-    
-  <pubDate>Fri, 07 Mar 2025 00:00:00 +0000</pubDate>  
-  
-  
-  <atom:author>
-    <atom:name>Enrique Gabriel Baquela</atom:name>
-  </atom:author>
-        
-</item>
-
-<item>
-  <title>
-    <![CDATA[  Links sobre física  ]]>
-  </title>
-  <link> https://www.egbaquela.com.ar/posts/20251226_links_fisica/index.html </link>
-  <guid> https://www.egbaquela.com.ar/posts/20251226_links_fisica/index.html </guid>
-  <description>
-    <![CDATA[  Links sobre física. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
   </description>  
     
   <pubDate>Fri, 07 Mar 2025 00:00:00 +0000</pubDate>  

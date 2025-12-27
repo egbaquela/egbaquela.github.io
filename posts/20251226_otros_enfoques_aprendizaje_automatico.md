@@ -1,16 +1,16 @@
 +++
-title = "Otros enfoque sobre el aprendizaje automático"
+title = "Otros enfoques sobre el aprendizaje automático"
 hascode = false
 date = Date(2025, 12, 27)
-rss = "Otros enfoque sobre el aprendizaje automático (Circuitos lógicos y probabilísticos y Tsetlin Machines"
+rss = "Otros enfoques sobre el aprendizaje automático (Circuitos lógicos y probabilísticos y Tsetlin Machines"
 
 tags = ["machine learning", "julialang", "python", "circuitos lógicos", "circuitos probabilísticos", "tsetlin machines"]
 +++
 
 
-# Otros enfoque sobre el aprendizaje automático
+# Otros enfoques sobre el aprendizaje automático
 
-No todo el aprendizaje automático se reduce a redes neuronales, árboles y modelos tipo KNN. Hay otros enfoques muy potentes y versátiles, si bien todavía incipientes. En este post dejo una recopilación de links sobre _Circuitos lógicos y probabilísticos_ y _Tsetlin Machines_.
+No todo el aprendizaje automático se reduce a redes neuronales, árboles y modelos tipo KNN. Hay otros enfoques muy potentes y versátiles, si bien todavía incipientes. En este post dejo una recopilación de links sobre _Circuitos lógicos y probabilísticos_, _Tsetlin Machines_ e IA Neurosimbólica.
 
 ## Bibliotecas de circuitos lógicos y probabilísticos
 * Cirkit (biblioteca en Python): [https://cirkit-docs.readthedocs.io/en/stable/notebooks/learning-a-circuit/](https://cirkit-docs.readthedocs.io/en/stable/notebooks/learning-a-circuit/)
@@ -20,3 +20,7 @@ No todo el aprendizaje automático se reduce a redes neuronales, árboles y mode
 * Tsetlin Machine, por [CAIR](https://cair.uia.no/): [https://github.com/cair/tmu](https://github.com/cair/tmu)
 * Tsetlin Machine in Julia: [https://github.com/BooBSD/Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 * Fuzzy-Pattern Tsetlin Machine in Julia: [https://github.com/BooBSD/FuzzyPatternTM](https://github.com/BooBSD/FuzzyPatternTM)
+
+## IA neurosimbólica:
+* Neuro-Symbolic AI: Explainability, Challenges, and Future Trends: [https://arxiv.org/html/2411.04383v1](https://arxiv.org/html/2411.04383v1)
+* Dolphin - A Programmable Framework for Scalable Neurosymbolic Learning: [https://arxiv.org/abs/2410.03348v2](https://arxiv.org/abs/2410.03348v2)
