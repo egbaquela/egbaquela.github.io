@@ -74,6 +74,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/posts/20251228_recursos_videojuegos/index.html</loc>
+    <lastmod>2025-12-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html</loc>
     <lastmod>2025-12-27</lastmod>
     <changefreq>monthly</changefreq>
@@ -81,7 +87,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/lista_posts/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
+    <lastmod>2025-12-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
