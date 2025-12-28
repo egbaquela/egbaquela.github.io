@@ -85,5 +85,6 @@ tags = ["general"]
 
 ## Videojuegos
 
+* [Recursos para creación de videojuegos](../posts/20251228_recursos_videojuegos)
 * [Tutoriales y material de estudio sobre Godot](../posts/20251207_tutoriales_godot)
 * [Mi primer videojuego en Godot](../posts/20251122_primer_juego_godot)
