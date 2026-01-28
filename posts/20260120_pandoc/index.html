@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+   <link rel="stylesheet" href="/libs/highlight/styles/github.min.css">
+   
   <link rel="stylesheet" href="/css/franklin.css">
 <link rel="stylesheet" href="/css/poole_hyde.css">
 <!-- style adjustments -->
@@ -18,10 +21,10 @@
 </style>
 <link rel="icon" href="/assets/favicon.png">
 
-  <title>Tag: linux</title>
+   <title>¿Como convertir un archivo markdown a PDF en _Fedora Linux_?</title>  
 </head>
 <body>
-  <div class="sidebar">
+<div class="sidebar">
   <div class=style="text-align: center;"><img src="/assets/foto perfil cv 2025.jpeg" alt="Foto de perfil" width="210" height="210"></div>
   <div class="container sidebar-sticky">
     <div class="sidebar-about">
@@ -40,14 +43,25 @@
 </div>
 <div class="content container">
 
-  <div class="">
-    <h1>Tag: linux</h1>
-    <ul><li><a href="/posts/20260120_pandoc/">¿Como convertir un archivo markdown a PDF en _Fedora Linux_?</a></li><li><a href="/posts/20250904_recortar_video_linux/">¿Como recortar un video por línea de comandos en Linux?</a></li></ul>
-    <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. 
+<!-- Content appended here -->
+<div class="franklin-content">
+<h1 id="como_convertir_un_archivo_markdown_a_pdf_en_fedora_linux"><a href="#como_convertir_un_archivo_markdown_a_pdf_en_fedora_linux" class="header-anchor">¿Como convertir un archivo markdown a PDF en <em>Fedora Linux</em>?</a></h1>
+<p>Vamos a utilizar <a href="https://pandoc.org/"><em>pandoc</em></a>. Para ello, en la terminal, lo instalamos con el siguiente comando:</p>
+<pre><code class="language-julia">sudo dnf install pandoc texlive pdflatex</code></pre>
+<p>Y luego hacemos:</p>
+<pre><code class="language-julia">pandoc input.md -o output.pdf</code></pre>
+<p>&#40;y con el mismo <em>pandoc</em> podemos convertir a html, por ejemplo&#41;.</p>
+<div class="page-foot">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: January 27, 2026.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
+</div><!-- CONTENT ENDS HERE -->
+    </div>  <!-- div: content container -->
+    
+    
+        <script src="/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>
 
-  </div>
-</body>
+    
+  </body>
 </html>

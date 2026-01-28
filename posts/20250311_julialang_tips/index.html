@@ -47,7 +47,7 @@
 <div class="franklin-content">
 <h1 id="tips_para_el_lenguaje_de_programación_julia"><a href="#tips_para_el_lenguaje_de_programación_julia" class="header-anchor">Tips para el lenguaje de programación Julia</a></h1>
 <p>Código <em>Julia</em> para tareas menores que hago a cada rato y que no quiero tener que andar buscando en la web. Si a alguien le sirve, bienvenido. </p>
-<div class="franklin-toc"><ol><li><a href="#escribir_un_dataframe_en_un_archivo_excel">Escribir un dataframe en un archivo excel</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_excel">Leer un dataframe desde un archivo excel</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv">Escribir un dataframe en un archivo CSV</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_csv">Leer un dataframe desde un archivo CSV</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv_usando_un_pipe">Escribir un dataframe en un archivo CSV usando un pipe</a></li><li><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe">Cambiar el tipo de dato de una columna de un dataframe</a></li><li><a href="#agrupar_un_dataframe">Agrupar un Dataframe</a></li><li><a href="#crear_un_dataframe_vacío_pero_con_nombre_de_columnas">Crear un dataframe vacío pero con nombre de columnas</a></li><li><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></li><li><a href="#convertir_días_a_enteros">Convertir días a enteros</a></li><li><a href="#guardar_y_leer_una_estructura_en_un_archivo_binario">Guardar y leer una estructura en un archivo binario</a></li><li><a href="#sumar_listas_por_comprensión_que_podrían_estar_vacías">Sumar listas por comprensión que podrían estar vacías</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#escribir_un_dataframe_en_un_archivo_excel">Escribir un dataframe en un archivo excel</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_excel">Leer un dataframe desde un archivo excel</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv">Escribir un dataframe en un archivo CSV</a></li><li><a href="#leer_un_dataframe_desde_un_archivo_csv">Leer un dataframe desde un archivo CSV</a></li><li><a href="#escribir_un_dataframe_en_un_archivo_csv_usando_un_pipe">Escribir un dataframe en un archivo CSV usando un pipe</a></li><li><a href="#modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición">Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición</a></li><li><a href="#cambiar_el_tipo_de_dato_de_una_columna_de_un_dataframe">Cambiar el tipo de dato de una columna de un dataframe</a></li><li><a href="#agrupar_un_dataframe">Agrupar un Dataframe</a></li><li><a href="#crear_un_dataframe_vacío_pero_con_nombre_de_columnas">Crear un dataframe vacío pero con nombre de columnas</a></li><li><a href="#averiguar_que_modelos_de_aprendizaje_automático_puedo_usar_con_mis_datos_usando_mlj">Averiguar que modelos de aprendizaje automático puedo usar con mis datos &#40;usando MLJ&#41;</a></li><li><a href="#convertir_días_a_enteros">Convertir días a enteros</a></li><li><a href="#guardar_y_leer_una_estructura_en_un_archivo_binario">Guardar y leer una estructura en un archivo binario</a></li><li><a href="#sumar_listas_por_comprensión_que_podrían_estar_vacías">Sumar listas por comprensión que podrían estar vacías</a></li><li><a href="#lanzar_un_servidor_en_la_carpeta_de_trabajo_actual">Lanzar un servidor en la carpeta de trabajo actual</a></li><li><a href="#ver_el_contenido_del_directorio_actual">Ver el contenido del directorio actual</a></li><li><a href="#movernos_a_otro_directorio">Movernos a otro directorio</a></li></ol></div>
 <h2 id="escribir_un_dataframe_en_un_archivo_excel"><a href="#escribir_un_dataframe_en_un_archivo_excel" class="header-anchor">Escribir un dataframe en un archivo excel</a></h2>
 <pre><code class="language-julia">using DataFrames
 using XLSX
@@ -74,7 +74,7 @@ df &#61; CSV.read&#40;&quot;new_file.csv&quot;, DataFrame&#41;</code></pre>
 using CSV
 
 df |&gt; CSV.write&#40;&quot;new_file.csv&quot;&#41;</code></pre>
-<h1 id="modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición"><a href="#modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición" class="header-anchor">Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición</a></h1>
+<h2 id="modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición"><a href="#modificar_los_valores_de_una_columna_de_un_dataframe_cuando_la_fila_cumpla_alguna_condición" class="header-anchor">Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición</a></h2>
 <p>Tip extraído de <a href="https://stackoverflow.com/questions/66586623/julia-dataframe-preferred-way-to-update-values-in-one-column-based-on-the-valu">este post</a> de Stack Overflow.</p>
 <pre><code class="language-julia">using DataFrames
 
@@ -183,8 +183,18 @@ Closest candidates are:
 <pre><code class="language-julia">sum&#40;Float64.&#40;x for x in X&#41;&#41;</code></pre>
 <p>Otra es usar <em>reduce</em>:</p>
 <pre><code class="language-julia">reduce&#40;&#43;, x for x in X; init&#61;0.0&#41;</code></pre>
+<h2 id="lanzar_un_servidor_en_la_carpeta_de_trabajo_actual"><a href="#lanzar_un_servidor_en_la_carpeta_de_trabajo_actual" class="header-anchor">Lanzar un servidor en la carpeta de trabajo actual</a></h2>
+<p>Estando posicionados en la carpeta cuyo contenido queremos mostrar en el navegador, hacemos:</p>
+<pre><code class="language-julia">using LiveServer
+
+serve&#40;&#41;</code></pre>
+<p>Mas info <a href="https://juliadocs.org/LiveServer.jl/stable/">acá</a>.</p>
+<h2 id="ver_el_contenido_del_directorio_actual"><a href="#ver_el_contenido_del_directorio_actual" class="header-anchor">Ver el contenido del directorio actual</a></h2>
+<pre><code class="language-julia">pwd&#40;&#41;</code></pre>
+<h2 id="movernos_a_otro_directorio"><a href="#movernos_a_otro_directorio" class="header-anchor">Movernos a otro directorio</a></h2>
+<pre><code class="language-julia">cd&#40;&quot;path_al_directorio&quot;&#41;</code></pre>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: December 16, 2025.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: December 30, 2025.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
