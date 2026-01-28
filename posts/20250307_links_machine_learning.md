@@ -51,6 +51,7 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 * Forecasting: Principles and Practice (libro online interactivo, en Python): [https://otexts.com/fpppy/](https://otexts.com/fpppy/)
 
 ## LLM
+* Language modeling from scratch: [https://www.youtube.com/playlist?list=PLoROMvodv4rOY23Y0BoGoBGgQ1zmU_MT_](https://www.youtube.com/playlist?list=PLoROMvodv4rOY23Y0BoGoBGgQ1zmU_MT_)
 * Building Large Language Models (en inglés, video): [https://www.youtube.com/watch?v=9vM4p9NN0Ts](https://www.youtube.com/watch?v=9vM4p9NN0Ts) 
 * _Nano-Chat_, de _Andrej Karpathy_ (en inglés, repositorio): [https://github.com/karpathy/nanochat/tree/master](https://github.com/karpathy/nanochat/tree/master)
 * _Nano-GPT_, de _Andrej Karpathy_ (en inglés, repositorio): [https://github.com/karpathy/nanoGPT](https://github.com/karpathy/nanoGPT)

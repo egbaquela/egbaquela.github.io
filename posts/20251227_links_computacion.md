@@ -4,7 +4,7 @@ hascode = false
 date = Date(2025, 12, 27)
 rss = "Links sobre computación. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante"
 
-tags = ["autoaprendizaje", "computación", "python"]
+tags = ["autoaprendizaje", "computación", "python", "julialang"]
 +++
 
 
@@ -15,6 +15,8 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 ## Algoritmos
 * Implementación de algoritmos en Python para aprendizaje: [https://github.com/TheAlgorithms/Python](https://github.com/TheAlgorithms/Python)
+* Mismo link que el anterior pero en Julia: [https://github.com/TheAlgorithms/Julia/tree/main/src](https://github.com/TheAlgorithms/Julia/tree/main/src)
+* Explicación de (algunos) de los algoritmos anteriores: [https://github.com/TheAlgorithms/Algorithms-Explanation](https://github.com/TheAlgorithms/Algorithms-Explanation)
 
 ## Arquitectura
 * The Architecture of Open Source Applications: [https://aosabook.org/en/](https://aosabook.org/en/)

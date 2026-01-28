@@ -40,6 +40,7 @@ El objetivo de este post es ir recolectando links útiles para el auto-aprendiza
 
 ## Estadística
 
+ * Stats Resource Hub (en inglés, enlaces): [https://github.com/LSTP-stat/StatResourcesHub](https://github.com/LSTP-stat/StatResourcesHub)
  * Curso introductorio (en inglés, en video): [https://www.youtube.com/playlist?list=PLC8478000586FA6F9](https://www.youtube.com/playlist?list=PLC8478000586FA6F9)
 
 ## Economía cuantitativa

@@ -23,6 +23,82 @@
 
 <item>
   <title>
+    <![CDATA[  OptiMind, un LLM de Microsoft para modelado de problemas de optimización  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20260127_optimind/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20260127_optimind/index.html </guid>
+  <description>
+    <![CDATA[  Una primera impresión, sin probarlo todavía de OptiMind, un LLM de Microsoft para modelado de problemas de optimización  ]]>
+  </description>  
+    
+  <pubDate>Tue, 27 Jan 2026 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Un muy lindo post sobre el newsvendor problem  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20260127_newsvendor/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20260127_newsvendor/index.html </guid>
+  <description>
+    <![CDATA[  Un post que analiza el newsvendor problem, extrayendo sus principales conclusiones que, obviamente, no son matemáticas  ]]>
+  </description>  
+    
+  <pubDate>Tue, 27 Jan 2026 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  ¿Como convertir un archivo markdown a PDF en <em>Fedora Linux</em>?  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20260120_pandoc/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20260120_pandoc/index.html </guid>
+  <description>
+    <![CDATA[  ¿Como convertir un archivo markdown a PDF en <em>Fedora Linux</em>?  ]]>
+  </description>  
+    
+  <pubDate>Tue, 20 Jan 2026 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Visualizador de resolución de problemas de programación lineal  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20251230_visualizador_lp/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20251230_visualizador_lp/index.html </guid>
+  <description>
+    <![CDATA[  Visualizador de resolución de problemas de programación lineal  ]]>
+  </description>  
+    
+  <pubDate>Tue, 30 Dec 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
     <![CDATA[  Recursos para creación de videojuegos  ]]>
   </title>
   <link> https://www.egbaquela.com.ar/posts/20251228_recursos_videojuegos/index.html </link>

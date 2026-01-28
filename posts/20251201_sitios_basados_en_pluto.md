@@ -31,3 +31,5 @@ Para dar un poco mas de dinamismo, tenemos estos repos:
 
 * PlutoUI: [https://featured.plutojl.org/basic/plutoui.jl](https://featured.plutojl.org/basic/plutoui.jl)
 * Pluto Teaching Tools: [https://juliapluto.github.io/PlutoTeachingTools.jl/example.html](https://juliapluto.github.io/PlutoTeachingTools.jl/example.html)
+
+Por último, no creado con Pluto, pero igual ofreciendo contenido y tareas con dicho sistema, tenemos el curso de [Modern Macroeconomics](https://modernmacro.org).

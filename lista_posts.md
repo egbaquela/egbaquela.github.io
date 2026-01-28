@@ -33,6 +33,9 @@ tags = ["general"]
 
 ## Investigación Operativa
 
+* [Un muy lindo post sobre el _newsvendor problem_](../posts/20260127_newsvendor)
+* [OptiMind, un LLM de Microsoft para modelado de problemas de optimización](../posts/20260127_optimind)
+* [Visualizador de resolución de problemas de programación lineal](../posts/20251230_visualizador_lp)
 * [Recordatorios que el modelo de optimización es un medio, no un fin](../posts/20251227_io_modelos_medios)
 * [Links sobre material de autoaprendizaje](../posts/20251227_links_io)
 * [Repositorios de papers interesantes de IO](../posts/20251226_links_repositorios_paper_io)
@@ -54,6 +57,7 @@ tags = ["general"]
 
 ## Linux
 
+* [¿Como convertir un archivo markdown a PDF en _Fedora Linux_?](../posts/20260120_pandoc)
 * [¿Como recortar un video por línea de comandos?](../posts/20250904_recortar_video_linux)
 * [¿Como hacer para que desaparezca la advertencia sobre _libappindicator_ de _Dropbox_ en _Gnome_ en _Fedora Linux_?](../posts/20250430_fedora_gnome_dropbox_libappindicator)
 

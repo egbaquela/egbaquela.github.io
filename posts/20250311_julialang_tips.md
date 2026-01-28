@@ -60,7 +60,7 @@ using CSV
 df |> CSV.write("new_file.csv")
 ```
 
-# Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición
+## Modificar los valores de una columna de un dataframe cuando la fila cumpla alguna condición
 
 Tip extraído de [este post](https://stackoverflow.com/questions/66586623/julia-dataframe-preferred-way-to-update-values-in-one-column-based-on-the-valu) de Stack Overflow.
 
@@ -247,3 +247,26 @@ reduce(+, x for x in X; init=0.0)
 
 ```
 
+## Lanzar un servidor en la carpeta de trabajo actual
+
+Estando posicionados en la carpeta cuyo contenido queremos mostrar en el navegador, hacemos:
+
+```julia
+using LiveServer
+
+serve()
+```
+
+Mas info [acá](https://juliadocs.org/LiveServer.jl/stable/).
+
+## Ver el contenido del directorio actual
+
+```julia
+pwd()
+```
+
+## Movernos a otro directorio
+
+```julia
+cd("path_al_directorio")
+```
