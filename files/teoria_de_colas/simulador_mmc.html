@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador M/M/c</title>
+  <style>
+    :root {
+      --bg: #eef3f7;
+      --bg-2: #f7fafc;
+      --panel: #ffffff;
+      --panel-soft: #f8fbfd;
+      --ink: #223548;
+      --muted: #607286;
+      --line: #d7e2ec;
+      --accent: #1f6fb2;
+      --accent-2: #3989cb;
+      --accent-3: #dcecf8;
+      --accent-dark: #164f80;
+      --ok: #2d8a57;
+      --warn: #c27b2c;
+      --danger: #c94b4b;
+      --shadow: 0 14px 36px rgba(22, 47, 78, 0.10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(31, 111, 178, 0.08), transparent 24%),
+        linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
+    }
+
+    .wrap {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px 16px 42px;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, #265f93 0%, #1d547f 100%);
+      color: #fff;
+      border-radius: 22px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 18px 42px rgba(21, 58, 92, 0.22);
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.55rem, 2.4vw, 2.45rem);
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 980px;
+      color: rgba(255,255,255,0.90);
+      line-height: 1.45;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel .hd {
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(220,236,248,0.60), rgba(255,255,255,0));
+    }
+
+    .panel .hd h2,
+    .panel .hd h3 {
+      margin: 0 0 5px;
+      font-size: 1.04rem;
+      letter-spacing: -0.02em;
+      color: var(--accent-dark);
+    }
+
+    .panel .hd p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 0.92rem;
+    }
+
+    .body {
+      padding: 16px 18px 18px;
+    }
+
+    .content-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+      background: #fbfdff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(31, 111, 178, 0.12);
+    }
+
+    .hint, .small {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .note-box {
+      border: 1px dashed #b6cee2;
+      background: linear-gradient(180deg, #f2f8fc, #fbfdff);
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: #36516b;
+      line-height: 1.42;
+      font-size: 0.86rem;
+    }
+
+    .actions, .play-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--accent) 0%, #185e98 100%);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(31, 111, 178, 0.22);
+    }
+
+    .btn-secondary {
+      background: #edf5fb;
+      color: var(--accent-dark);
+      border: 1px solid #cfe0ee;
+    }
+
+    .btn-ghost {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-export {
+      background: #f4faf5;
+      color: #266844;
+      border: 1px solid #cfe5d6;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 15px;
+      min-height: 96px;
+    }
+
+    .stat .k {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .stat .v {
+      font-size: 1.68rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 5px;
+      color: var(--accent-dark);
+    }
+
+    .stat .s {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.34;
+    }
+
+    .status-banner {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .status-ok {
+      background: rgba(45, 138, 87, 0.10);
+      color: #246d46;
+      border-color: rgba(45, 138, 87, 0.18);
+    }
+
+    .status-warn {
+      background: rgba(194, 123, 44, 0.10);
+      color: #93580f;
+      border-color: rgba(194, 123, 44, 0.18);
+    }
+
+    .prob-table, .summary-table, .event-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    .prob-table th, .prob-table td,
+    .summary-table th, .summary-table td,
+    .event-table th, .event-table td {
+      border-bottom: 1px solid #e6eef4;
+      padding: 9px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .prob-table thead th,
+    .summary-table thead th,
+    .event-table thead th {
+      background: #f5f9fc;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.76rem;
+    }
+
+    .prob-bar-wrap {
+      background: #edf4fa;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      min-width: 160px;
+    }
+
+    .prob-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #77aeda);
+      border-radius: inherit;
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .formula-card, .hist-card, .chart-card, .occupancy-card {
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f9fcfe 100%);
+      padding: 12px 14px;
+    }
+
+    .formula-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .formula {
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.87rem;
+      line-height: 1.52;
+      color: #29425c;
+    }
+
+    .mono { font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; }
+    .muted { color: var(--muted); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 18px;
+    }
+
+    .histo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+    }
+
+    .hist-card h4, .chart-card h4 {
+      margin: 0 0 4px;
+      font-size: 0.98rem;
+      color: var(--accent-dark);
+    }
+
+    .hist-card p, .chart-card p {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    }
+
+    .playbar {
+      display: grid;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .slider-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .metric-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid #dbe7f1;
+      background: #f4f9fd;
+      color: #355069;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .sim-stage {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    .queue-box, .server-zone {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f9fcfe 100%);
+      padding: 14px;
+    }
+
+    .queue-title, .server-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 900;
+      color: var(--accent-dark);
+    }
+
+    .queue-people {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 92px;
+      align-content: flex-start;
+    }
+
+    .person-chip {
+      min-width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, #edf6fc, #dcecf8);
+      border: 1px solid #c8dced;
+      color: var(--accent-dark);
+    }
+
+    .server-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .server-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+      min-height: 126px;
+    }
+
+    .server-card.busy {
+      background: linear-gradient(180deg, #eef6fc 0%, #fbfdff 100%);
+      border-color: #c5dae9;
+      box-shadow: inset 0 0 0 1px rgba(31,111,178,0.05);
+    }
+
+    .server-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 900;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.74rem;
+      font-weight: 900;
+    }
+
+    .tag-idle {
+      background: rgba(45,138,87,0.10);
+      color: #256742;
+    }
+
+    .tag-busy {
+      background: rgba(31,111,178,0.10);
+      color: var(--accent-dark);
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.42;
+    }
+
+    @media (max-width: 1250px) {
+      .grid-main, .two-col, .chart-grid, .sim-stage { grid-template-columns: 1fr; }
+      .histo-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      .stats-grid, .formula-grid, .row-2 { grid-template-columns: 1fr; }
+      .slider-line { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .wrap { padding: 16px 10px 30px; }
+      .hero { padding: 20px 16px 16px; }
+    }
+
+
+    /* ===== Override de paleta basada en HTML de referencia ===== */
+    :root {
+      --bg: #0b1020;
+      --bg-2: #162045;
+      --panel: #0f1428;
+      --panel-soft: #0d1328;
+      --ink: #e7ecf3;
+      --muted: #9aa4b2;
+      --line: #1e2646;
+      --border: #1e2646;
+      --accent: #8ec5ff;
+      --accent-2: #78a6ff;
+      --accent-3: #0e1a3c;
+      --accent-dark: #8ec5ff;
+      --ok: #21c07a;
+      --warn: #ffb454;
+      --danger: #ef476f;
+      --p0: #8ec5ff;
+      --p1: #ffd166;
+      --p2: #78a6ff;
+      --p3: #21c07a;
+      --p4: #ff9f1c;
+      --shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+      --chart-bg: #0c1226;
+      --input-bg: #0d1631;
+      --soft-top: rgba(255,255,255,0.02);
+      --soft-bottom: rgba(0,0,0,0.04);
+      --grid: rgba(255,255,255,0.08);
+      --grid-strong: rgba(255,255,255,0.14);
+    }
+
+    body {
+      color: var(--ink);
+      background: radial-gradient(1200px 700px at 20% -10%, var(--bg-2) 0%, var(--bg) 50%);
+    }
+
+    .hero {
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.30);
+    }
+
+    .hero::after { background: rgba(255,255,255,0.05); }
+    .hero p { color: var(--muted); }
+
+    .panel,
+    .stat,
+    .formula-card,
+    .hist-card,
+    .chart-card,
+    .occupancy-card,
+    .queue-box,
+    .server-zone,
+    .server-card {
+      background: linear-gradient(180deg, var(--soft-top), var(--soft-bottom)), var(--panel);
+      border-color: var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .panel .hd {
+      border-bottom-color: var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+    }
+
+    .panel .hd h2,
+    .panel .hd h3,
+    .stat .v,
+    .queue-title,
+    .server-title,
+    .hist-card h4,
+    .chart-card h4,
+    .server-head,
+    .formula,
+    .mono,
+    .panel strong,
+    .hero h1 {
+      color: var(--ink);
+    }
+
+    label, .hint, .small, .muted, .stat .k, .stat .s, .panel .hd p, .footer-note {
+      color: var(--muted);
+    }
+
+    input, select {
+      background: var(--input-bg);
+      color: var(--ink);
+      border-color: var(--border);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(142, 197, 255, 0.12);
+    }
+
+    .note-box {
+      border-color: var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft);
+      color: var(--ink);
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--p2) 0%, var(--p0) 100%);
+      color: #08111f;
+      box-shadow: 0 10px 20px rgba(120, 166, 255, 0.22);
+    }
+
+    .btn-secondary,
+    .btn-ghost,
+    .btn-export {
+      background: #0f1734;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .btn-export {
+      background: #0f1a33;
+      color: var(--p3);
+      border-color: var(--border);
+    }
+
+    .status-ok {
+      background: rgba(33, 192, 122, 0.10);
+      color: var(--ok);
+      border-color: rgba(33, 192, 122, 0.22);
+    }
+
+    .status-warn {
+      background: rgba(255, 180, 84, 0.10);
+      color: var(--warn);
+      border-color: rgba(255, 180, 84, 0.22);
+    }
+
+    .prob-table th, .prob-table td,
+    .summary-table th, .summary-table td,
+    .event-table th, .event-table td {
+      border-bottom-color: #141a33;
+    }
+
+    .prob-table thead th,
+    .summary-table thead th,
+    .event-table thead th {
+      background: #0d1631;
+      color: var(--muted);
+    }
+
+    .prob-bar-wrap {
+      background: #0e1a3c;
+    }
+
+    .prob-bar {
+      background: linear-gradient(90deg, var(--p2), var(--p0));
+    }
+
+    canvas {
+      background: var(--chart-bg);
+      border: 1px solid var(--border);
+    }
+
+    .badge {
+      border-color: var(--border);
+      background: #0f1734;
+      color: var(--ink);
+    }
+
+    .person-chip {
+      background: linear-gradient(180deg, rgba(120,166,255,0.18), rgba(142,197,255,0.08));
+      border-color: var(--border);
+      color: var(--ink);
+    }
+
+    .server-card.busy {
+      background: linear-gradient(180deg, rgba(120,166,255,0.10) 0%, rgba(255,255,255,0.02) 100%), var(--panel);
+      border-color: var(--border);
+      box-shadow: inset 0 0 0 1px rgba(142,197,255,0.08);
+    }
+
+    .tag-idle {
+      background: rgba(33,192,122,0.10);
+      color: var(--ok);
+    }
+
+    .tag-busy {
+      background: rgba(142,197,255,0.10);
+      color: var(--p0);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Simulador M/M/c — colas con arribos Poisson y servicios exponenciales</h1>
+      <p>
+        Ajustá la tasa de arribo <span class="mono">λ</span>, la tasa de servicio <span class="mono">μ</span>, la cantidad de servidores paralelos <span class="mono">c</span>
+        y el horizonte. La app resuelve el modelo analítico M/M/c y además construye una simulación temporal por eventos, asignando cada cliente al primer servidor que se libera.
+      </p>
+    </section>
+
+    <div class="grid-main">
+      <aside class="panel">
+        <div class="hd">
+          <h2>Parámetros del sistema</h2>
+          <p>Para que el modelo estacionario sea válido, debe cumplirse <span class="mono">λ &lt; c·μ</span>.</p>
+        </div>
+        <div class="body">
+          <div class="controls">
+            <div class="row-2">
+              <div class="field">
+                <label for="lambda">Tasa de arribo λ</label>
+                <input id="lambda" type="number" min="0.01" step="0.01" value="2.40" />
+                <div class="hint">Clientes por unidad de tiempo.</div>
+              </div>
+              <div class="field">
+                <label for="mu">Tasa de servicio μ</label>
+                <input id="mu" type="number" min="0.01" step="0.01" value="1.40" />
+                <div class="hint">Atenciones por servidor y por unidad de tiempo.</div>
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="servers">Servidores paralelos c</label>
+                <select id="servers">
+                  <option value="1">1</option>
+                  <option value="2" selected>2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+                <div class="hint">Entre 1 y 5 servidores.</div>
+              </div>
+              <div class="field">
+                <label for="horizon">Horizonte de simulación</label>
+                <input id="horizon" type="number" min="10" step="10" value="250" />
+                <div class="hint">Tiempo total simulado.</div>
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="seed">Semilla aleatoria</label>
+                <input id="seed" type="number" step="1" value="12345" />
+                <div class="hint">Permite reproducir la misma trayectoria.</div>
+              </div>
+              <div class="field">
+                <label for="speed">Velocidad de reproducción</label>
+                <select id="speed">
+                  <option value="0.25">0.25×</option>
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                  <option value="8">8×</option>
+                </select>
+                <div class="hint">Controla la animación temporal.</div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn-primary" id="runBtn">Calcular y simular</button>
+              <button class="btn-secondary" id="exampleBtn">Cargar ejemplo</button>
+              <button class="btn-ghost" id="resetPlayBtn">Reiniciar reproducción</button>
+            </div>
+
+            <div class="actions">
+              <button class="btn-export" id="exportCustomersBtn">CSV clientes</button>
+              <button class="btn-export" id="exportEventsBtn">CSV eventos</button>
+              <button class="btn-export" id="exportSummaryBtn">CSV resumen</button>
+            </div>
+
+            <div class="note-box">
+              <strong>La página hace cuatro cosas:</strong><br>
+              1) calcula las métricas teóricas del M/M/c; 2) simula arribos, servicios y salidas; 3) grafica histogramas y series temporales; 4) permite exportar los datos observados a CSV.
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="content-stack">
+        <section class="panel">
+          <div class="hd">
+            <h2>Resultados analíticos del M/M/c</h2>
+            <p>Se informan personas esperadas en cola y sistema, tiempos, probabilidades y utilización.</p>
+          </div>
+          <div class="body">
+            <div class="stats-grid" id="statsGrid"></div>
+            <div id="stabilityBanner" class="status-banner status-ok"></div>
+          </div>
+        </section>
+
+        <section class="two-col">
+          <div class="panel">
+            <div class="hd">
+              <h3>Probabilidades de que haya n personas en el sistema</h3>
+              <p>Se muestran las probabilidades estacionarias para <span class="mono">n = 0, 1, 2, 3, 4, 5</span>.</p>
+            </div>
+            <div class="body">
+              <table class="prob-table">
+                <thead>
+                  <tr>
+                    <th>n</th>
+                    <th>Expresión</th>
+                    <th>Probabilidad</th>
+                    <th>Visual</th>
+                  </tr>
+                </thead>
+                <tbody id="probTableBody"></tbody>
+              </table>
+              <div class="footer-note">Si <span class="mono">ρ ≥ 1</span>, las probabilidades estacionarias no existen porque el sistema no es estable.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="hd">
+              <h3>Detalle de los cálculos</h3>
+              <p>Las fórmulas se reemplazan usando los parámetros elegidos por el usuario.</p>
+            </div>
+            <div class="body">
+              <div class="formula-grid" id="formulaGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Resultados de la simulación</h2>
+            <p>Promedios y extremos observados en la trayectoria generada por eventos discretos.</p>
+          </div>
+          <div class="body">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Métrica</th>
+                  <th>Valor</th>
+                  <th>Interpretación</th>
+                </tr>
+              </thead>
+              <tbody id="simSummary"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Histogramas y tasas estimadas</h2>
+            <p>Se grafican los tiempos entre arribos, los tiempos de servicio y los tiempos entre salidas.</p>
+          </div>
+          <div class="body">
+            <div class="histo-grid">
+              <div class="hist-card">
+                <h4>Arribos</h4>
+                <p id="arrivalRateText"></p>
+                <canvas id="arrivalHist" width="380" height="240"></canvas>
+              </div>
+              <div class="hist-card">
+                <h4>Servicios</h4>
+                <p id="serviceRateText"></p>
+                <canvas id="serviceHist" width="380" height="240"></canvas>
+              </div>
+              <div class="hist-card">
+                <h4>Salidas</h4>
+                <p id="departureRateText"></p>
+                <canvas id="departureHist" width="380" height="240"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Gráficos temporales</h2>
+            <p>Se representa la evolución del número de personas y el uso de cada servidor durante la simulación.</p>
+          </div>
+          <div class="body">
+            <div class="chart-grid">
+              <div class="chart-card">
+                <h4>Clientes en cola y en el sistema</h4>
+                <p>Gráfico escalonado en función del tiempo. La línea superior corresponde al sistema total y la inferior a la cola.</p>
+                <canvas id="queueSystemChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Uso temporal de los servidores</h4>
+                <p>Cada franja coloreada indica que el servidor estuvo ocupado atendiendo un cliente durante ese intervalo.</p>
+                <canvas id="serverUsageChart" width="520" height="280"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Simulación en el tiempo</h2>
+            <p>La cola es FIFO y cada cliente entra al primer servidor libre. Podés recorrer la trayectoria evento por evento o reproducirla.</p>
+          </div>
+          <div class="body">
+            <div class="playbar">
+              <div class="play-actions">
+                <button class="btn-primary" id="playBtn">▶ Reproducir</button>
+                <button class="btn-secondary" id="pauseBtn">❚❚ Pausar</button>
+                <button class="btn-ghost" id="stepBtn">Paso a paso</button>
+                <div class="metric-badges">
+                  <span class="badge">Tiempo actual: <span id="clockText" class="mono">0.000</span></span>
+                  <span class="badge">Evento: <span id="eventTypeText" class="mono">—</span></span>
+                  <span class="badge">Clientes en sistema: <span id="systemNowText" class="mono">0</span></span>
+                </div>
+              </div>
+
+              <div class="slider-line">
+                <input id="timeline" type="range" min="0" max="0" value="0" />
+                <div class="small">Evento <span id="timelineIndexText" class="mono">0</span> / <span id="timelineTotalText" class="mono">0</span></div>
+              </div>
+            </div>
+
+            <div class="sim-stage">
+              <div class="queue-box">
+                <div class="queue-title">
+                  <span>Cola</span>
+                  <span class="badge">En espera: <span id="queueCountText" class="mono">0</span></span>
+                </div>
+                <div class="queue-people" id="queuePeople"></div>
+                <div class="footer-note">Se muestran hasta 24 clientes en espera. Si hay más, se indica el excedente.</div>
+              </div>
+
+              <div class="server-zone">
+                <div class="server-title">
+                  <span>Servidores</span>
+                  <span class="badge">Ocupación instantánea: <span id="busyCountText" class="mono">0</span></span>
+                </div>
+                <div class="server-grid" id="serverGrid"></div>
+              </div>
+            </div>
+
+            <div class="occupancy-card" style="margin-top:16px;">
+              <div class="server-title">
+                <span>Utilización simulada de los servidores</span>
+                <span class="small">Se calcula con los tiempos efectivamente ocupados observados en la simulación.</span>
+              </div>
+              <div class="server-grid" id="serverUtilGrid"></div>
+            </div>
+
+            <div class="occupancy-card" style="margin-top:16px;">
+              <div class="server-title">
+                <span>Últimos eventos</span>
+                <span class="small">Se muestran los más recientes respecto del punto seleccionado.</span>
+              </div>
+              <table class="event-table">
+                <thead>
+                  <tr>
+                    <th>Tiempo</th>
+                    <th>Evento</th>
+                    <th>Cliente</th>
+                    <th>Cola</th>
+                    <th>Sistema</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody id="eventLogBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const byId = (id) => document.getElementById(id);
+    const fmt = (x, d = 4) => Number.isFinite(x) ? x.toFixed(d) : '—';
+    const fmtPct = (x, d = 2) => Number.isFinite(x) ? (100 * x).toFixed(d) + '%' : '—';
+
+    function getVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function theme(name, fallback='') {
+      const v = getVar(name);
+      return v || fallback;
+    }
+
+    function hexToRgba(hex, alpha) {
+      const h = (hex || '').replace('#', '').trim();
+      if (![3, 6].includes(h.length)) return `rgba(255,255,255,${alpha})`;
+      const full = h.length === 3 ? h.split('').map(ch => ch + ch).join('') : h;
+      const n = parseInt(full, 16);
+      const r = (n >> 16) & 255;
+      const g = (n >> 8) & 255;
+      const b = n & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    const inputs = {
+      lambda: byId('lambda'),
+      mu: byId('mu'),
+      servers: byId('servers'),
+      horizon: byId('horizon'),
+      seed: byId('seed'),
+      speed: byId('speed')
+    };
+
+    const state = {
+      analytic: null,
+      sim: null,
+      playTimer: null,
+      playIndex: -1,
+      playbackSpeed: 1
+    };
+
+    function factorial(n) {
+      let acc = 1;
+      for (let i = 2; i <= n; i++) acc *= i;
+      return acc;
+    }
+
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), t | 1);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function expSample(rate, rng) {
+      const u = Math.max(1e-12, 1 - rng());
+      return -Math.log(u) / rate;
+    }
+
+    function mmcMetrics(lambda, mu, c) {
+      const a = lambda / mu;
+      const rho = lambda / (c * mu);
+      const stable = rho < 1;
+      let P0 = NaN, Lq = NaN, L = NaN, Wq = NaN, W = NaN;
+      const pn = [];
+
+      if (stable) {
+        let sum = 0;
+        for (let n = 0; n <= c - 1; n++) sum += Math.pow(a, n) / factorial(n);
+        sum += Math.pow(a, c) / (factorial(c) * (1 - rho));
+        P0 = 1 / sum;
+        Lq = (P0 * Math.pow(a, c) * rho) / (factorial(c) * Math.pow(1 - rho, 2));
+        L = Lq + a;
+        Wq = Lq / lambda;
+        W = Wq + 1 / mu;
+        for (let n = 0; n <= 5; n++) {
+          const val = n < c
+            ? P0 * Math.pow(a, n) / factorial(n)
+            : P0 * Math.pow(a, n) / (factorial(c) * Math.pow(c, n - c));
+          pn.push(val);
+        }
+      } else {
+        for (let n = 0; n <= 5; n++) pn.push(NaN);
+      }
+
+      return { lambda, mu, c, a, rho, stable, P0, Lq, L, Wq, W, pn };
+    }
+
+    function formulaCaseText(n, c) {
+      return n < c
+        ? `P${n} = P0·(λ/μ)^${n}/${n}!`
+        : `P${n} = P0·(λ/μ)^${n}/(${c}!·${c}^(${n}-${c}))`;
+    }
+
+    function analyticalCards(m) {
+      return [
+        { key: 'Utilización', value: fmt(m.rho), sub: 'Fracción promedio de capacidad usada en cada servidor.' },
+        { key: 'Lq', value: fmt(m.Lq), sub: 'Cantidad esperada de clientes esperando en cola.' },
+        { key: 'L', value: fmt(m.L), sub: 'Cantidad esperada de clientes dentro del sistema.' },
+        { key: 'Wq', value: fmt(m.Wq), sub: 'Tiempo esperado de espera antes de ser atendido.' },
+        { key: 'W', value: fmt(m.W), sub: 'Tiempo esperado total en el sistema.' },
+        { key: 'P0', value: fmt(m.P0), sub: 'Probabilidad de encontrar el sistema vacío.' }
+      ];
+    }
+
+    function renderAnalytical(m) {
+      byId('statsGrid').innerHTML = analyticalCards(m).map(card => `
+        <div class="stat">
+          <div class="k">${card.key}</div>
+          <div class="v">${card.value}</div>
+          <div class="s">${card.sub}</div>
+        </div>
+      `).join('');
+
+      const banner = byId('stabilityBanner');
+      if (m.stable) {
+        banner.className = 'status-banner status-ok';
+        banner.innerHTML = `Sistema estable: <span class="mono">λ = ${fmt(m.lambda, 3)}</span>, <span class="mono">μ = ${fmt(m.mu, 3)}</span>, <span class="mono">c = ${m.c}</span>. Entonces <span class="mono">ρ = ${fmt(m.rho, 4)} &lt; 1</span> y las fórmulas estacionarias aplican.`;
+      } else {
+        banner.className = 'status-banner status-warn';
+        banner.innerHTML = `Atención: <span class="mono">ρ = ${fmt(m.rho, 4)} ≥ 1</span>. El sistema no es estable en régimen estacionario. La simulación finita sí se ejecuta, pero <strong>Lq, L, Wq, W y Pn estacionarias no aplican</strong>.`;
+      }
+
+      byId('probTableBody').innerHTML = Array.from({ length: 6 }, (_, n) => {
+        const p = m.pn[n];
+        const pct = Number.isFinite(p) ? Math.max(0, Math.min(100, p * 100)) : 0;
+        return `
+          <tr>
+            <td><strong>${n}</strong></td>
+            <td class="mono">${formulaCaseText(n, m.c)}</td>
+            <td>${fmt(p)}</td>
+            <td><div class="prob-bar-wrap"><div class="prob-bar" style="width:${pct}%;"></div></div></td>
+          </tr>
+        `;
+      }).join('');
+
+      if (!m.stable) {
+        byId('formulaGrid').innerHTML = `
+          <div class="formula-card">
+            <div class="formula-title">Criterio de estabilidad</div>
+            <div class="formula">ρ = λ / (c·μ)
+= ${fmt(m.lambda, 4)} / (${m.c}·${fmt(m.mu, 4)})
+= ${fmt(m.rho, 6)}</div>
+            <div class="small">Como ρ ≥ 1, el sistema no posee equilibrio estacionario.</div>
+          </div>
+          <div class="formula-card">
+            <div class="formula-title">Interpretación</div>
+            <div class="formula">La simulación temporal sí puede ejecutarse en un horizonte finito T,
+pero sus promedios dependen del horizonte elegido y no corresponden a un régimen estacionario.</div>
+            <div class="small">Probá subir μ, aumentar c o reducir λ.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const sumTerms = [];
+      for (let n = 0; n <= m.c - 1; n++) sumTerms.push(`(${fmt(m.a, 5)}^${n}/${n}!)`);
+      const p0DenText = `${sumTerms.join(' + ')} + (${fmt(m.a, 5)}^${m.c}/(${m.c}!·(1-${fmt(m.rho, 5)})))`;
+
+      byId('formulaGrid').innerHTML = `
+        <div class="formula-card">
+          <div class="formula-title">1) Utilización</div>
+          <div class="formula">ρ = λ / (c·μ)
+= ${fmt(m.lambda, 5)} / (${m.c}·${fmt(m.mu, 5)})
+= ${fmt(m.rho, 6)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">2) Probabilidad de sistema vacío</div>
+          <div class="formula">P0 = [ Σ(n=0→c-1) (a^n/n!) + a^c/(c!·(1-ρ)) ]^-1
+con a = λ/μ = ${fmt(m.a, 6)}
+P0 = [ ${p0DenText} ]^-1
+= ${fmt(m.P0, 6)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">3) Personas esperadas en cola</div>
+          <div class="formula">Lq = P0·a^c·ρ / (c!·(1-ρ)^2)
+= ${fmt(m.P0, 6)}·${fmt(m.a, 6)}^${m.c}·${fmt(m.rho, 6)} / (${m.c}!·(1-${fmt(m.rho, 6)})^2)
+= ${fmt(m.Lq, 6)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">4) Personas esperadas en sistema</div>
+          <div class="formula">L = Lq + λ/μ
+= ${fmt(m.Lq, 6)} + ${fmt(m.a, 6)}
+= ${fmt(m.L, 6)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">5) Tiempo esperado en cola</div>
+          <div class="formula">Wq = Lq / λ
+= ${fmt(m.Lq, 6)} / ${fmt(m.lambda, 6)}
+= ${fmt(m.Wq, 6)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">6) Tiempo esperado en sistema</div>
+          <div class="formula">W = Wq + 1/μ
+= ${fmt(m.Wq, 6)} + 1/${fmt(m.mu, 6)}
+= ${fmt(m.W, 6)}</div>
+        </div>
+      `;
+    }
+
+    function simulateMMc(lambda, mu, c, horizon, seed) {
+      const rng = mulberry32(Number(seed) || 1);
+      const servers = Array.from({ length: c }, (_, idx) => ({
+        id: idx + 1,
+        busy: false,
+        customerId: null,
+        endTime: Infinity,
+        startTime: null,
+        totalBusy: 0,
+        completed: 0,
+        lastService: null,
+        intervals: []
+      }));
+
+      const queue = [];
+      const customers = [];
+      const events = [];
+      const interarrivals = [];
+      const serviceTimes = [];
+      const interdepartures = [];
+      const departureTimes = [];
+
+      let t = 0;
+      let nextArrival = expSample(lambda, rng);
+      let customerCounter = 0;
+      let arrivals = 0;
+      let departures = 0;
+      let maxQueue = 0;
+      let areaQueue = 0;
+      let areaSystem = 0;
+      let lastEventTime = 0;
+
+      function updateAreas(newTime) {
+        const dt = newTime - lastEventTime;
+        if (dt < 0) return;
+        const busyCount = servers.filter(s => s.busy).length;
+        areaQueue += queue.length * dt;
+        areaSystem += (queue.length + busyCount) * dt;
+        lastEventTime = newTime;
+      }
+
+      function snapshot(eventType, customerId, detail) {
+        const queueIds = queue.map(item => item.id);
+        const busyCount = servers.filter(s => s.busy).length;
+        const inSystem = queue.length + busyCount;
+        events.push({
+          time: t,
+          type: eventType,
+          customerId,
+          detail,
+          queueLength: queue.length,
+          systemCount: inSystem,
+          busyCount,
+          queueIds,
+          servers: servers.map(s => ({
+            id: s.id,
+            busy: s.busy,
+            customerId: s.customerId,
+            endTime: s.endTime,
+            startTime: s.startTime,
+            lastService: s.lastService
+          }))
+        });
+      }
+
+      function firstIdleServer() {
+        return servers.find(s => !s.busy) || null;
+      }
+
+      function startService(customer, server, startTime, origin) {
+        const st = expSample(mu, rng);
+        serviceTimes.push(st);
+        customer.serviceTime = st;
+        customer.serviceStart = startTime;
+        customer.wait = customer.serviceStart - customer.arrival;
+        customer.serverId = server.id;
+        customer.origin = origin;
+
+        server.busy = true;
+        server.customerId = customer.id;
+        server.startTime = startTime;
+        server.endTime = startTime + st;
+        server.lastService = st;
+        server.intervals.push({ start: startTime, end: null, customerId: customer.id });
+      }
+
+      while (true) {
+        let nextDepartureTime = Infinity;
+        let departingServer = null;
+        for (const s of servers) {
+          if (s.busy && s.endTime < nextDepartureTime) {
+            nextDepartureTime = s.endTime;
+            departingServer = s;
+          }
+        }
+
+        const eventTime = Math.min(nextArrival, nextDepartureTime);
+        if (!Number.isFinite(eventTime) || eventTime > horizon) break;
+
+        updateAreas(eventTime);
+        t = eventTime;
+
+        if (nextDepartureTime <= nextArrival) {
+          const server = departingServer;
+          const customer = customers[server.customerId - 1];
+          customer.departure = t;
+          customer.systemTime = customer.departure - customer.arrival;
+          departures += 1;
+          server.totalBusy += t - server.startTime;
+          server.completed += 1;
+          const lastInterval = server.intervals[server.intervals.length - 1];
+          if (lastInterval && lastInterval.end === null) lastInterval.end = t;
+
+          departureTimes.push(t);
+          if (departureTimes.length >= 2) {
+            interdepartures.push(departureTimes[departureTimes.length - 1] - departureTimes[departureTimes.length - 2]);
+          }
+
+          let detail = `Sale del sistema desde servidor ${server.id}.`;
+          server.busy = false;
+          server.customerId = null;
+          server.startTime = null;
+          server.endTime = Infinity;
+          server.lastService = null;
+
+          if (queue.length > 0) {
+            const nextCustomer = queue.shift();
+            startService(nextCustomer, server, t, 'cola');
+            detail += ` Cliente ${nextCustomer.id} pasa inmediatamente a servicio en servidor ${server.id}.`;
+          }
+
+          snapshot('salida', customer.id, detail);
+        } else {
+          customerCounter += 1;
+          arrivals += 1;
+          const customer = {
+            id: customerCounter,
+            arrival: t,
+            serviceStart: null,
+            serviceTime: null,
+            wait: null,
+            departure: null,
+            systemTime: null,
+            serverId: null,
+            origin: 'llegada'
+          };
+          customers.push(customer);
+          if (arrivals >= 2) interarrivals.push(t - customers[customers.length - 2].arrival);
+
+          const idle = firstIdleServer();
+          let detail;
+          if (idle) {
+            startService(customer, idle, t, 'llegada');
+            detail = `Ingresa al servidor ${idle.id} sin esperar.`;
+          } else {
+            queue.push(customer);
+            if (queue.length > maxQueue) maxQueue = queue.length;
+            detail = 'No hay servidor libre: entra a la cola FIFO.';
+          }
+
+          snapshot('llegada', customer.id, detail);
+          nextArrival = t + expSample(lambda, rng);
+        }
+      }
+
+      updateAreas(horizon);
+
+      for (const s of servers) {
+        if (s.busy && s.startTime !== null) {
+          s.totalBusy += horizon - s.startTime;
+          const lastInterval = s.intervals[s.intervals.length - 1];
+          if (lastInterval && lastInterval.end === null) lastInterval.end = horizon;
+        }
+      }
+
+      const completedCustomers = customers.filter(cu => Number.isFinite(cu.departure));
+      const mean = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : NaN;
+      const maxv = arr => arr.length ? Math.max(...arr) : NaN;
+      const waits = completedCustomers.map(cu => cu.wait);
+      const systems = completedCustomers.map(cu => cu.systemTime);
+      const meanQueue = areaQueue / horizon;
+      const meanSystem = areaSystem / horizon;
+      const outputRateByCount = departures / horizon;
+      const arrRate = Number.isFinite(mean(interarrivals)) ? 1 / mean(interarrivals) : (arrivals / horizon);
+      const servRate = Number.isFinite(mean(serviceTimes)) ? 1 / mean(serviceTimes) : NaN;
+      const depRate = Number.isFinite(mean(interdepartures)) ? 1 / mean(interdepartures) : outputRateByCount;
+      const globalBusy = servers.reduce((acc, s) => acc + s.totalBusy, 0) / (c * horizon);
+
+      const timeSeries = [{ time: 0, queue: 0, system: 0, busyCount: 0 }];
+      if (events.length) {
+        for (const ev of events) {
+          timeSeries.push({ time: ev.time, queue: ev.queueLength, system: ev.systemCount, busyCount: ev.busyCount });
+        }
+        const last = events[events.length - 1];
+        timeSeries.push({ time: horizon, queue: last.queueLength, system: last.systemCount, busyCount: last.busyCount });
+      } else {
+        timeSeries.push({ time: horizon, queue: 0, system: 0, busyCount: 0 });
+      }
+
+      return {
+        lambda, mu, c, horizon, seed,
+        arrivals, departures,
+        customers, completedCustomers, events,
+        interarrivals, serviceTimes, interdepartures,
+        meanQueue, meanSystem,
+        meanWait: mean(waits),
+        meanSystemTime: mean(systems),
+        maxWait: maxv(waits),
+        maxSystemTime: maxv(systems),
+        maxQueue,
+        outputRateByCount,
+        estimatedArrivalRate: arrRate,
+        estimatedServiceRate: servRate,
+        estimatedDepartureRate: depRate,
+        serverUtilization: servers.map(s => ({ id: s.id, util: s.totalBusy / horizon, completed: s.completed, intervals: s.intervals })),
+        globalUtilization: globalBusy,
+        timeSeries
+      };
+    }
+
+    function renderSimSummary(sim) {
+      const rows = [
+        ['Clientes que llegaron', sim.arrivals, 'Cantidad total de arribos observados dentro del horizonte.'],
+        ['Clientes que salieron', sim.departures, 'Cantidad total de servicios completados antes del horizonte.'],
+        ['Lq empírico', fmt(sim.meanQueue), 'Promedio temporal de personas esperando en cola.'],
+        ['L empírico', fmt(sim.meanSystem), 'Promedio temporal de personas en el sistema.'],
+        ['Wq empírico', fmt(sim.meanWait), 'Promedio de espera de los clientes que completaron servicio.'],
+        ['W empírico', fmt(sim.meanSystemTime), 'Promedio de permanencia total observado.'],
+        ['Espera máxima', fmt(sim.maxWait), 'Máximo tiempo de espera observado.'],
+        ['Tiempo máximo en sistema', fmt(sim.maxSystemTime), 'Máxima permanencia total observada.'],
+        ['Cola máxima', sim.maxQueue, 'Mayor cantidad simultánea de clientes esperando.'],
+        ['Tasa de salida por conteo', fmt(sim.outputRateByCount), 'Salidas totales divididas por el horizonte.'],
+        ['Utilización global empírica', fmt(sim.globalUtilization), 'Tiempo total ocupado sobre c·T.']
+      ];
+
+      const utilRows = sim.serverUtilization.map(s => [
+        `Utilización servidor ${s.id}`,
+        `${fmt(s.util)} (${fmtPct(s.util)})`,
+        `Atendió ${s.completed} cliente(s) durante el horizonte.`
+      ]);
+
+      byId('simSummary').innerHTML = [...rows, ...utilRows].map(r => `
+        <tr>
+          <td><strong>${r[0]}</strong></td>
+          <td>${r[1]}</td>
+          <td>${r[2]}</td>
+        </tr>
+      `).join('');
+    }
+
+    function histogramBins(data, binCount = 12) {
+      if (!data.length) return null;
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const span = Math.max(max - min, 1e-9);
+      const width = span / binCount;
+      const bins = Array(binCount).fill(0);
+      for (const x of data) {
+        let idx = Math.floor((x - min) / width);
+        if (idx >= binCount) idx = binCount - 1;
+        if (idx < 0) idx = 0;
+        bins[idx] += 1;
+      }
+      return { min, max, bins };
+    }
+
+    function drawAxes(ctx, W, H, pad, xLabel, yLabel, xMin, xMax, yMax, tickCountX = 4, tickCountY = 4) {
+      const chartW = W - pad.l - pad.r;
+      const chartH = H - pad.t - pad.b;
+
+      ctx.strokeStyle = theme('--border', '#1e2646');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, pad.t + chartH);
+      ctx.lineTo(pad.l + chartW, pad.t + chartH);
+      ctx.stroke();
+
+      ctx.font = '11px system-ui';
+      ctx.fillStyle = theme('--muted', '#9aa4b2');
+      ctx.textAlign = 'center';
+      for (let i = 0; i <= tickCountX; i++) {
+        const x = pad.l + (chartW * i / tickCountX);
+        const t = xMin + (xMax - xMin) * i / tickCountX;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t + chartH);
+        ctx.lineTo(x, pad.t + chartH + 4);
+        ctx.stroke();
+        ctx.fillText(fmt(t, 1), x, H - 12);
+      }
+
+      ctx.textAlign = 'right';
+      for (let i = 0; i <= tickCountY; i++) {
+        const y = pad.t + chartH - (chartH * i / tickCountY);
+        const v = yMax * i / tickCountY;
+        ctx.beginPath();
+        ctx.moveTo(pad.l - 4, y);
+        ctx.lineTo(pad.l, y);
+        ctx.stroke();
+        ctx.fillText(fmt(v, 1), pad.l - 7, y + 4);
+      }
+
+      ctx.textAlign = 'center';
+      ctx.fillText(xLabel, pad.l + chartW / 2, H - 2);
+      ctx.save();
+      ctx.translate(14, pad.t + chartH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+
+      return { chartW, chartH };
+    }
+
+    function drawHistogram(canvasId, data, xLabel) {
+      const canvas = byId(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = theme('--chart-bg', '#0c1226');
+      ctx.fillRect(0, 0, W, H);
+
+      const hist = histogramBins(data, 12);
+      const pad = { l: 44, r: 18, t: 18, b: 38 };
+      if (!hist) {
+        ctx.fillStyle = theme('--muted', '#9aa4b2');
+        ctx.font = '14px system-ui';
+        ctx.fillText('Sin datos suficientes para graficar.', 20, 40);
+        return;
+      }
+
+      const { chartW, chartH } = drawAxes(ctx, W, H, pad, xLabel, 'Frecuencia', hist.min, hist.max, Math.max(...hist.bins, 1));
+      const bw = chartW / hist.bins.length - 6;
+      const maxCount = Math.max(...hist.bins, 1);
+
+      for (let i = 0; i < hist.bins.length; i++) {
+        const count = hist.bins[i];
+        const bh = (count / maxCount) * (chartH - 8);
+        const x = pad.l + i * (bw + 6) + 3;
+        const y = pad.t + chartH - bh;
+        const grad = ctx.createLinearGradient(0, y, 0, pad.t + chartH);
+        grad.addColorStop(0, theme('--p2', '#78a6ff'));
+        grad.addColorStop(1, theme('--p0', '#8ec5ff'));
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, bw, bh);
+        ctx.fillStyle = theme('--muted', '#9aa4b2');
+        ctx.font = '10px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(count), x + bw / 2, Math.max(12, y - 4));
+      }
+    }
+
+    function renderHistogramsFromData(data) {
+      const meanVal = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : NaN;
+      byId('arrivalRateText').textContent = `Media interarribos = ${fmt(meanVal(data.interarrivals))}; tasa estimada = ${fmt(data.estimatedArrivalRate)}.`;
+      byId('serviceRateText').textContent = `Media de servicio = ${fmt(meanVal(data.serviceTimes))}; tasa estimada = ${fmt(data.estimatedServiceRate)}.`;
+      byId('departureRateText').textContent = `Media intersalidas = ${fmt(meanVal(data.interdepartures))}; tasa estimada = ${fmt(data.estimatedDepartureRate)}.`;
+      drawHistogram('arrivalHist', data.interarrivals, 'Tiempo entre arribos');
+      drawHistogram('serviceHist', data.serviceTimes, 'Tiempo de servicio');
+      drawHistogram('departureHist', data.interdepartures, 'Tiempo entre salidas');
+    }
+
+    function renderHistograms(sim) {
+      renderHistogramsFromData(sim);
+    }
+
+    function drawStepSeries(canvasId, data, horizon) {
+      const canvas = byId(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = theme('--chart-bg', '#0c1226');
+      ctx.fillRect(0, 0, W, H);
+
+      const series = data && data.length ? data : [{ time: 0, queue: 0, system: 0, busyCount: 0 }];
+      const fullHorizon = Math.max(horizon || 0, 1e-9);
+      const pad = { l: 48, r: 18, t: 20, b: 40 };
+      const yMax = Math.max(1, ...series.map(d => Math.max(d.queue ?? 0, d.system ?? 0)));
+      const { chartW, chartH } = drawAxes(ctx, W, H, pad, 'Tiempo', 'Clientes', 0, fullHorizon, yMax, 5, Math.min(5, yMax));
+
+      const xScale = t => pad.l + (t / fullHorizon) * chartW;
+      const yScale = y => pad.t + chartH - (y / yMax) * chartH;
+
+      ctx.strokeStyle = hexToRgba(theme('--ink', '#e7ecf3'), 0.08);
+      for (let i = 1; i < Math.min(5, yMax); i++) {
+        const y = yScale(i);
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(pad.l + chartW, y);
+        ctx.stroke();
+      }
+
+      function plotSeries(selector, color, label, labelY) {
+        if (!series.length) return;
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = color;
+        let started = false;
+        for (let i = 0; i < series.length - 1; i++) {
+          const a = series[i];
+          const b = series[i + 1];
+          const x1 = xScale(a.time), x2 = xScale(b.time);
+          const y = yScale(a[selector] ?? 0);
+          const y2 = yScale(b[selector] ?? 0);
+          if (!started) { ctx.moveTo(x1, y); started = true; }
+          ctx.lineTo(x2, y);
+          ctx.lineTo(x2, y2);
+        }
+        if (!started && series.length === 1) {
+          const x0 = xScale(series[0].time ?? 0);
+          const y0 = yScale(series[0][selector] ?? 0);
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x0, y0);
+        }
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = '12px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText(label, pad.l + 8, labelY);
+      }
+
+      plotSeries('system', theme('--p0', '#8ec5ff'), 'Sistema L(t)', 18);
+      plotSeries('queue', theme('--p1', '#ffd166'), 'Cola Lq(t)', 34);
+    }
+
+    function drawServerUsage(canvasId, c, intervalsByServer, horizon) {
+      const canvas = byId(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = theme('--chart-bg', '#0c1226');
+      ctx.fillRect(0, 0, W, H);
+
+      const pad = { l: 54, r: 18, t: 20, b: 38 };
+      const rowH = (H - pad.t - pad.b) / c;
+      const chartW = W - pad.l - pad.r;
+      const fullHorizon = Math.max(horizon || 0, 1e-9);
+      const xScale = t => pad.l + (t / fullHorizon) * chartW;
+
+      ctx.strokeStyle = theme('--border', '#1e2646');
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, H - pad.b);
+      ctx.lineTo(W - pad.r, H - pad.b);
+      ctx.stroke();
+
+      for (let i = 0; i < c; i++) {
+        const yTop = pad.t + i * rowH;
+        const yMid = yTop + rowH / 2;
+        ctx.strokeStyle = hexToRgba(theme('--ink', '#e7ecf3'), 0.08);
+        ctx.beginPath();
+        ctx.moveTo(pad.l, yTop + rowH);
+        ctx.lineTo(W - pad.r, yTop + rowH);
+        ctx.stroke();
+        ctx.fillStyle = theme('--muted', '#9aa4b2');
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText(`S${i + 1}`, pad.l - 8, yMid + 4);
+      }
+
+      intervalsByServer.forEach((srv, idx) => {
+        const y = pad.t + idx * rowH + 8;
+        const h = Math.max(18, rowH - 16);
+        srv.intervals.forEach((intv) => {
+          const x1 = xScale(Math.max(0, intv.start));
+          const x2 = xScale(Math.min(fullHorizon, intv.end ?? fullHorizon));
+          const grad = ctx.createLinearGradient(0, y, 0, y + h);
+          grad.addColorStop(0, theme('--p2', '#78a6ff'));
+          grad.addColorStop(1, theme('--p0', '#8ec5ff'));
+          ctx.fillStyle = grad;
+          ctx.fillRect(x1, y, Math.max(1, x2 - x1), h);
+        });
+      });
+
+      ctx.fillStyle = theme('--muted', '#9aa4b2');
+      ctx.font = '11px system-ui';
+      ctx.textAlign = 'center';
+      for (let i = 0; i <= 4; i++) {
+        const x = pad.l + chartW * i / 4;
+        const t = fullHorizon * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(x, H - pad.b);
+        ctx.lineTo(x, H - pad.b + 4);
+        ctx.strokeStyle = theme('--border', '#1e2646');
+        ctx.stroke();
+        ctx.fillText(fmt(t, 1), x, H - 14);
+      }
+      ctx.fillText('Tiempo', pad.l + chartW / 2, H - 2);
+    }
+
+    function renderTemporalCharts(sim) {
+      drawStepSeries('queueSystemChart', sim.timeSeries, sim.horizon);
+      drawServerUsage('serverUsageChart', sim.c, sim.serverUtilization, sim.horizon);
+    }
+
+    function upperBound(arr, value, selector = x => x) {
+      let lo = 0, hi = arr.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (selector(arr[mid]) <= value) lo = mid + 1;
+        else hi = mid;
+      }
+      return lo;
+    }
+
+    function getPlaybackVisualData(sim, index) {
+      if (!sim) return null;
+      if (index < 0 || !sim.events.length) {
+        return {
+          interarrivals: [],
+          serviceTimes: [],
+          interdepartures: [],
+          estimatedArrivalRate: NaN,
+          estimatedServiceRate: NaN,
+          estimatedDepartureRate: NaN,
+          timeSeries: [{ time: 0, queue: 0, system: 0, busyCount: 0 }],
+          serverUtilization: Array.from({ length: sim.c }, (_, idx) => ({ id: idx + 1, intervals: [] })),
+          currentTime: 0
+        };
+      }
+
+      const ev = sim.events[index];
+      const currentTime = ev.time;
+      const arrivalsSeen = upperBound(sim.customers, currentTime, c => c.arrival);
+      const serviceStartEvents = sim.customers
+        .filter(c => Number.isFinite(c.serviceStart))
+        .sort((a, b) => a.serviceStart - b.serviceStart);
+      const servicesSeen = upperBound(serviceStartEvents, currentTime, c => c.serviceStart);
+      const departuresSeen = upperBound(sim.completedCustomers, currentTime, c => c.departure);
+
+      const interarrivals = sim.interarrivals.slice(0, Math.max(0, arrivalsSeen - 1));
+      const serviceTimes = serviceStartEvents.slice(0, servicesSeen).map(c => c.serviceTime);
+      const interdepartures = sim.interdepartures.slice(0, Math.max(0, departuresSeen - 1));
+
+      const meanVal = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : NaN;
+      const timeSeries = sim.timeSeries.slice(0, Math.min(sim.timeSeries.length - 1, index + 2));
+      if (!timeSeries.length || timeSeries[timeSeries.length - 1].time < currentTime) {
+        timeSeries.push({
+          time: currentTime,
+          queue: ev.queueLength,
+          system: ev.systemCount,
+          busyCount: ev.busyCount
+        });
+      }
+
+      const serverUtilization = sim.serverUtilization.map(srv => ({
+        id: srv.id,
+        intervals: srv.intervals
+          .filter(intv => intv.start <= currentTime)
+          .map(intv => ({ ...intv, end: Math.min(currentTime, intv.end ?? currentTime) }))
+          .filter(intv => intv.end > intv.start)
+      }));
+
+      return {
+        interarrivals,
+        serviceTimes,
+        interdepartures,
+        estimatedArrivalRate: Number.isFinite(meanVal(interarrivals)) ? 1 / meanVal(interarrivals) : NaN,
+        estimatedServiceRate: Number.isFinite(meanVal(serviceTimes)) ? 1 / meanVal(serviceTimes) : NaN,
+        estimatedDepartureRate: Number.isFinite(meanVal(interdepartures)) ? 1 / meanVal(interdepartures) : NaN,
+        timeSeries,
+        serverUtilization,
+        currentTime
+      };
+    }
+
+    function renderPlaybackVisuals(index) {
+      const sim = state.sim;
+      if (!sim) return;
+      const visual = getPlaybackVisualData(sim, index);
+      renderHistogramsFromData(visual);
+      drawStepSeries('queueSystemChart', visual.timeSeries, sim.horizon);
+      drawServerUsage('serverUsageChart', sim.c, visual.serverUtilization, sim.horizon);
+    }
+
+    function busyTimeUpTo(intervals, currentTime) {
+      if (!(currentTime > 0)) return 0;
+      let total = 0;
+      for (const intv of intervals || []) {
+        const start = Number(intv.start);
+        const end = Number.isFinite(intv.end) ? intv.end : currentTime;
+        const overlapEnd = Math.min(currentTime, end);
+        if (Number.isFinite(start) && overlapEnd > start) total += overlapEnd - start;
+      }
+      return total;
+    }
+
+    function renderServerUtilGrid(currentTime = null) {
+      const sim = state.sim;
+      if (!sim) return;
+      const effectiveTime = Number.isFinite(currentTime) ? Math.max(0, currentTime) : sim.horizon;
+      byId('serverUtilGrid').innerHTML = sim.serverUtilization.map(srv => {
+        const busyNow = busyTimeUpTo(srv.intervals, effectiveTime);
+        const utilNow = effectiveTime > 0 ? busyNow / effectiveTime : 0;
+        return `
+          <div class="server-card">
+            <div class="server-head">
+              <span>Servidor ${srv.id}</span>
+              <span class="tag tag-busy">${fmtPct(srv.util)}</span>
+            </div>
+            <div class="small">Utilización simulada final: <strong>${fmt(srv.util)}</strong></div>
+            <div class="small">Utilización acumulada al tiempo actual: <strong>${fmt(utilNow)}</strong></div>
+            <div class="small">Tiempo ocupado acumulado: <span class="mono">${fmt(busyNow, 3)}</span></div>
+            <div class="small">Tiempo ocupado total: <span class="mono">${fmt(srv.util * sim.horizon, 3)}</span></div>
+            <div class="small">Clientes completados: <span class="mono">${srv.completed}</span></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPlaybackInitial(resetCharts = false) {
+      const sim = state.sim;
+      if (!sim) return;
+      state.playIndex = -1;
+      byId('timeline').value = 0;
+      byId('timelineIndexText').textContent = '0';
+      byId('timelineTotalText').textContent = String(sim.events.length);
+      byId('clockText').textContent = '0.000';
+      byId('eventTypeText').textContent = 'inicio';
+      byId('systemNowText').textContent = '0';
+      byId('queueCountText').textContent = '0';
+      byId('busyCountText').textContent = `0/${sim.c}`;
+      byId('queuePeople').innerHTML = `<div class="small muted">No hay clientes esperando en este instante.</div>`;
+      byId('serverGrid').innerHTML = Array.from({ length: sim.c }, (_, idx) => `
+        <div class="server-card">
+          <div class="server-head">
+            <span>Servidor ${idx + 1}</span>
+            <span class="tag tag-idle">libre</span>
+          </div>
+          <div class="small">Cliente actual: <strong>—</strong></div>
+          <div class="small">Inicio servicio: <span class="mono">—</span></div>
+          <div class="small">Fin previsto: <span class="mono">—</span></div>
+          <div class="small">Tiempo restante: <span class="mono">0.000</span></div>
+        </div>
+      `).join('');
+      byId('eventLogBody').innerHTML = '';
+      renderServerUtilGrid(0);
+      if (resetCharts) renderPlaybackVisuals(-1);
+    }
+
+    function renderPlayback(index) {
+      const sim = state.sim;
+      if (!sim || !sim.events.length) return;
+      const i = Math.max(0, Math.min(index, sim.events.length - 1));
+      state.playIndex = i;
+      const ev = sim.events[i];
+      byId('timeline').value = i;
+      byId('timelineIndexText').textContent = String(i + 1);
+      byId('timelineTotalText').textContent = String(sim.events.length);
+      byId('clockText').textContent = fmt(ev.time, 3);
+      byId('eventTypeText').textContent = ev.type;
+      byId('systemNowText').textContent = String(ev.systemCount);
+      byId('queueCountText').textContent = String(ev.queueLength);
+      byId('busyCountText').textContent = `${ev.busyCount}/${sim.c}`;
+
+      const shown = ev.queueIds.slice(0, 24);
+      const queuePeople = byId('queuePeople');
+      queuePeople.innerHTML = shown.map(id => `<span class="person-chip">${id}</span>`).join('');
+      if (ev.queueIds.length > shown.length) queuePeople.innerHTML += `<span class="person-chip">+${ev.queueIds.length - shown.length}</span>`;
+      if (!ev.queueIds.length) queuePeople.innerHTML = `<div class="small muted">No hay clientes esperando en este instante.</div>`;
+
+      byId('serverGrid').innerHTML = ev.servers.map(s => {
+        const rem = s.busy ? Math.max(0, s.endTime - ev.time) : 0;
+        return `
+          <div class="server-card ${s.busy ? 'busy' : ''}">
+            <div class="server-head">
+              <span>Servidor ${s.id}</span>
+              <span class="tag ${s.busy ? 'tag-busy' : 'tag-idle'}">${s.busy ? 'ocupado' : 'libre'}</span>
+            </div>
+            <div class="small">Cliente actual: <strong>${s.busy ? s.customerId : '—'}</strong></div>
+            <div class="small">Inicio servicio: <span class="mono">${s.busy ? fmt(s.startTime, 3) : '—'}</span></div>
+            <div class="small">Fin previsto: <span class="mono">${s.busy ? fmt(s.endTime, 3) : '—'}</span></div>
+            <div class="small">Tiempo restante: <span class="mono">${s.busy ? fmt(rem, 3) : '0.000'}</span></div>
+          </div>
+        `;
+      }).join('');
+
+      const start = Math.max(0, i - 9);
+      const logSlice = sim.events.slice(start, i + 1).reverse();
+      byId('eventLogBody').innerHTML = logSlice.map(ev2 => `
+        <tr>
+          <td class="mono">${fmt(ev2.time, 3)}</td>
+          <td>${ev2.type}</td>
+          <td>${ev2.customerId ?? '—'}</td>
+          <td>${ev2.queueLength}</td>
+          <td>${ev2.systemCount}</td>
+          <td>${ev2.detail}</td>
+        </tr>
+      `).join('');
+
+      renderServerUtilGrid(ev.time);
+      renderPlaybackVisuals(i);
+    }
+
+    function pausePlayback() {
+      if (state.playTimer) {
+        clearInterval(state.playTimer);
+        state.playTimer = null;
+      }
+    }
+
+    function playPlayback() {
+      pausePlayback();
+      const sim = state.sim;
+      if (!sim || !sim.events.length) return;
+      state.playbackSpeed = Number(inputs.speed.value) || 1;
+      renderPlaybackInitial(true);
+      state.playTimer = setInterval(() => {
+        if (state.playIndex >= sim.events.length - 1) {
+          pausePlayback();
+          return;
+        }
+        renderPlayback(state.playIndex + 1);
+      }, Math.max(30, 260 / state.playbackSpeed));
+    }
+
+    function validateInputs() {
+      const lambda = Number(inputs.lambda.value);
+      const mu = Number(inputs.mu.value);
+      const c = Number(inputs.servers.value);
+      const horizon = Number(inputs.horizon.value);
+      const seed = Number(inputs.seed.value);
+      if (!(lambda > 0) || !(mu > 0) || !(c >= 1 && c <= 5) || !(horizon > 0)) {
+        alert('Revisá los parámetros: λ, μ y horizonte deben ser positivos, y c debe estar entre 1 y 5.');
+        return null;
+      }
+      return { lambda, mu, c, horizon, seed };
+    }
+
+    function arrayToCSV(rows) {
+      return rows.map(row => row.map(val => {
+        const s = val == null ? '' : String(val);
+        return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(',')).join('\n');
+    }
+
+    function downloadCSV(filename, rows) {
+      const csv = arrayToCSV(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCustomersCSV() {
+      if (!state.sim) return;
+      const rows = [[
+        'cliente_id','arribo','inicio_servicio','tiempo_servicio','espera','salida','tiempo_sistema','servidor','origen'
+      ]];
+      state.sim.customers.forEach(c => rows.push([
+        c.id, fmt(c.arrival, 6), fmt(c.serviceStart, 6), fmt(c.serviceTime, 6), fmt(c.wait, 6), fmt(c.departure, 6), fmt(c.systemTime, 6), c.serverId ?? '', c.origin ?? ''
+      ]));
+      downloadCSV('mmc_clientes.csv', rows);
+    }
+
+    function exportEventsCSV() {
+      if (!state.sim) return;
+      const rows = [[
+        'indice_evento','tiempo','tipo','cliente_id','cola','sistema','servidores_ocupados','detalle'
+      ]];
+      state.sim.events.forEach((e, idx) => rows.push([
+        idx + 1, fmt(e.time, 6), e.type, e.customerId ?? '', e.queueLength, e.systemCount, e.busyCount, e.detail
+      ]));
+      downloadCSV('mmc_eventos.csv', rows);
+    }
+
+    function exportSummaryCSV() {
+      if (!state.sim || !state.analytic) return;
+      const a = state.analytic;
+      const s = state.sim;
+      const rows = [
+        ['categoria','metrica','valor'],
+        ['analitico','lambda', a.lambda],
+        ['analitico','mu', a.mu],
+        ['analitico','servidores', a.c],
+        ['analitico','rho', fmt(a.rho, 8)],
+        ['analitico','P0', fmt(a.P0, 8)],
+        ['analitico','Lq', fmt(a.Lq, 8)],
+        ['analitico','L', fmt(a.L, 8)],
+        ['analitico','Wq', fmt(a.Wq, 8)],
+        ['analitico','W', fmt(a.W, 8)],
+        ['simulacion','horizonte', s.horizon],
+        ['simulacion','arribos', s.arrivals],
+        ['simulacion','salidas', s.departures],
+        ['simulacion','Lq_empirico', fmt(s.meanQueue, 8)],
+        ['simulacion','L_empirico', fmt(s.meanSystem, 8)],
+        ['simulacion','Wq_empirico', fmt(s.meanWait, 8)],
+        ['simulacion','W_empirico', fmt(s.meanSystemTime, 8)],
+        ['simulacion','cola_maxima', s.maxQueue],
+        ['simulacion','utilizacion_global', fmt(s.globalUtilization, 8)],
+        ['simulacion','tasa_arribo_estimada', fmt(s.estimatedArrivalRate, 8)],
+        ['simulacion','tasa_servicio_estimada', fmt(s.estimatedServiceRate, 8)],
+        ['simulacion','tasa_salida_estimada', fmt(s.estimatedDepartureRate, 8)]
+      ];
+      s.serverUtilization.forEach(u => rows.push(['simulacion', `utilizacion_servidor_${u.id}`, fmt(u.util, 8)]));
+      downloadCSV('mmc_resumen.csv', rows);
+    }
+
+    function runAll() {
+      const params = validateInputs();
+      if (!params) return;
+      pausePlayback();
+      state.analytic = mmcMetrics(params.lambda, params.mu, params.c);
+      state.sim = simulateMMc(params.lambda, params.mu, params.c, params.horizon, params.seed);
+      renderAnalytical(state.analytic);
+      renderSimSummary(state.sim);
+      renderHistograms(state.sim);
+      renderTemporalCharts(state.sim);
+      byId('timeline').max = Math.max(0, state.sim.events.length - 1);
+      if (state.sim.events.length) {
+        renderPlaybackInitial(false);
+      } else {
+        byId('timelineIndexText').textContent = '0';
+        byId('timelineTotalText').textContent = '0';
+      }
+    }
+
+    byId('runBtn').addEventListener('click', runAll);
+    byId('playBtn').addEventListener('click', playPlayback);
+    byId('pauseBtn').addEventListener('click', pausePlayback);
+    byId('stepBtn').addEventListener('click', () => {
+      pausePlayback();
+      if (!state.sim || !state.sim.events.length) return;
+      renderPlayback(Math.min(state.playIndex + 1, state.sim.events.length - 1));
+    });
+    byId('resetPlayBtn').addEventListener('click', () => {
+      pausePlayback();
+      if (state.sim && state.sim.events.length) renderPlaybackInitial(true);
+    });
+    byId('timeline').addEventListener('input', (e) => {
+      pausePlayback();
+      if (!state.sim || !state.sim.events.length) return;
+      renderPlayback(Number(e.target.value));
+    });
+    inputs.speed.addEventListener('change', () => {
+      if (state.playTimer) playPlayback();
+    });
+
+    byId('exampleBtn').addEventListener('click', () => {
+      inputs.lambda.value = '3.20';
+      inputs.mu.value = '1.25';
+      inputs.servers.value = '3';
+      inputs.horizon.value = '300';
+      inputs.seed.value = '20260324';
+      inputs.speed.value = '1';
+      runAll();
+    });
+
+    byId('exportCustomersBtn').addEventListener('click', exportCustomersCSV);
+    byId('exportEventsBtn').addEventListener('click', exportEventsCSV);
+    byId('exportSummaryBtn').addEventListener('click', exportSummaryCSV);
+
+    window.addEventListener('resize', () => {
+      if (state.sim) {
+        renderHistograms(state.sim);
+        renderTemporalCharts(state.sim);
+      }
+    });
+
+    runAll();
+  </script>
+</body>
+</html>
