@@ -23,15 +23,34 @@
 
 <item>
   <title>
-    <![CDATA[  Links sobre computación  ]]>
+    <![CDATA[  Paquetes interesantes de Julia a mirar - Marzo 2026  ]]>
   </title>
-  <link> https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html </link>
-  <guid> https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html </guid>
+  <link> https://www.egbaquela.com.ar/posts/20260319_paquetes_interesantes_de_julia_a_mirar/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20260319_paquetes_interesantes_de_julia_a_mirar/index.html </guid>
   <description>
-    <![CDATA[  Links sobre computación. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
+    <![CDATA[  Una lista de paquetes de Julia a revisar, que a priori me parecen interesantes  ]]>
   </description>  
     
-  <pubDate>Sat, 27 Dec 2025 00:00:00 +0000</pubDate>  
+  <pubDate>Thu, 19 Mar 2026 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Lecturas sobre Dinámica de Sistemas - Marzo 2026  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20260319_material_lectura_SD/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20260319_material_lectura_SD/index.html </guid>
+  <description>
+    <![CDATA[  Una lista de material leido y por leer relativo a dinámica de sistemas  ]]>
+  </description>  
+    
+  <pubDate>Thu, 19 Mar 2026 00:00:00 +0000</pubDate>  
   
   
   <atom:author>
@@ -48,6 +67,25 @@
   <guid> https://www.egbaquela.com.ar/posts/20251226_otros_enfoques_aprendizaje_automatico/index.html </guid>
   <description>
     <![CDATA[  Otros enfoques sobre el aprendizaje automático &#40;Circuitos lógicos y probabilísticos y Tsetlin Machines  ]]>
+  </description>  
+    
+  <pubDate>Sat, 27 Dec 2025 00:00:00 +0000</pubDate>  
+  
+  
+  <atom:author>
+    <atom:name>Enrique Gabriel Baquela</atom:name>
+  </atom:author>
+        
+</item>
+
+<item>
+  <title>
+    <![CDATA[  Links sobre computación  ]]>
+  </title>
+  <link> https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html </link>
+  <guid> https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html </guid>
+  <description>
+    <![CDATA[  Links sobre computación. Útil para autoaprendizaje. Videos, tutoriales, todo lo que encuentre interesante  ]]>
   </description>  
     
   <pubDate>Sat, 27 Dec 2025 00:00:00 +0000</pubDate>  

@@ -20,3 +20,8 @@ Recopilo en este post material de estudio sobre diseño, gestión, optimización
 * Supply Chain, As It Should Be (LOKAD): nota sobre el libro [acá](https://www.lokad.com/blog/2025/09/29/supply-chain-as-it-should-be/), y link al libro [acá](https://www.lokad.com/book-introduction-to-supply-chain/).
 * The Quantitative Supply Chain (LOKAD): link sobre nota del libro [acá](https://www.lokad.com/blog/2018/2/5/book-the-quantitative-supply-chain/).
 * Supply Chain Lectures (LOKAD): link [acá](https://www.lokad.com/learn/).
+
+## Apuntes webs
+
+* [Reabastecimiento de Inventario Priorizado en Excel con forecast probabilísticos (LOKAD)](https://www.lokad.com/es/reabastecimiento-de-inventario-priorizado-en-excel-con-pronosticos-probabilisticos/)
+* [Optimización basada en decisiones (LOKAD)](https://www.lokad.com/es/optimizacion-guiada-por-decisiones/)
