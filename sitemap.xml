@@ -2,26 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20250526_murio_bigote_acosta/index.html</loc>
-    <lastmod>2025-05-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/posts/20250425_links_sobre_el_knapsack_problem/index.html</loc>
     <lastmod>2025-05-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251227_juego_cerveza_con_agentes/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20260127_optimind/index.html</loc>
-    <lastmod>2026-01-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -32,20 +14,8 @@
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20251226_videojuegos_digital_twins/index.html</loc>
-    <lastmod>2025-12-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251226_links_computacion_cientifica/index.html</loc>
-    <lastmod>2025-12-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html</loc>
-    <lastmod>2025-12-30</lastmod>
+    <loc>https://www.egbaquela.com.ar/posts/20260319_material_lectura_ML/index.html</loc>
+    <lastmod>2026-03-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -56,20 +26,56 @@
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20251226_links_repositorios_paper_io/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/posts/20250505_inteligencia_artificial_en_ingenieria_industrial/index.html</loc>
     <lastmod>2025-05-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20250602_tablas_markdown/index.html</loc>
-    <lastmod>2025-07-02</lastmod>
+    <loc>https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html</loc>
+    <lastmod>2025-12-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250323_julia_en_google_colab_nativo/index.html</loc>
+    <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260319_paquetes_interesantes_de_julia_a_mirar/index.html</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/sobre_mi/index.html</loc>
+    <lastmod>2025-12-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250526_murio_bigote_acosta/index.html</loc>
+    <lastmod>2025-05-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251227_juego_cerveza_con_agentes/index.html</loc>
+    <lastmod>2025-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260319_links_sobre_forth/index.html</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_links_computacion_cientifica/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -86,7 +92,7 @@
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20250307_links_matematica/index.html</loc>
+    <loc>https://www.egbaquela.com.ar/posts/20251230_visualizador_lp/index.html</loc>
     <lastmod>2025-12-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -98,86 +104,14 @@
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20250311_julialang_tips/index.html</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/posts/20251226_otros_enfoques_aprendizaje_automatico/index.html</loc>
     <lastmod>2025-12-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>https://www.egbaquela.com.ar/posts/20250323_julia_en_google_colab_nativo/index.html</loc>
-    <lastmod>2025-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20250310_ossu/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20250430_fedora_gnome_dropbox_libappindicator/index.html</loc>
-    <lastmod>2025-05-06</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20250225_links_licencias/index.html</loc>
-    <lastmod>2025-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251207_material_supply_chain/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251230_visualizador_lp/index.html</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://www.egbaquela.com.ar/posts/20260120_pandoc/index.html</loc>
     <lastmod>2026-01-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20260127_newsvendor/index.html</loc>
-    <lastmod>2026-01-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251227_io_modelos_medio/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251227_links_io/index.html</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251207_tutoriales_godot/index.html</loc>
-    <lastmod>2025-12-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20251227_analisis_ia_2025/index.html</loc>
-    <lastmod>2025-12-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -195,18 +129,6 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_machine_learning/index.html</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/posts/20250904_recortar_video_linux/index.html</loc>
-    <lastmod>2025-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>https://www.egbaquela.com.ar/sobre_mi/index.html</loc>
     <lastmod>2025-12-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -230,8 +152,122 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_videojuegos_digital_twins/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260319_paquetes_interesantes_de_lisp_a_mirar/index.html</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250602_tablas_markdown/index.html</loc>
+    <lastmod>2025-07-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250311_julialang_tips/index.html</loc>
+    <lastmod>2025-12-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260319_empresas_de_softwares_e_io_interesantes/index.html</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250310_ossu/index.html</loc>
+    <lastmod>2025-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250225_links_licencias/index.html</loc>
+    <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260127_newsvendor/index.html</loc>
+    <lastmod>2026-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251207_tutoriales_godot/index.html</loc>
+    <lastmod>2025-12-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/posts/20250307_links_julia_lang/index.html</loc>
     <lastmod>2025-12-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260127_optimind/index.html</loc>
+    <lastmod>2026-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251227_links_computacion/index.html</loc>
+    <lastmod>2025-12-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260319_material_lectura_SD/index.html</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251226_links_repositorios_paper_io/index.html</loc>
+    <lastmod>2025-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250430_fedora_gnome_dropbox_libappindicator/index.html</loc>
+    <lastmod>2025-05-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251207_material_supply_chain/index.html</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251227_io_modelos_medio/index.html</loc>
+    <lastmod>2025-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251227_links_io/index.html</loc>
+    <lastmod>2025-12-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20251227_analisis_ia_2025/index.html</loc>
+    <lastmod>2025-12-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20250904_recortar_video_linux/index.html</loc>
+    <lastmod>2025-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -284,6 +320,18 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/files/teoria_de_colas/simulador_mmc/</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/files/teoria_de_colas/simulador_colas_serie/</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/files/ml/clasificacion_arbol/</loc>
     <lastmod>2025-08-14</lastmod>
     <changefreq>monthly</changefreq>
@@ -328,6 +376,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/files/cv/20250907_cv/</loc>
     <lastmod>2025-09-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/files/teoria_de_colas/simulador_gg1/</loc>
+    <lastmod>2026-03-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>

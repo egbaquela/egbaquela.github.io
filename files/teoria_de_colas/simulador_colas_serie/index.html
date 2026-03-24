@@ -1,1 +1,2327 @@
-<!DOCTYPE html> <html lang=es > <meta charset=UTF-8  /> <meta name=viewport  content="width=device-width, initial-scale=1.0" /> <title>Simulador de colas en serie — 5 etapas</title> <style> :root { --bg: #0b1020; --bg-2: #162045; --panel: #0f1428; --panel-soft: #0d1328; --ink: #e7ecf3; --muted: #9aa4b2; --line: #1e2646; --border: #1e2646; --accent: #8ec5ff; --accent-2: #78a6ff; --accent-3: #0e1a3c; --accent-dark: #8ec5ff; --ok: #21c07a; --warn: #ffb454; --danger: #ef476f; --p0: #8ec5ff; --p1: #ffd166; --p2: #78a6ff; --p3: #21c07a; --p4: #ff9f1c; --p5: #ef476f; --shadow: 0 14px 36px rgba(0, 0, 0, 0.28); --chart-bg: #0c1226; --input-bg: #0d1631; --soft-top: rgba(255,255,255,0.02); --soft-bottom: rgba(0,0,0,0.04); --grid: rgba(255,255,255,0.08); --grid-strong: rgba(255,255,255,0.14); --radius: 18px; } * { box-sizing: border-box; } html, body { height: 100%; } body { margin: 0; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: radial-gradient(1200px 700px at 20% -10%, var(--bg-2) 0%, var(--bg) 50%); } .wrap { max-width: 1600px; margin: 0 auto; padding: 24px 16px 42px; } .hero { background: var(--bg); color: var(--ink); border-radius: 22px; padding: 24px 24px 20px; box-shadow: 0 18px 42px rgba(0, 0, 0, 0.30); margin-bottom: 18px; position: relative; overflow: hidden; border: 1px solid var(--border); } .hero::after { content: ""; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,0.05); } .hero h1 { margin: 0 0 8px; font-size: clamp(1.55rem, 2.4vw, 2.45rem); letter-spacing: -0.03em; color: var(--ink); } .hero p { margin: 0; max-width: 1150px; color: var(--muted); line-height: 1.45; } .grid-main { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: start; } .panel, .stat, .formula-card, .chart-card, .stage-visual, .queue-strip, .server-strip, .server-card, .event-card { background: linear-gradient(180deg, var(--soft-top), var(--soft-bottom)), var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; } .panel .hd { padding: 16px 18px 10px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)); } .panel .hd h2, .panel .hd h3 { margin: 0 0 5px; font-size: 1.04rem; letter-spacing: -0.02em; color: var(--ink); } .panel .hd p { margin: 0; color: var(--muted); line-height: 1.35; font-size: 0.92rem; } .body { padding: 16px 18px 18px; } .content-stack { display: grid; gap: 18px; } .controls { display: grid; gap: 14px; } .row-2, .row-3 { display: grid; gap: 12px; } .row-2 { grid-template-columns: 1fr 1fr; } .row-3 { grid-template-columns: repeat(3, 1fr); } .field, .field-stack { display: grid; gap: 6px; } .field-stack { border: 1px solid var(--border); background: rgba(255,255,255,0.02); border-radius: 16px; padding: 12px; } label { font-size: 0.88rem; color: var(--muted); font-weight: 700; } .stage-title { font-size: 0.84rem; color: var(--accent); font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; } input, select { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 0.98rem; background: var(--input-bg); color: var(--ink); outline: none; transition: border-color 0.16s ease, box-shadow 0.16s ease; } input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(142, 197, 255, 0.12); } .hint, .small, .muted { font-size: 0.82rem; color: var(--muted); line-height: 1.35; } .note-box { border: 1px dashed var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft); border-radius: 14px; padding: 12px 13px; color: var(--ink); line-height: 1.42; font-size: 0.86rem; } .actions, .play-actions, .mini-badges { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } button { appearance: none; border: 0; border-radius: 12px; padding: 10px 14px; font-size: 0.94rem; font-weight: 800; cursor: pointer; transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease; } button:hover { transform: translateY(-1px); } button:active { transform: translateY(0); } .btn-primary { background: linear-gradient(180deg, var(--p2) 0%, var(--p0) 100%); color: #08111f; box-shadow: 0 10px 20px rgba(120, 166, 255, 0.22); } .btn-secondary, .btn-ghost { background: #0f1734; color: var(--ink); border: 1px solid var(--border); } .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 12px; } .stat { padding: 14px 15px; min-height: 96px; } .stat .k { font-size: 0.76rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; margin-bottom: 6px; } .stat .v { font-size: 1.55rem; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 5px; color: var(--ink); } .stat .s { font-size: 0.83rem; color: var(--muted); line-height: 1.34; } .status-banner { margin-top: 12px; padding: 12px 14px; border-radius: 14px; font-size: 0.92rem; font-weight: 700; border: 1px solid transparent; } .status-ok { background: rgba(33, 192, 122, 0.10); color: var(--ok); border-color: rgba(33, 192, 122, 0.22); } .status-warn { background: rgba(255, 180, 84, 0.10); color: var(--warn); border-color: rgba(255, 180, 84, 0.22); } .status-danger { background: rgba(239, 71, 111, 0.10); color: var(--danger); border-color: rgba(239, 71, 111, 0.22); } .table-wrap { overflow-x: auto; } .summary-table, .prob-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; } .summary-table th, .summary-table td, .prob-table th, .prob-table td { border-bottom: 1px solid #141a33; padding: 9px 9px; text-align: left; vertical-align: top; white-space: nowrap; } .summary-table thead th, .prob-table thead th { background: #0d1631; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.76rem; position: sticky; top: 0; } .prob-bar-wrap { background: #0e1a3c; border-radius: 999px; height: 10px; overflow: hidden; min-width: 140px; } .prob-bar { height: 100%; background: linear-gradient(90deg, var(--p2), var(--p0)); border-radius: inherit; } .formula-grid, .two-col, .chart-grid { display: grid; gap: 14px; } .formula-grid { grid-template-columns: repeat(3, 1fr); } .two-col { grid-template-columns: 1.1fr 0.9fr; } .chart-grid { grid-template-columns: repeat(2, 1fr); } .formula-card { padding: 12px 14px; } .formula-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; margin-bottom: 7px; } .formula { white-space: pre-wrap; font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; font-size: 0.87rem; line-height: 1.52; color: var(--ink); } .formula small { display: block; margin-top: 6px; color: var(--muted); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 0.79rem; line-height: 1.35; } .mono { font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; } .chart-card { padding: 12px 14px; } .chart-card h4 { margin: 0 0 4px; font-size: 0.98rem; color: var(--ink); } .chart-card p { margin: 0 0 10px; font-size: 0.82rem; color: var(--muted); line-height: 1.35; } canvas { width: 100%; display: block; border-radius: 12px; background: var(--chart-bg); border: 1px solid var(--border); } .metric-badges, .badge-row { display: flex; flex-wrap: wrap; gap: 8px; } .badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border-radius: 999px; border: 1px solid var(--border); background: #0f1734; color: var(--ink); font-size: 0.82rem; font-weight: 800; } .timeline-wrap { display: grid; gap: 10px; margin-top: 12px; } .slider-line { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; } input[type="range"] { padding: 0; background: transparent; box-shadow: none; } .factory-card { margin-top: 14px; padding: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; } .factory-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; } .factory-header strong { font-size: 0.96rem; letter-spacing: -0.02em; } .factory-line { display: grid; grid-template-columns: auto repeat(5, minmax(150px, 1fr)) auto; gap: 10px; align-items: center; overflow-x: auto; padding-bottom: 4px; } .factory-end, .factory-stage { min-width: 150px; padding: 12px; border-radius: 18px; border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), var(--panel); box-shadow: var(--shadow); position: relative; overflow: hidden; } .factory-end::after, .factory-stage::after { content: ""; position: absolute; inset: auto -18px -18px auto; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.03); pointer-events: none; } .factory-end { min-width: 128px; text-align: center; } .factory-end-title, .factory-stage-title { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 900; margin-bottom: 8px; position: relative; z-index: 1; } .factory-stage-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .factory-stage-title .eta { color: var(--accent); font-size: 0.72rem; } .factory-node-name { font-weight: 900; color: var(--ink); margin-bottom: 10px; position: relative; z-index: 1; } .factory-buffer { position: relative; z-index: 1; display: grid; gap: 8px; margin-bottom: 10px; } .factory-buffer-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); font-weight: 800; } .factory-buffer-bin { min-height: 44px; border-radius: 14px; border: 1px dashed var(--border); background: rgba(255,255,255,0.025); padding: 7px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; } .factory-buffer-bin.empty { align-items: center; justify-content: center; color: var(--muted); font-size: 0.8rem; font-weight: 700; } .factory-crate { min-width: 28px; height: 24px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(255,212,102,0.28), rgba(255,159,28,0.14)); border: 1px solid rgba(255,180,84,0.22); color: var(--ink); font-size: 0.72rem; font-weight: 900; } .factory-machine { position: relative; z-index: 1; border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(180deg, rgba(120,166,255,0.08), rgba(255,255,255,0.02)); padding: 10px; display: grid; gap: 7px; } .factory-machine.busy { box-shadow: inset 0 0 0 1px rgba(142,197,255,0.08), 0 0 0 1px rgba(142,197,255,0.05); } .machine-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .machine-icon { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: #101938; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; } .machine-state { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 999px; font-size: 0.73rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--border); } .machine-state.busy { color: var(--p0); background: rgba(142,197,255,0.10); } .machine-state.idle { color: var(--ok); background: rgba(33,192,122,0.10); } .machine-customer, .machine-stats { font-size: 0.8rem; color: var(--muted); line-height: 1.35; } .machine-customer strong, .machine-stats strong { color: var(--ink); } .machine-progress { position: relative; height: 8px; border-radius: 999px; overflow: hidden; background: #0b132d; border: 1px solid var(--border); } .machine-progress-fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, var(--p2), var(--p0)); } .factory-belt { position: relative; min-width: 86px; height: 24px; border-radius: 999px; border: 1px solid var(--border); background: linear-gradient(180deg, #0f1835, #0b1228); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); } .factory-belt::before, .factory-belt::after { content: ""; position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.05); } .factory-belt::before { left: 4px; } .factory-belt::after { right: 4px; } .belt-track { position: absolute; inset: 3px 11px; border-radius: 999px; overflow: hidden; background: linear-gradient(90deg, rgba(255,255,255,0.06) 0 18%, transparent 18% 36%, rgba(255,255,255,0.06) 36% 54%, transparent 54% 72%, rgba(255,255,255,0.06) 72% 90%, transparent 90% 100%); opacity: 0.4; } .belt-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 4px; background: linear-gradient(180deg, rgba(255,212,102,0.92), rgba(255,159,28,0.84)); box-shadow: 0 0 0 1px rgba(255,180,84,0.20), 0 0 16px rgba(255,180,84,0.18); opacity: 0; } .factory-belt.flowing .belt-dot { opacity: 1; animation: beltFlow 2.2s linear infinite; } .factory-belt.flowing .belt-dot.delay-1 { animation-delay: 0.5s; } .factory-belt.flowing .belt-dot.delay-2 { animation-delay: 1s; } .factory-belt.fast .belt-dot { animation-duration: 1.35s; } .factory-belt.slow .belt-dot { animation-duration: 3s; } .factory-belt.alert { box-shadow: inset 0 0 0 1px rgba(255,180,84,0.10), 0 0 0 1px rgba(255,180,84,0.08); } .factory-belt-id { position: absolute; right: 10px; top: -20px; font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; } .factory-end-value { font-size: 1.55rem; font-weight: 900; letter-spacing: -0.05em; color: var(--ink); position: relative; z-index: 1; } .factory-end-sub { position: relative; z-index: 1; font-size: 0.82rem; color: var(--muted); line-height: 1.36; margin-top: 8px; } .factory-end.highlight, .factory-stage.highlight { box-shadow: 0 0 0 1px rgba(142,197,255,0.14), 0 0 0 6px rgba(142,197,255,0.05), var(--shadow); } @keyframes beltFlow { 0% { left: -10%; transform: translateY(0) scale(0.95); } 15% { transform: translateY(-1px) scale(1); } 50% { transform: translateY(0) scale(1); } 85% { transform: translateY(1px) scale(0.98); } 100% { left: 100%; transform: translateY(0) scale(0.95); } } .stage-visual { padding: 14px; display: grid; gap: 10px; } .stage-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 900; color: var(--ink); } .queue-strip, .server-strip { padding: 12px; } .queue-title, .server-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; font-weight: 900; color: var(--ink); } .queue-people { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; align-content: flex-start; } .person-chip { min-width: 34px; height: 34px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 900; background: linear-gradient(180deg, rgba(120,166,255,0.18), rgba(142,197,255,0.08)); border: 1px solid var(--border); color: var(--ink); } .server-card { padding: 12px; min-height: 82px; display: grid; gap: 6px; } .server-card.busy { background: linear-gradient(180deg, rgba(120,166,255,0.10) 0%, rgba(255,255,255,0.02) 100%), var(--panel); } .tag { display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.74rem; font-weight: 900; width: fit-content; } .tag-idle { background: rgba(33,192,122,0.10); color: var(--ok); } .tag-busy { background: rgba(142,197,255,0.10); color: var(--p0); } .stages-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; } .event-card { padding: 12px 14px; } .event-log { display: grid; gap: 8px; } .event-row { border: 1px solid var(--border); border-radius: 12px; padding: 10px 11px; background: rgba(255,255,255,0.02); font-size: 0.84rem; line-height: 1.4; } .footer-note { margin-top: 12px; font-size: 0.82rem; color: var(--muted); line-height: 1.42; } @media (max-width: 1420px) { .factory-line { grid-template-columns: auto repeat(5, minmax(170px, 1fr)) auto; } .stages-grid { grid-template-columns: repeat(2, 1fr); } .grid-main, .two-col, .chart-grid { grid-template-columns: 1fr; } .formula-grid { grid-template-columns: repeat(2, 1fr); } } @media (max-width: 860px) { .factory-line { grid-template-columns: 1fr; } .factory-belt { min-width: 100%; } .stats-grid, .row-2, .row-3, .formula-grid, .slider-line, .stages-grid { grid-template-columns: 1fr; } .wrap { padding: 16px 10px 30px; } .hero { padding: 20px 16px 16px; } } </style> <div class=wrap > <section class=hero > <h1>Simulador de colas en serie — 5 etapas M/M/1 + simulación por eventos</h1> <p> Ajustá la tasa de arribo <span class=mono >λ</span> y las tasas de servicio <span class=mono >μ₁, …, μ₅</span>. La app calcula métricas analíticas para una línea en serie de cinco estaciones y además genera una simulación temporal, mostrando colas, utilizaciones, tasa de salida, tiempos medios y probabilidades de cola total. </p> </section> <div class=grid-main > <aside class=panel > <div class=hd > <h2>Parámetros del sistema</h2> <p>El modelo estacionario requiere que <span class=mono >λ &lt; μᵢ</span> para cada una de las 5 etapas.</p> </div> <div class=body > <div class=controls > <div class=row-2 > <div class=field > <label for=lambda >Tasa de arribo λ</label> <input id=lambda  type=number  min=0.01  step=0.01  value=0.80  /> <div class=hint >Clientes por unidad de tiempo.</div> </div> <div class=field > <label for=horizon >Horizonte de simulación</label> <input id=horizon  type=number  min=10  step=10  value=400  /> <div class=hint >Duración total de la trayectoria simulada.</div> </div> </div> <div class=row-2 > <div class=field > <label for=seed >Semilla aleatoria</label> <input id=seed  type=number  step=1  value=12345  /> <div class=hint >Permite reproducir la misma corrida.</div> </div> <div class=field > <label for=speed >Velocidad de reproducción</label> <select id=speed > <option value=0.25 >0.25× <option value=0.5 >0.5× <option value=1  selected>1× <option value=2 >2× <option value=4 >4× <option value=8 >8× </select> <div class=hint >Controla la animación de eventos.</div> </div> </div> <div class=field-stack > <div class=stage-title >Tasas de servicio por etapa</div> <div class=row-2 > <div class=field > <label for=mu1 >Etapa 1 — μ₁</label> <input id=mu1  type=number  min=0.01  step=0.01  value=1.30  /> </div> <div class=field > <label for=mu2 >Etapa 2 — μ₂</label> <input id=mu2  type=number  min=0.01  step=0.01  value=1.20  /> </div> <div class=field > <label for=mu3 >Etapa 3 — μ₃</label> <input id=mu3  type=number  min=0.01  step=0.01  value=1.45  /> </div> <div class=field > <label for=mu4 >Etapa 4 — μ₄</label> <input id=mu4  type=number  min=0.01  step=0.01  value=1.15  /> </div> <div class=field > <label for=mu5 >Etapa 5 — μ₅</label> <input id=mu5  type=number  min=0.01  step=0.01  value=1.55  /> </div> </div> </div> <div class=actions > <button class=btn-primary  id=runBtn >Calcular y simular</button> <button class=btn-secondary  id=exampleBtn >Cargar ejemplo</button> <button class=btn-ghost  id=exportCsvBtn >Exportar CSV</button> <button class=btn-ghost  id=resetBtn >Reiniciar reproducción</button> </div> <div class=play-actions > <button class=btn-primary  id=playBtn >▶ Reproducir</button> <button class=btn-secondary  id=pauseBtn >❚❚ Pausar</button> <button class=btn-ghost  id=stepBtn >Paso a paso</button> </div> <div class=note-box > <strong>Qué hace la página:</strong><br> 1) calcula métricas analíticas por etapa y globales;<br> 2) estima la distribución de la cola total acumulada <span class=mono >Q = ΣQᵢ</span>;<br> 3) simula la línea por eventos discretos;<br> 4) muestra colas, estados de los servidores y gráficos temporales. </div> </div> </div> </aside> <main class=content-stack > <section class=panel > <div class=hd > <h2>Indicadores globales del sistema</h2> <p>Incluye tiempos medios, fracciones de tiempo en cola/proceso, utilización media y throughput.</p> </div> <div class=body > <div class=stats-grid  id=globalStats ></div> <div id=stabilityBanner  class="status-banner status-ok"></div> </div> </section> <section class=panel > <div class=hd > <h2>Resultados analíticos por etapa</h2> <p>Cada estación se modela como M/M/1 con arribo efectivo igual a <span class=mono >λ</span>, válido si el sistema es estable.</p> </div> <div class="body table-wrap"> <table class=summary-table > <thead> <tr> <th>Etapa <th>μᵢ <th>ρᵢ <th>Lqᵢ <th>Lᵢ <th>Wqᵢ <th>Wᵢ <th>1/μᵢ <tbody id=stageAnalyticBody > </table> </div> </section> <section class=two-col > <div class=panel > <div class=hd > <h3>Probabilidad de cola total acumulada</h3> <p>Distribución teórica y empírica del total <span class=mono >Q = Q₁ + … + Q₅</span> para tamaños 0 a 10.</p> </div> <div class="body table-wrap"> <table class=prob-table > <thead> <tr> <th>Q total <th>Analítica <th>Empírica <th>Visual analítica <tbody id=probTableBody > </table> <div class=footer-note >La masa restante se informa como <span class=mono >P(Q &gt; 10)</span>.</div> </div> </div> <div class=panel > <div class=hd > <h3>Detalle conceptual</h3> <p>Fórmulas del modelo M/M/1 en serie, con sustitución numérica usando los parámetros actuales.</p> </div> <div class=body > <div class=formula-grid  id=formulaGrid ></div> </div> </div> </section> <section class=panel > <div class=hd > <h2>Resultados de la simulación</h2> <p>Promedios observados en la trayectoria generada, tanto globales como por etapa.</p> </div> <div class="body table-wrap"> <table class=summary-table > <thead> <tr> <th>Métrica <th>Global <th>Etapa 1 <th>Etapa 2 <th>Etapa 3 <th>Etapa 4 <th>Etapa 5 <tbody id=simSummaryBody > </table> </div> </section> <section class=panel > <div class=hd > <h2>Gráficos temporales</h2> <p>Evolución temporal del sistema total, de las colas por etapa y de la utilización de cada servidor.</p> </div> <div class=body > <div class=chart-grid > <div class=chart-card > <h4>Lq total y Ls total</h4> <p>Serie escalonada del total de personas esperando y del total en sistema (Ls) a lo largo del tiempo.</p> <canvas id=totalChart  width=760  height=280 ></canvas> </div> <div class=chart-card > <h4>Colas por etapa</h4> <p>Se muestran <span class=mono >Q₁(t)</span>, …, <span class=mono >Q₅(t)</span> en una misma vista.</p> <canvas id=stageQueueChart  width=760  height=280 ></canvas> </div> <div class=chart-card > <h4>Utilización temporal de cada servidor</h4> <p>Cada banda representa ocupación 0/1 de una etapa a través del tiempo.</p> <canvas id=usageChart  width=760  height=280 ></canvas> </div> <div class=chart-card > <h4>Utilización acumulada durante la reproducción</h4> <p>Permite comparar cómo converge la utilización simulada de cada etapa.</p> <canvas id=utilCumulativeChart  width=760  height=280 ></canvas> </div> </div> </div> </section> <section class=panel > <div class=hd > <h2>Simulación en vivo</h2> <p>Podés avanzar evento por evento o reproducir la trayectoria. Se muestran las cinco colas y sus servidores.</p> </div> <div class=body > <div class=badge-row > <span class=badge >Tiempo actual: <span id=clockText  class=mono >0.000</span></span> <span class=badge >Evento: <span id=eventTypeText  class=mono >—</span></span> <span class=badge >Q total: <span id=totalQueueText  class=mono >0</span></span> <span class=badge >Ls total: <span id=totalSystemText  class=mono >0</span></span> <span class=badge >Salidas: <span id=departuresText  class=mono >0</span></span> </div> <div class=timeline-wrap > <div class=slider-line > <input id=timeline  type=range  min=0  max=0  value=0  /> <div class=small >Evento <span id=timelineIndexText  class=mono >0</span> / <span id=timelineTotalText  class=mono >0</span></div> </div> </div> <div class=factory-card > <div class=factory-header > <strong>Vista animada de la línea</strong> <span class=small >Buffers antes de cada etapa, máquinas en servicio y flujo entre estaciones.</span> </div> <div class=factory-line  id=factoryLine ></div> </div> <div class=stages-grid  id=stagesGrid ></div> <div class=event-card  style="margin-top:16px;"> <div class=queue-title > <span>Últimos eventos</span> <span class=small >Se muestran los 7 más recientes respecto del punto seleccionado.</span> </div> <div class=event-log  id=eventLog ></div> </div> </div> </section> </main> </div> </div> <script> const STAGES = 5; const $ = (id) => document.getElementById(id); const fmt = (x, d = 4) => Number.isFinite(x) ? x.toFixed(d) : '—'; const fmtPct = (x, d = 2) => Number.isFinite(x) ? (100 * x).toFixed(d) + '%' : '—'; function safeDiv(a, b) { return (Number.isFinite(a) && Number.isFinite(b) && Math.abs(b) > 1e-12) ? (a / b) : NaN; } function escCsv(value) { const txt = String(value ?? ''); return /[",\n;]/.test(txt) ? '"' + txt.replace(/"/g, '""') + '"' : txt; } function downloadCsv(filename, rows) { const csv = rows.map(row => row.map(escCsv).join(',')).join('\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); } function getVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); } function theme(name, fallback='') { const v = getVar(name); return v || fallback; } function hexToRgba(hex, alpha) { const h = (hex || '').replace('#', '').trim(); if (![3, 6].includes(h.length)) return `rgba(255,255,255,${alpha})`; const full = h.length === 3 ? h.split('').map(ch => ch + ch).join('') : h; const n = parseInt(full, 16); const r = (n >> 16) & 255; const g = (n >> 8) & 255; const b = n & 255; return `rgba(${r}, ${g}, ${b}, ${alpha})`; } const inputs = { lambda: $('lambda'), horizon: $('horizon'), seed: $('seed'), speed: $('speed'), mus: [1,2,3,4,5].map(i => $(`mu${i}`)) }; const state = { analytic: null, sim: null, playIndex: -1, playTimer: null, playbackSpeed: 1 }; function mulberry32(seed) { let t = seed >>> 0; return function() { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), t | 1); r ^= r + Math.imul(r ^ (r >>> 7), r | 61); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; } function expSample(rate, rng) { const u = Math.max(1e-12, 1 - rng()); return -Math.log(u) / rate; } function mean(arr) { return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : NaN; } function mm1Metrics(lambda, mu) { const rho = lambda / mu; const stable = rho < 1; if (!stable) { return { lambda, mu, rho, stable, Lq: NaN, L: NaN, Wq: NaN, W: NaN, serviceMean: 1 / mu }; } const Lq = (rho * rho) / (1 - rho); const L = rho / (1 - rho); const Wq = Lq / lambda; const W = L / lambda; return { lambda, mu, rho, stable, Lq, L, Wq, W, serviceMean: 1 / mu }; } function queuePmfMM1(rho, maxK) { const out = Array(maxK + 1).fill(0); if (!(rho >= 0) || rho >= 1) return out.map(() => NaN); out[0] = 1 - rho * rho; for (let q = 1; q <= maxK; q++) { out[q] = (1 - rho) * Math.pow(rho, q + 1); } return out; } function convolveUpTo(a, b, maxK) { const out = Array(maxK + 1).fill(0); for (let i = 0; i <= maxK; i++) { for (let j = 0; j <= maxK - i; j++) { out[i + j] += a[i] * b[j]; } } return out; } function tandemAnalytics(lambda, mus, maxK = 10) { const stages = mus.map(mu => mm1Metrics(lambda, mu)); const stable = stages.every(s => s.stable); const bottleneckMu = Math.min(...mus); let totalLq = NaN, totalL = NaN, totalWq = NaN, totalW = NaN; let totalService = NaN, processShare = NaN, waitShare = NaN, outputRate = NaN, meanUtil = NaN; let pmf = Array(maxK + 1).fill(NaN), tailProb = NaN; if (stable) { totalLq = stages.reduce((acc, s) => acc + s.Lq, 0); totalL = stages.reduce((acc, s) => acc + s.L, 0); totalWq = stages.reduce((acc, s) => acc + s.Wq, 0); totalW = stages.reduce((acc, s) => acc + s.W, 0); totalService = stages.reduce((acc, s) => acc + s.serviceMean, 0); processShare = totalService / totalW; waitShare = totalWq / totalW; outputRate = lambda; meanUtil = stages.reduce((acc, s) => acc + s.rho, 0) / STAGES; let accPmf = [1, ...Array(maxK).fill(0)]; for (const s of stages) { accPmf = convolveUpTo(accPmf, queuePmfMM1(s.rho, maxK), maxK); } pmf = accPmf; tailProb = Math.max(0, 1 - pmf.reduce((a,b) => a+b, 0)); } return { lambda, mus, stages, stable, bottleneckMu, totalLq, totalL, totalWq, totalW, totalService, processShare, waitShare, outputRate, meanUtil, pmf, tailProb }; } function simulateTandem(lambda, mus, horizon, seed) { const rng = mulberry32(Number(seed) || 1); const servers = mus.map((mu, idx) => ({ id: idx + 1, mu, busy: false, customerId: null, startTime: null, endTime: Infinity, serviceTime: null, totalBusy: 0, completed: 0, intervals: [] })); const queues = Array.from({ length: STAGES }, () => []); const customers = []; const events = []; const areasQ = Array(STAGES).fill(0); const areasL = Array(STAGES).fill(0); const timeInTotalQ = Array(12).fill(0); // 0..10, 11=>overflow const cumulativeUtilSeries = []; const timeSeries = [{ time: 0, totalQ: 0, totalL: 0, stageQ: Array(STAGES).fill(0), stageBusy: Array(STAGES).fill(0) }]; let t = 0; let lastTime = 0; let nextArrival = expSample(lambda, rng); let customerCounter = 0; let arrivals = 0; let departures = 0; let eventCounter = 0; function snapshot(type, customerId, stage, detail) { events.push({ idx: eventCounter++, time: t, type, customerId, stage, detail, departures, stageQueues: queues.map(q => q.slice(0, 12).map(c => c.id)), stageBusy: servers.map(s => s.busy), stageServerCustomer: servers.map(s => s.customerId), stageEndTime: servers.map(s => s.endTime), totalQ: queues.reduce((acc, q) => acc + q.length, 0), totalL: queues.reduce((acc, q) => acc + q.length, 0) + servers.filter(s => s.busy).length }); } function registerSeriesPoint(timeValue) { timeSeries.push({ time: timeValue, totalQ: queues.reduce((acc, q) => acc + q.length, 0), totalL: queues.reduce((acc, q) => acc + q.length, 0) + servers.filter(s => s.busy).length, stageQ: queues.map(q => q.length), stageBusy: servers.map(s => s.busy ? 1 : 0) }); cumulativeUtilSeries.push({ time: timeValue, utils: servers.map((s, i) => timeValue > 0 ? ((areasL[i] - areasQ[i]) / timeValue) : 0) }); } function updateAreas(newTime) { const dt = newTime - lastTime; if (dt < 0) return; const totalQ = queues.reduce((acc, q) => acc + q.length, 0); for (let i = 0; i < STAGES; i++) { areasQ[i] += queues[i].length * dt; areasL[i] += (queues[i].length + (servers[i].busy ? 1 : 0)) * dt; } const bucket = Math.min(totalQ, 11); timeInTotalQ[bucket] += dt; lastTime = newTime; } function ensureStageRecord(customer, stageIndex, entryTime) { if (!customer.stages[stageIndex]) { customer.stages[stageIndex] = { arrivalQueue: entryTime, serviceStart: null, serviceEnd: null, wait: null, serviceTime: null }; } return customer.stages[stageIndex]; } function startService(stageIndex, customer, now, source) { const server = servers[stageIndex]; const rec = ensureStageRecord(customer, stageIndex, now); if (rec.arrivalQueue == null) rec.arrivalQueue = now; const st = expSample(server.mu, rng); rec.serviceStart = now; rec.wait = now - rec.arrivalQueue; rec.serviceTime = st; server.busy = true; server.customerId = customer.id; server.startTime = now; server.endTime = now + st; server.serviceTime = st; server.intervals.push({ start: now, end: null, customerId: customer.id }); customer.currentStage = stageIndex + 1; customer.lastMove = source; } function enterStage(stageIndex, customer, now, source) { const rec = ensureStageRecord(customer, stageIndex, now); rec.arrivalQueue = now; const server = servers[stageIndex]; if (!server.busy) { startService(stageIndex, customer, now, source); return `Cliente ${customer.id} entra directo a servicio en etapa ${stageIndex + 1}.`; } queues[stageIndex].push(customer); customer.currentStage = stageIndex + 1; customer.lastMove = source; return `Cliente ${customer.id} entra a cola en etapa ${stageIndex + 1}.`; } function maybeStartNext(stageIndex, now) { if (servers[stageIndex].busy) return; if (queues[stageIndex].length === 0) return; const customer = queues[stageIndex].shift(); startService(stageIndex, customer, now, 'cola'); } while (true) { let nextCompletion = Infinity; let compStage = -1; for (let i = 0; i < STAGES; i++) { if (servers[i].busy && servers[i].endTime < nextCompletion) { nextCompletion = servers[i].endTime; compStage = i; } } const nextEventTime = Math.min(nextArrival, nextCompletion); if (!Number.isFinite(nextEventTime) || nextEventTime > horizon) break; updateAreas(nextEventTime); t = nextEventTime; if (nextArrival <= nextCompletion) { customerCounter += 1; arrivals += 1; const customer = { id: customerCounter, arrivalSystem: t, departureSystem: null, stages: [], currentStage: 0, lastMove: 'arribo' }; customers.push(customer); const detail = enterStage(0, customer, t, 'arribo externo'); snapshot('arribo', customer.id, 1, detail); registerSeriesPoint(t); nextArrival = t + expSample(lambda, rng); } else { const server = servers[compStage]; const customer = customers[server.customerId - 1]; const rec = ensureStageRecord(customer, compStage, t); rec.serviceEnd = t; server.totalBusy += t - server.startTime; server.completed += 1; const lastInterval = server.intervals[server.intervals.length - 1]; if (lastInterval && lastInterval.end === null) lastInterval.end = t; server.busy = false; server.customerId = null; server.startTime = null; server.endTime = Infinity; server.serviceTime = null; let detail = `Cliente ${customer.id} completa etapa ${compStage + 1}.`; if (compStage < STAGES - 1) { detail += ' ' + enterStage(compStage + 1, customer, t, `salida etapa ${compStage + 1}`); } else { customer.departureSystem = t; departures += 1; detail += ` Cliente ${customer.id} sale del sistema.`; } maybeStartNext(compStage, t); snapshot('salida de servicio', customer.id, compStage + 1, detail); registerSeriesPoint(t); } } updateAreas(horizon); t = horizon; for (const server of servers) { if (server.busy && server.startTime !== null) { server.totalBusy += horizon - server.startTime; const lastInterval = server.intervals[server.intervals.length - 1]; if (lastInterval && lastInterval.end === null) lastInterval.end = horizon; } } registerSeriesPoint(horizon); const completed = customers.filter(c => Number.isFinite(c.departureSystem)); const totalWaits = completed.map(c => c.stages.reduce((acc, s) => acc + (s.wait || 0), 0)); const totalServices = completed.map(c => c.stages.reduce((acc, s) => acc + (s.serviceTime || 0), 0)); const totalSystems = completed.map(c => c.departureSystem - c.arrivalSystem); const stageWaits = Array.from({ length: STAGES }, (_, i) => completed.filter(c => c.stages[i]).map(c => c.stages[i].wait || 0)); const stageTimes = Array.from({ length: STAGES }, (_, i) => completed.filter(c => c.stages[i]).map(c => (c.stages[i].wait || 0) + (c.stages[i].serviceTime || 0))); const result = { lambda, mus, horizon, seed, customers, completed, events, timeSeries, cumulativeUtilSeries, arrivals, departures, totalQMean: areasQ.reduce((a,b) => a+b, 0) / horizon, totalLMean: areasL.reduce((a,b) => a+b, 0) / horizon, totalWaitMean: mean(totalWaits), totalSystemMean: mean(totalSystems), totalServiceMean: mean(totalServices), processShareMean: mean(totalServices) / mean(totalSystems), waitShareMean: mean(totalWaits) / mean(totalSystems), throughput: departures / horizon, stageQMean: areasQ.map(a => a / horizon), stageLMean: areasL.map(a => a / horizon), stageWaitMean: stageWaits.map(arr => mean(arr)), stageSystemMean: stageTimes.map(arr => mean(arr)), stageUtil: servers.map(s => s.totalBusy / horizon), stageCompleted: servers.map(s => s.completed), servers, probTotalQ: timeInTotalQ.map(x => x / horizon) }; return result; } function analyticalCards(a, sim) { return [ { key: 'Lq total', value: fmt(a.totalLq), sub: 'Promedio teórico de personas esperando en las 5 colas.' }, { key: 'Ls total', value: fmt(a.totalL), sub: 'Promedio teórico de personas en todo el sistema.' }, { key: 'Wq total', value: fmt(a.totalWq), sub: 'Tiempo medio total de espera, sumando las 5 colas.' }, { key: 'W total', value: fmt(a.totalW), sub: 'Tiempo medio total en el sistema.' }, { key: 'Proceso / sistema', value: fmtPct(a.processShare), sub: 'Fracción del tiempo total dedicada al servicio.' }, { key: 'Espera / sistema', value: fmtPct(a.waitShare), sub: 'Fracción del tiempo total dedicada a espera.' }, { key: 'Utilización media', value: fmt(a.meanUtil), sub: 'Promedio de ρᵢ en las cinco etapas.' }, { key: 'Tasa de salida', value: fmt(sim ? sim.throughput : a.outputRate), sub: 'Throughput del sistema: analítico ≈ λ y empírico = salidas/T.' } ]; } function renderGlobalStats(a, sim) { $('globalStats').innerHTML = analyticalCards(a, sim).map(card => ` <div class=stat > <div class=k >${card.key}</div> <div class=v >${card.value}</div> <div class=s >${card.sub}</div> </div> `).join(''); const banner = $('stabilityBanner'); if (a.stable) { banner.className = 'status-banner status-ok'; banner.innerHTML = `Sistema estable. La etapa más exigida tiene <span class=mono >μ = ${fmt(a.bottleneckMu, 3)}</span> y se cumple <span class=mono >λ = ${fmt(a.lambda, 3)} &lt; μᵢ</span> para todas las estaciones.`; } else { banner.className = 'status-banner status-danger'; const unstableStages = a.stages.map((s, i) => s.stable ? null : (i + 1)).filter(x => x !== null).join(', '); banner.innerHTML = `Atención: el régimen estacionario no aplica. Las etapas no estables son: <span class=mono >${unstableStages}</span>. La simulación finita sí se muestra, pero las fórmulas analíticas de equilibrio quedan invalidadas.`; } } function renderStageAnalytic(a) { $('stageAnalyticBody').innerHTML = a.stages.map((s, i) => ` <tr> <td><strong>Etapa ${i + 1}</strong> <td>${fmt(s.mu)} <td>${fmt(s.rho)} <td>${fmt(s.Lq)} <td>${fmt(s.L)} <td>${fmt(s.Wq)} <td>${fmt(s.W)} <td>${fmt(s.serviceMean)} `).join(''); } function renderProbTable(a, sim) { const rows = []; for (let k = 0; k <= 10; k++) { const pA = a.pmf[k]; const pE = sim.probTotalQ[k]; const pct = Number.isFinite(pA) ? Math.max(0, Math.min(100, pA * 100)) : 0; rows.push(` <tr> <td><strong>${k}</strong> <td>${fmt(pA)} <td>${fmt(pE)} <td><div class=prob-bar-wrap ><div class=prob-bar  style="width:${pct}%;"></div></div> `); } const tailPct = Number.isFinite(a.tailProb) ? Math.max(0, Math.min(100, a.tailProb * 100)) : 0; rows.push(` <tr> <td><strong>&gt; 10</strong> <td>${fmt(a.tailProb)} <td>${fmt(sim.probTotalQ[11])} <td><div class=prob-bar-wrap ><div class=prob-bar  style="width:${tailPct}%;"></div></div> `); $('probTableBody').innerHTML = rows.join(''); } function renderFormulaGrid(a, sim) { const stageCards = a.stages.map((s, i) => { const lambdaTxt = fmt(a.lambda); const muTxt = fmt(s.mu); const stageSimUtil = sim ? fmt(sim.stageUtil[i]) : '—'; if (!s.stable) { return ` <div class=formula-card > <div class=formula-title >Etapa ${i + 1}</div> <div class=formula >ρ${i + 1} = λ / μ${i + 1} = ${lambdaTxt} / ${muTxt} = ${fmt(s.rho)} No se cumple ρ${i + 1} &lt; 1, por lo que las fórmulas estacionarias M/M/1 no aplican. Utilización simulada observada ≈ ${stageSimUtil}</div> </div> `; } return ` <div class=formula-card > <div class=formula-title >Etapa ${i + 1}</div> <div class=formula >ρ${i + 1} = λ / μ${i + 1} = ${lambdaTxt} / ${muTxt} = ${fmt(s.rho)} Lq${i + 1} = ρ${i + 1}² / (1 - ρ${i + 1}) = ${fmt(s.Lq)} L${i + 1} = ρ${i + 1} / (1 - ρ${i + 1}) = ${fmt(s.L)} Wq${i + 1} = Lq${i + 1} / λ = ${fmt(s.Wq)} W${i + 1} = L${i + 1} / λ = ${fmt(s.W)} 1 / μ${i + 1} = ${fmt(s.serviceMean)} <small>Utilización simulada observada: ${stageSimUtil}</small></div> </div> `; }).join(''); const globalCard = a.stable ? ` <div class=formula-card > <div class=formula-title >Agregación de la línea</div> <div class=formula >Lq = Σ Lqᵢ = ${a.stages.map(s => fmt(s.Lq)).join(' + ')} = ${fmt(a.totalLq)} L = Σ Lᵢ = ${a.stages.map(s => fmt(s.L)).join(' + ')} = ${fmt(a.totalL)} Wq = Σ Wqᵢ = ${a.stages.map(s => fmt(s.Wq)).join(' + ')} = ${fmt(a.totalWq)} W = Σ Wᵢ = ${a.stages.map(s => fmt(s.W)).join(' + ')} = ${fmt(a.totalW)} Throughput teórico = λ = ${fmt(a.outputRate)}</div> </div> <div class=formula-card > <div class=formula-title >Descomposición del tiempo total</div> <div class=formula >Tiempo esperado de proceso = Σ (1 / μᵢ) = ${a.stages.map(s => fmt(s.serviceMean)).join(' + ')} = ${fmt(a.totalService)} Tiempo esperado de espera = Wq = ${fmt(a.totalWq)} Proporción de proceso = [Σ (1 / μᵢ)] / W = ${fmt(a.processShare)} Proporción de espera = Wq / W = ${fmt(a.waitShare)}</div> </div> <div class=formula-card > <div class=formula-title >Cola total acumulada</div> <div class=formula >Q = Q₁ + Q₂ + Q₃ + Q₄ + Q₅ P(Q = k) se obtiene por convolución de las distribuciones de cada Qᵢ. P(Q = 0) = ${fmt(a.pmf[0])} P(Q ≤ 10) = ${fmt(1 - a.tailProb)} P(Q &gt; 10) = ${fmt(a.tailProb)}</div> </div> ` : ` <div class=formula-card > <div class=formula-title >Agregación de la línea</div> <div class=formula >Como al menos una etapa no cumple ρᵢ &lt; 1, las fórmulas de régimen estacionario para Lq, L, Wq y W no son válidas. La simulación finita sigue mostrándose como aproximación transitoria.</div> </div> `; $('formulaGrid').innerHTML = stageCards + globalCard; } function renderSimSummary(a, sim) { const rows = [ ['Lq medio', fmt(sim.totalQMean), ...sim.stageQMean.map(v => fmt(v))], ['Ls medio', fmt(sim.totalLMean), ...sim.stageLMean.map(v => fmt(v))], ['Wq medio', fmt(sim.totalWaitMean), ...sim.stageWaitMean.map(v => fmt(v))], ['W medio', fmt(sim.totalSystemMean), ...sim.stageSystemMean.map(v => fmt(v))], ['Utilización', fmt(mean(sim.stageUtil)), ...sim.stageUtil.map(v => fmt(v))], ['Throughput', fmt(sim.throughput), ...sim.stageCompleted.map(v => fmt(v / sim.horizon))], ['Servicio / sistema', fmtPct(sim.processShareMean), '—', '—', '—', '—', '—'], ['Espera / sistema', fmtPct(sim.waitShareMean), '—', '—', '—', '—', '—'], ['Clientes completados', fmt(sim.departures, 0), ...sim.stageCompleted.map(v => fmt(v, 0))] ]; $('simSummaryBody').innerHTML = rows.map(r => ` <tr> <td><strong>${r[0]}</strong> <td>${r[1]} <td>${r[2]} <td>${r[3]} <td>${r[4]} <td>${r[5]} <td>${r[6]} `).join(''); } function drawAxes(ctx, W, H, pad, xLabel, yLabel, xMin, xMax, yMax, tickCountX = 4, tickCountY = 4) { const chartW = W - pad.l - pad.r; const chartH = H - pad.t - pad.b; ctx.strokeStyle = theme('--border', '#1e2646'); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + chartH); ctx.lineTo(pad.l + chartW, pad.t + chartH); ctx.stroke(); ctx.font = '11px system-ui'; ctx.fillStyle = theme('--muted', '#9aa4b2'); ctx.textAlign = 'center'; for (let i = 0; i <= tickCountX; i++) { const x = pad.l + (chartW * i / tickCountX); const t = xMin + (xMax - xMin) * i / tickCountX; ctx.beginPath(); ctx.moveTo(x, pad.t + chartH); ctx.lineTo(x, pad.t + chartH + 4); ctx.stroke(); ctx.fillText(fmt(t, 1), x, H - 12); } ctx.textAlign = 'right'; for (let i = 0; i <= tickCountY; i++) { const y = pad.t + chartH - (chartH * i / tickCountY); const v = yMax * i / tickCountY; ctx.beginPath(); ctx.moveTo(pad.l - 4, y); ctx.lineTo(pad.l, y); ctx.stroke(); ctx.fillText(fmt(v, 1), pad.l - 7, y + 4); } ctx.textAlign = 'center'; ctx.fillText(xLabel, pad.l + chartW / 2, H - 2); ctx.save(); ctx.translate(14, pad.t + chartH / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yLabel, 0, 0); ctx.restore(); return { chartW, chartH }; } function drawStepMulti(canvasId, series, seriesDefs, horizon, yLabel) { const canvas = $(canvasId); const ctx = canvas.getContext('2d'); const W = canvas.width, H = canvas.height; ctx.clearRect(0, 0, W, H); ctx.fillStyle = theme('--chart-bg', '#0c1226'); ctx.fillRect(0, 0, W, H); const pad = { l: 48, r: 18, t: 20, b: 40 }; const yMax = Math.max(1, ...series.flatMap(s => seriesDefs.map(def => def.get(s)))); const { chartW, chartH } = drawAxes(ctx, W, H, pad, 'Tiempo', yLabel, 0, Math.max(horizon, 1e-9), yMax, 5, Math.min(6, Math.max(2, Math.ceil(yMax)))); const xScale = t => pad.l + (t / Math.max(horizon, 1e-9)) * chartW; const yScale = y => pad.t + chartH - (y / yMax) * chartH; ctx.strokeStyle = hexToRgba(theme('--ink', '#e7ecf3'), 0.08); for (let i = 1; i < Math.min(6, Math.max(2, Math.ceil(yMax))); i++) { const y = yScale(i); ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + chartW, y); ctx.stroke(); } seriesDefs.forEach((def, idx) => { ctx.beginPath(); ctx.lineWidth = 2.2; ctx.strokeStyle = def.color; let started = false; for (let i = 0; i < series.length - 1; i++) { const a = series[i]; const b = series[i + 1]; const x1 = xScale(a.time), x2 = xScale(b.time); const y1 = yScale(def.get(a)); const y2 = yScale(def.get(b)); if (!started) { ctx.moveTo(x1, y1); started = true; } ctx.lineTo(x2, y1); ctx.lineTo(x2, y2); } ctx.stroke(); ctx.fillStyle = def.color; ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.fillText(def.label, pad.l + 10, 18 + idx * 14); }); } function drawUsageBands(canvasId, sim, horizon) { const canvas = $(canvasId); const ctx = canvas.getContext('2d'); const W = canvas.width, H = canvas.height; ctx.clearRect(0, 0, W, H); ctx.fillStyle = theme('--chart-bg', '#0c1226'); ctx.fillRect(0, 0, W, H); const pad = { l: 54, r: 18, t: 20, b: 38 }; const rowH = (H - pad.t - pad.b) / STAGES; const chartW = W - pad.l - pad.r; const fullHorizon = Math.max(horizon, 1e-9); const xScale = t => pad.l + (t / fullHorizon) * chartW; ctx.strokeStyle = theme('--border', '#1e2646'); ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke(); for (let i = 0; i < STAGES; i++) { const yTop = pad.t + i * rowH; const yMid = yTop + rowH / 2; ctx.strokeStyle = hexToRgba(theme('--ink', '#e7ecf3'), 0.08); ctx.beginPath(); ctx.moveTo(pad.l, yTop + rowH); ctx.lineTo(W - pad.r, yTop + rowH); ctx.stroke(); ctx.fillStyle = theme('--muted', '#9aa4b2'); ctx.font = '11px system-ui'; ctx.textAlign = 'right'; ctx.fillText(`Etapa ${i + 1}`, pad.l - 8, yMid + 4); } const colors = [theme('--p0','#8ec5ff'), theme('--p1','#ffd166'), theme('--p2','#78a6ff'), theme('--p3','#21c07a'), theme('--p5','#ef476f')]; sim.servers.forEach((srv, idx) => { const y = pad.t + idx * rowH + 8; const h = Math.max(18, rowH - 16); srv.intervals.forEach((intv) => { const x1 = xScale(Math.max(0, intv.start)); const x2 = xScale(Math.min(fullHorizon, intv.end ?? fullHorizon)); const grad = ctx.createLinearGradient(0, y, 0, y + h); grad.addColorStop(0, colors[idx % colors.length]); grad.addColorStop(1, hexToRgba(colors[idx % colors.length], 0.65)); ctx.fillStyle = grad; ctx.fillRect(x1, y, Math.max(1, x2 - x1), h); }); }); ctx.fillStyle = theme('--muted', '#9aa4b2'); ctx.font = '11px system-ui'; ctx.textAlign = 'center'; for (let i = 0; i <= 4; i++) { const x = pad.l + chartW * i / 4; const tt = fullHorizon * i / 4; ctx.beginPath(); ctx.moveTo(x, H - pad.b); ctx.lineTo(x, H - pad.b + 4); ctx.strokeStyle = theme('--border', '#1e2646'); ctx.stroke(); ctx.fillText(fmt(tt, 1), x, H - 14); } ctx.fillText('Tiempo', pad.l + chartW / 2, H - 2); } function renderCharts(sim) { drawStepMulti('totalChart', sim.timeSeries, [ { label: 'Lq total', color: theme('--p1', '#ffd166'), get: s => s.totalQ }, { label: 'L total', color: theme('--p0', '#8ec5ff'), get: s => s.totalL } ], sim.horizon, 'Clientes'); drawStepMulti('stageQueueChart', sim.timeSeries, [ { label: 'Q1', color: theme('--p0', '#8ec5ff'), get: s => s.stageQ[0] }, { label: 'Q2', color: theme('--p1', '#ffd166'), get: s => s.stageQ[1] }, { label: 'Q3', color: theme('--p2', '#78a6ff'), get: s => s.stageQ[2] }, { label: 'Q4', color: theme('--p3', '#21c07a'), get: s => s.stageQ[3] }, { label: 'Q5', color: theme('--p5', '#ef476f'), get: s => s.stageQ[4] } ], sim.horizon, 'Clientes en cola'); drawUsageBands('usageChart', sim, sim.horizon); drawStepMulti('utilCumulativeChart', sim.cumulativeUtilSeries, [ { label: 'U1', color: theme('--p0', '#8ec5ff'), get: s => s.utils[0] }, { label: 'U2', color: theme('--p1', '#ffd166'), get: s => s.utils[1] }, { label: 'U3', color: theme('--p2', '#78a6ff'), get: s => s.utils[2] }, { label: 'U4', color: theme('--p3', '#21c07a'), get: s => s.utils[3] }, { label: 'U5', color: theme('--p5', '#ef476f'), get: s => s.utils[4] } ], sim.horizon, 'Utilización acumulada'); } function machineProgressPercent(ev, stageIndex, sim) { if (!ev || !ev.stageBusy[stageIndex]) return 0; const server = sim.servers[stageIndex]; const intv = [...server.intervals].reverse().find(seg => seg.start <= ev.time && (seg.end ?? sim.horizon) >= ev.time); if (!intv) return 0.45; const span = Math.max(1e-9, (intv.end ?? sim.horizon) - intv.start); const progress = (ev.time - intv.start) / span; return Math.max(0.06, Math.min(0.98, progress)); } function renderFactoryView(ev) { const line = $('factoryLine'); if (!state.sim) { line.innerHTML = ''; return; } const sim = state.sim; const currentEv = ev || null; const totalQ = currentEv ? currentEv.totalQ : 0; const totalL = currentEv ? currentEv.totalL : 0; const departures = currentEv ? currentEv.departures : 0; const currentStage = currentEv ? Number(currentEv.stage || 0) : 0; const pieces = []; pieces.push(` <div class="factory-end ${currentEv && currentEv.type === 'arribo' ? 'highlight' : ''}"> <div class=factory-end-title >Entrada</div> <div class=factory-end-value >λ</div> <div class=factory-end-sub >Arribos externos a la línea.<br><span class=mono >${fmt(sim.lambda, 2)}</span> clientes / tiempo</div> </div> `); for (let i = 0; i < STAGES; i++) { const q = currentEv ? (currentEv.stageQueues[i] || []) : []; const busy = currentEv ? !!currentEv.stageBusy[i] : false; const cust = currentEv ? currentEv.stageServerCustomer[i] : null; const flowActive = currentEv ? (i === 0 ? (currentEv.type === 'arribo' || q.length > 0 || busy) : (!!currentEv.stageBusy[i - 1] || q.length > 0 || busy)) : false; const beltClass = flowActive ? (q.length >= 3 ? 'factory-belt flowing fast alert' : 'factory-belt flowing') : 'factory-belt slow'; const highlightStage = currentEv && currentStage === (i + 1); const progressPct = machineProgressPercent(currentEv, i, sim) * 100; const utilTxt = fmt(sim.stageUtil[i]); const muTxt = fmt(sim.mus[i], 2); const crates = q.length ? q.slice(0, 5).map(id => `<span class=factory-crate >${id}</span>`).join('') + (q.length > 5 ? `<span class=factory-crate >+${q.length - 5}</span>` : '') : '<span>Buffer vacío</span>'; pieces.push(` <div class="${beltClass}"> <div class=factory-belt-id >flujo ${i === 0 ? 'in' : i}</div> <div class=belt-track ></div> <span class=belt-dot ></span> <span class="belt-dot delay-1"></span> <span class="belt-dot delay-2"></span> </div> <div class="factory-stage ${highlightStage ? 'highlight' : ''}"> <div class=factory-stage-title > <span>Etapa ${i + 1}</span> <span class=eta >μ = ${muTxt}</span> </div> <div class=factory-node-name >Centro de trabajo ${i + 1}</div> <div class=factory-buffer > <div class=factory-buffer-top > <span>Buffer previo</span> <span class=badge >Q = ${q.length}</span> </div> <div class="factory-buffer-bin ${q.length ? '' : 'empty'}">${crates}</div> </div> <div class="factory-machine ${busy ? 'busy' : ''}"> <div class=machine-top > <span class=machine-icon >⚙</span> <span class="machine-state ${busy ? 'busy' : 'idle'}">${busy ? 'Procesando' : 'Libre'}</span> </div> <div class=machine-customer >${busy ? `<strong>Cliente ${cust}</strong> en servicio.` : 'Sin cliente en proceso.'}</div> <div class=machine-progress ><div class=machine-progress-fill  style="width:${busy ? progressPct : 0}%;"></div></div> <div class=machine-stats ><strong>U sim:</strong> ${utilTxt} · <strong>WIP:</strong> ${q.length + (busy ? 1 : 0)}</div> </div> </div> `); } pieces.push(` <div class="factory-belt ${currentEv && departures > 0 ? 'flowing' : 'slow'}"> <div class=factory-belt-id >out</div> <div class=belt-track ></div> <span class=belt-dot ></span> <span class="belt-dot delay-1"></span> <span class="belt-dot delay-2"></span> </div> <div class="factory-end ${currentEv && currentEv.stage === 5 && currentEv.type === 'salida de servicio' ? 'highlight' : ''}"> <div class=factory-end-title >Salida</div> <div class=factory-end-value >${departures}</div> <div class=factory-end-sub >Unidades terminadas.<br>Q total = <span class=mono >${totalQ}</span> · L total = <span class=mono >${totalL}</span></div> </div> `); line.innerHTML = pieces.join(''); } function emptyStageVisual(i) { return ` <div class=stage-visual > <div class=stage-head > <span>Etapa ${i + 1}</span> <span class=badge >ρ sim: <span class=mono >${fmt(state.sim ? state.sim.stageUtil[i] : NaN)}</span></span> </div> <div class=queue-strip > <div class=queue-title > <span>Cola</span> <span class=badge >0</span> </div> <div class=queue-people ></div> </div> <div class=server-strip > <div class=server-title > <span>Servidor</span> </div> <div class=server-card > <span class="tag tag-idle">Libre</span> <div class=small >Sin cliente en servicio.</div> </div> </div> </div> `; } function renderPlayback(index) { if (!state.sim) return; const sim = state.sim; const timeline = $('timeline'); const maxIndex = sim.events.length - 1; if (index < 0) { $('clockText').textContent = '0.000'; $('eventTypeText').textContent = '—'; $('totalQueueText').textContent = '0'; $('totalSystemText').textContent = '0'; $('departuresText').textContent = '0'; $('timelineIndexText').textContent = '0'; $('timelineTotalText').textContent = String(maxIndex + 1); timeline.max = Math.max(0, maxIndex); timeline.value = 0; $('stagesGrid').innerHTML = Array.from({ length: STAGES }, (_, i) => emptyStageVisual(i)).join(''); renderFactoryView(null); $('eventLog').innerHTML = `<div class=event-row >Todavía no se reprodujo ningún evento.</div>`; state.playIndex = -1; return; } const ev = sim.events[index]; $('clockText').textContent = fmt(ev.time, 3); $('eventTypeText').textContent = `${ev.type} · etapa ${ev.stage || '—'}`; $('totalQueueText').textContent = String(ev.totalQ); $('totalSystemText').textContent = String(ev.totalL); $('departuresText').textContent = String(ev.departures); $('timelineIndexText').textContent = String(index + 1); $('timelineTotalText').textContent = String(maxIndex + 1); timeline.max = Math.max(0, maxIndex); timeline.value = index; renderFactoryView(ev); $('stagesGrid').innerHTML = Array.from({ length: STAGES }, (_, i) => { const q = ev.stageQueues[i] || []; const busy = ev.stageBusy[i]; const cust = ev.stageServerCustomer[i]; const chips = q.length ? q.slice(0, 8).map(id => `<span class=person-chip >${id}</span>`).join('') + (q.length > 8 ? `<span class=person-chip >+${q.length - 8}</span>` : '') : `<span class=small >Sin espera.</span>`; return ` <div class=stage-visual > <div class=stage-head > <span>Etapa ${i + 1}</span> <span class=badge >U sim: <span class=mono >${fmt(sim.stageUtil[i])}</span></span> </div> <div class=queue-strip > <div class=queue-title > <span>Cola</span> <span class=badge >${q.length}</span> </div> <div class=queue-people >${chips}</div> </div> <div class=server-strip > <div class=server-title > <span>Servidor</span> <span class=badge >μ = <span class=mono >${fmt(sim.mus[i], 2)}</span></span> </div> <div class="server-card ${busy ? 'busy' : ''}"> <span class="tag ${busy ? 'tag-busy' : 'tag-idle'}">${busy ? 'Ocupado' : 'Libre'}</span> <div class=small >${busy ? `Cliente ${cust} en servicio.` : 'Sin cliente en servicio.'}</div> <div class=small >Q(t) = ${q.length} · B(t) = ${busy ? 1 : 0}</div> </div> </div> </div> `; }).join(''); const start = Math.max(0, index - 6); $('eventLog').innerHTML = sim.events.slice(start, index + 1).reverse().map(row => ` <div class=event-row > <strong>${fmt(row.time, 3)}</strong> · ${row.type} · cliente ${row.customerId} · etapa ${row.stage || '—'}<br> ${row.detail}<br> <span class=muted >Q total = ${row.totalQ} · L total = ${row.totalL} · salidas = ${row.departures}</span> </div> `).join(''); state.playIndex = index; } function pausePlayback() { if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; } } function playPlayback() { if (!state.sim || state.sim.events.length === 0) return; pausePlayback(); const intervalMs = Math.max(20, 300 / state.playbackSpeed); state.playTimer = setInterval(() => { if (state.playIndex >= state.sim.events.length - 1) { pausePlayback(); return; } renderPlayback(state.playIndex + 1); }, intervalMs); } function exportCsv() { if (!state.analytic || !state.sim) return; const a = state.analytic; const sim = state.sim; const timestamp = new Date().toISOString().replace(/[:.]/g, '-'); const rows = [ ['seccion', 'subseccion', 'indice', 'metrica', 'valor'] ]; rows.push( ['parametros', 'global', '', 'lambda', a.lambda], ['parametros', 'global', '', 'horizonte', sim.horizon], ['parametros', 'global', '', 'semilla', sim.seed], ['parametros', 'global', '', 'estable', a.stable ? 1 : 0] ); a.mus.forEach((mu, i) => { rows.push(['parametros', 'etapa', i + 1, 'mu', mu]); }); [ ['Lq_total_analitico', a.totalLq], ['L_total_analitico', a.totalL], ['Wq_total_analitico', a.totalWq], ['W_total_analitico', a.totalW], ['tiempo_proceso_total_analitico', a.totalService], ['proporcion_proceso_analitica', a.processShare], ['proporcion_espera_analitica', a.waitShare], ['throughput_analitico', a.outputRate], ['utilizacion_media_analitica', a.meanUtil], ['bottleneck_mu', a.bottleneckMu], ['cola_total_gt_10_analitica', a.tailProb] ].forEach(([metric, value]) => rows.push(['analitico', 'global', '', metric, value])); a.stages.forEach((s, i) => { rows.push( ['analitico', 'etapa', i + 1, 'rho', s.rho], ['analitico', 'etapa', i + 1, 'Lq', s.Lq], ['analitico', 'etapa', i + 1, 'L', s.L], ['analitico', 'etapa', i + 1, 'Wq', s.Wq], ['analitico', 'etapa', i + 1, 'W', s.W], ['analitico', 'etapa', i + 1, 'service_mean', s.serviceMean] ); }); for (let k = 0; k <= 10; k++) { rows.push( ['probabilidades', 'cola_total', k, 'analitica', a.pmf[k]], ['probabilidades', 'cola_total', k, 'empirica', sim.probTotalQ[k]] ); } rows.push(['probabilidades', 'cola_total', '>10', 'analitica', a.tailProb]); rows.push(['probabilidades', 'cola_total', '>10', 'empirica', sim.probTotalQ[11]]); [ ['Lq_total_simulado', sim.totalQMean], ['L_total_simulado', sim.totalLMean], ['Wq_total_simulado', sim.totalWaitMean], ['W_total_simulado', sim.totalSystemMean], ['servicio_total_simulado', sim.totalServiceMean], ['proporcion_proceso_simulada', sim.processShareMean], ['proporcion_espera_simulada', sim.waitShareMean], ['throughput_simulado', sim.throughput], ['clientes_arribados', sim.arrivals], ['clientes_completados', sim.departures] ].forEach(([metric, value]) => rows.push(['simulacion', 'global', '', metric, value])); sim.stageUtil.forEach((u, i) => { rows.push( ['simulacion', 'etapa', i + 1, 'Lq_medio', sim.stageQMean[i]], ['simulacion', 'etapa', i + 1, 'L_medio', sim.stageLMean[i]], ['simulacion', 'etapa', i + 1, 'Wq_medio', sim.stageWaitMean[i]], ['simulacion', 'etapa', i + 1, 'W_medio', sim.stageSystemMean[i]], ['simulacion', 'etapa', i + 1, 'utilizacion', u], ['simulacion', 'etapa', i + 1, 'completados', sim.stageCompleted[i]] ); }); sim.timeSeries.forEach((row, idx) => { rows.push( ['serie_temporal', 'global', idx, 'tiempo', row.time], ['serie_temporal', 'global', idx, 'Q_total', row.totalQ], ['serie_temporal', 'global', idx, 'L_total', row.totalL] ); row.stageQ.forEach((v, i) => rows.push(['serie_temporal', 'etapa', `${idx}-${i + 1}`, `Q${i + 1}`, v])); row.stageBusy.forEach((v, i) => rows.push(['serie_temporal', 'etapa', `${idx}-${i + 1}`, `B${i + 1}`, v])); }); sim.cumulativeUtilSeries.forEach((row, idx) => { row.utils.forEach((v, i) => rows.push(['serie_temporal_utilizacion', 'etapa', `${idx}-${i + 1}`, `U${i + 1}`, v])); }); downloadCsv(`colas_serie_5_etapas_${timestamp}.csv`, rows); } function readInputs() { return { lambda: Number(inputs.lambda.value), horizon: Number(inputs.horizon.value), seed: Number(inputs.seed.value), mus: inputs.mus.map(el => Number(el.value)) }; } function runAll() { pausePlayback(); const { lambda, mus, horizon, seed } = readInputs(); state.playbackSpeed = Number(inputs.speed.value) || 1; state.analytic = tandemAnalytics(lambda, mus, 10); state.sim = simulateTandem(lambda, mus, horizon, seed); renderGlobalStats(state.analytic, state.sim); renderStageAnalytic(state.analytic); renderProbTable(state.analytic, state.sim); renderFormulaGrid(state.analytic, state.sim); renderSimSummary(state.analytic, state.sim); renderCharts(state.sim); renderPlayback(-1); } function loadExample() { inputs.lambda.value = '0.82'; inputs.horizon.value = '450'; inputs.seed.value = '20260324'; const vals = ['1.35', '1.18', '1.42', '1.10', '1.50']; inputs.mus.forEach((el, i) => el.value = vals[i]); inputs.speed.value = '1'; runAll(); } $('runBtn').addEventListener('click', runAll); $('exampleBtn').addEventListener('click', loadExample); $('exportCsvBtn').addEventListener('click', exportCsv); $('resetBtn').addEventListener('click', () => { pausePlayback(); renderPlayback(-1); }); $('playBtn').addEventListener('click', playPlayback); $('pauseBtn').addEventListener('click', pausePlayback); $('stepBtn').addEventListener('click', () => { if (!state.sim) return; pausePlayback(); renderPlayback(Math.min(state.playIndex + 1, state.sim.events.length - 1)); }); $('timeline').addEventListener('input', (e) => { if (!state.sim) return; pausePlayback(); renderPlayback(Number(e.target.value)); }); inputs.speed.addEventListener('change', () => { state.playbackSpeed = Number(inputs.speed.value) || 1; if (state.playTimer) playPlayback(); }); window.addEventListener('load', runAll); </script>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de colas en serie — 5 etapas</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-2: #162045;
+      --panel: #0f1428;
+      --panel-soft: #0d1328;
+      --ink: #e7ecf3;
+      --muted: #9aa4b2;
+      --line: #1e2646;
+      --border: #1e2646;
+      --accent: #8ec5ff;
+      --accent-2: #78a6ff;
+      --accent-3: #0e1a3c;
+      --accent-dark: #8ec5ff;
+      --ok: #21c07a;
+      --warn: #ffb454;
+      --danger: #ef476f;
+      --p0: #8ec5ff;
+      --p1: #ffd166;
+      --p2: #78a6ff;
+      --p3: #21c07a;
+      --p4: #ff9f1c;
+      --p5: #ef476f;
+      --shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+      --chart-bg: #0c1226;
+      --input-bg: #0d1631;
+      --soft-top: rgba(255,255,255,0.02);
+      --soft-bottom: rgba(0,0,0,0.04);
+      --grid: rgba(255,255,255,0.08);
+      --grid-strong: rgba(255,255,255,0.14);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 700px at 20% -10%, var(--bg-2) 0%, var(--bg) 50%);
+    }
+
+    .wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px 16px 42px;
+    }
+
+    .hero {
+      background: var(--bg);
+      color: var(--ink);
+      border-radius: 22px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.30);
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.55rem, 2.4vw, 2.45rem);
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 1150px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel,
+    .stat,
+    .formula-card,
+    .chart-card,
+    .stage-visual,
+    .queue-strip,
+    .server-strip,
+    .server-card,
+    .event-card {
+      background: linear-gradient(180deg, var(--soft-top), var(--soft-bottom)), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel .hd {
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+    }
+
+    .panel .hd h2,
+    .panel .hd h3 {
+      margin: 0 0 5px;
+      font-size: 1.04rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .panel .hd p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 0.92rem;
+    }
+
+    .body {
+      padding: 16px 18px 18px;
+    }
+
+    .content-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    .row-2, .row-3 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .field, .field-stack {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field-stack {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .stage-title {
+      font-size: 0.84rem;
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+      background: var(--input-bg);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(142, 197, 255, 0.12);
+    }
+
+    .hint, .small, .muted {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .note-box {
+      border: 1px dashed var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft);
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: var(--ink);
+      line-height: 1.42;
+      font-size: 0.86rem;
+    }
+
+    .actions, .play-actions, .mini-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--p2) 0%, var(--p0) 100%);
+      color: #08111f;
+      box-shadow: 0 10px 20px rgba(120, 166, 255, 0.22);
+    }
+
+    .btn-secondary,
+    .btn-ghost {
+      background: #0f1734;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      padding: 14px 15px;
+      min-height: 96px;
+    }
+
+    .stat .k {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .stat .v {
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 5px;
+      color: var(--ink);
+    }
+
+    .stat .s {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.34;
+    }
+
+    .status-banner {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .status-ok {
+      background: rgba(33, 192, 122, 0.10);
+      color: var(--ok);
+      border-color: rgba(33, 192, 122, 0.22);
+    }
+
+    .status-warn {
+      background: rgba(255, 180, 84, 0.10);
+      color: var(--warn);
+      border-color: rgba(255, 180, 84, 0.22);
+    }
+
+    .status-danger {
+      background: rgba(239, 71, 111, 0.10);
+      color: var(--danger);
+      border-color: rgba(239, 71, 111, 0.22);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .summary-table, .prob-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    .summary-table th, .summary-table td,
+    .prob-table th, .prob-table td {
+      border-bottom: 1px solid #141a33;
+      padding: 9px 9px;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .summary-table thead th,
+    .prob-table thead th {
+      background: #0d1631;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.76rem;
+      position: sticky;
+      top: 0;
+    }
+
+    .prob-bar-wrap {
+      background: #0e1a3c;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      min-width: 140px;
+    }
+
+    .prob-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--p2), var(--p0));
+      border-radius: inherit;
+    }
+
+    .formula-grid, .two-col, .chart-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .formula-grid { grid-template-columns: repeat(3, 1fr); }
+    .two-col { grid-template-columns: 1.1fr 0.9fr; }
+    .chart-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .formula-card {
+      padding: 12px 14px;
+    }
+
+    .formula-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .formula {
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.87rem;
+      line-height: 1.52;
+      color: var(--ink);
+    }
+
+    .formula small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.79rem;
+      line-height: 1.35;
+    }
+
+    .mono { font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; }
+
+    .chart-card {
+      padding: 12px 14px;
+    }
+
+    .chart-card h4 {
+      margin: 0 0 4px;
+      font-size: 0.98rem;
+      color: var(--ink);
+    }
+
+    .chart-card p {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: var(--chart-bg);
+      border: 1px solid var(--border);
+    }
+
+    .metric-badges, .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #0f1734;
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .timeline-wrap {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .slider-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .factory-card {
+      margin-top: 14px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .factory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .factory-header strong {
+      font-size: 0.96rem;
+      letter-spacing: -0.02em;
+    }
+
+    .factory-line {
+      display: grid;
+      grid-template-columns: auto repeat(5, minmax(150px, 1fr)) auto;
+      gap: 10px;
+      align-items: center;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .factory-end,
+    .factory-stage {
+      min-width: 150px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), var(--panel);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .factory-end::after,
+    .factory-stage::after {
+      content: "";
+      position: absolute;
+      inset: auto -18px -18px auto;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+      pointer-events: none;
+    }
+
+    .factory-end {
+      min-width: 128px;
+      text-align: center;
+    }
+
+    .factory-end-title,
+    .factory-stage-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .factory-stage-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .factory-stage-title .eta {
+      color: var(--accent);
+      font-size: 0.72rem;
+    }
+
+    .factory-node-name {
+      font-weight: 900;
+      color: var(--ink);
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .factory-buffer {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .factory-buffer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .factory-buffer-bin {
+      min-height: 44px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: rgba(255,255,255,0.025);
+      padding: 7px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-content: flex-start;
+    }
+
+    .factory-buffer-bin.empty {
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .factory-crate {
+      min-width: 28px;
+      height: 24px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(255,212,102,0.28), rgba(255,159,28,0.14));
+      border: 1px solid rgba(255,180,84,0.22);
+      color: var(--ink);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .factory-machine {
+      position: relative;
+      z-index: 1;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(120,166,255,0.08), rgba(255,255,255,0.02));
+      padding: 10px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .factory-machine.busy {
+      box-shadow: inset 0 0 0 1px rgba(142,197,255,0.08), 0 0 0 1px rgba(142,197,255,0.05);
+    }
+
+    .machine-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .machine-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #101938;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .machine-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid var(--border);
+    }
+
+    .machine-state.busy {
+      color: var(--p0);
+      background: rgba(142,197,255,0.10);
+    }
+
+    .machine-state.idle {
+      color: var(--ok);
+      background: rgba(33,192,122,0.10);
+    }
+
+    .machine-customer,
+    .machine-stats {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .machine-customer strong,
+    .machine-stats strong {
+      color: var(--ink);
+    }
+
+    .machine-progress {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #0b132d;
+      border: 1px solid var(--border);
+    }
+
+    .machine-progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--p2), var(--p0));
+    }
+
+    .factory-belt {
+      position: relative;
+      min-width: 86px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #0f1835, #0b1228);
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .factory-belt::before,
+    .factory-belt::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      margin-top: -6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .factory-belt::before { left: 4px; }
+    .factory-belt::after { right: 4px; }
+
+    .belt-track {
+      position: absolute;
+      inset: 3px 11px;
+      border-radius: 999px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg,
+          rgba(255,255,255,0.06) 0 18%,
+          transparent 18% 36%,
+          rgba(255,255,255,0.06) 36% 54%,
+          transparent 54% 72%,
+          rgba(255,255,255,0.06) 72% 90%,
+          transparent 90% 100%);
+      opacity: 0.4;
+    }
+
+    .belt-dot {
+      position: absolute;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      margin-top: -6px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, rgba(255,212,102,0.92), rgba(255,159,28,0.84));
+      box-shadow: 0 0 0 1px rgba(255,180,84,0.20), 0 0 16px rgba(255,180,84,0.18);
+      opacity: 0;
+    }
+
+    .factory-belt.flowing .belt-dot {
+      opacity: 1;
+      animation: beltFlow 2.2s linear infinite;
+    }
+
+    .factory-belt.flowing .belt-dot.delay-1 { animation-delay: 0.5s; }
+    .factory-belt.flowing .belt-dot.delay-2 { animation-delay: 1s; }
+    .factory-belt.fast .belt-dot { animation-duration: 1.35s; }
+    .factory-belt.slow .belt-dot { animation-duration: 3s; }
+
+    .factory-belt.alert {
+      box-shadow: inset 0 0 0 1px rgba(255,180,84,0.10), 0 0 0 1px rgba(255,180,84,0.08);
+    }
+
+    .factory-belt-id {
+      position: absolute;
+      right: 10px;
+      top: -20px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+    }
+
+    .factory-end-value {
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: var(--ink);
+      position: relative;
+      z-index: 1;
+    }
+
+    .factory-end-sub {
+      position: relative;
+      z-index: 1;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.36;
+      margin-top: 8px;
+    }
+
+    .factory-end.highlight,
+    .factory-stage.highlight {
+      box-shadow: 0 0 0 1px rgba(142,197,255,0.14), 0 0 0 6px rgba(142,197,255,0.05), var(--shadow);
+    }
+
+    @keyframes beltFlow {
+      0%   { left: -10%; transform: translateY(0) scale(0.95); }
+      15%  { transform: translateY(-1px) scale(1); }
+      50%  { transform: translateY(0) scale(1); }
+      85%  { transform: translateY(1px) scale(0.98); }
+      100% { left: 100%; transform: translateY(0) scale(0.95); }
+    }
+
+    .stage-visual {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .stage-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .queue-strip, .server-strip {
+      padding: 12px;
+    }
+
+    .queue-title, .server-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .queue-people {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 44px;
+      align-content: flex-start;
+    }
+
+    .person-chip {
+      min-width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, rgba(120,166,255,0.18), rgba(142,197,255,0.08));
+      border: 1px solid var(--border);
+      color: var(--ink);
+    }
+
+    .server-card {
+      padding: 12px;
+      min-height: 82px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .server-card.busy {
+      background: linear-gradient(180deg, rgba(120,166,255,0.10) 0%, rgba(255,255,255,0.02) 100%), var(--panel);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.74rem;
+      font-weight: 900;
+      width: fit-content;
+    }
+
+    .tag-idle {
+      background: rgba(33,192,122,0.10);
+      color: var(--ok);
+    }
+
+    .tag-busy {
+      background: rgba(142,197,255,0.10);
+      color: var(--p0);
+    }
+
+    .stages-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .event-card {
+      padding: 12px 14px;
+    }
+
+    .event-log {
+      display: grid;
+      gap: 8px;
+    }
+
+    .event-row {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: rgba(255,255,255,0.02);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.42;
+    }
+
+    @media (max-width: 1420px) {
+      .factory-line { grid-template-columns: auto repeat(5, minmax(170px, 1fr)) auto; }
+      .stages-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-main, .two-col, .chart-grid { grid-template-columns: 1fr; }
+      .formula-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 860px) {
+      .factory-line { grid-template-columns: 1fr; }
+      .factory-belt { min-width: 100%; }
+      .stats-grid, .row-2, .row-3, .formula-grid, .slider-line, .stages-grid { grid-template-columns: 1fr; }
+      .wrap { padding: 16px 10px 30px; }
+      .hero { padding: 20px 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Simulador de colas en serie — 5 etapas M/M/1 + simulación por eventos</h1>
+      <p>
+        Ajustá la tasa de arribo <span class="mono">λ</span> y las tasas de servicio <span class="mono">μ₁, …, μ₅</span>. La app calcula métricas analíticas
+        para una línea en serie de cinco estaciones y además genera una simulación temporal, mostrando colas, utilizaciones, tasa de salida, tiempos medios y probabilidades de cola total.
+      </p>
+    </section>
+
+    <div class="grid-main">
+      <aside class="panel">
+        <div class="hd">
+          <h2>Parámetros del sistema</h2>
+          <p>El modelo estacionario requiere que <span class="mono">λ &lt; μᵢ</span> para cada una de las 5 etapas.</p>
+        </div>
+        <div class="body">
+          <div class="controls">
+            <div class="row-2">
+              <div class="field">
+                <label for="lambda">Tasa de arribo λ</label>
+                <input id="lambda" type="number" min="0.01" step="0.01" value="0.80" />
+                <div class="hint">Clientes por unidad de tiempo.</div>
+              </div>
+              <div class="field">
+                <label for="horizon">Horizonte de simulación</label>
+                <input id="horizon" type="number" min="10" step="10" value="400" />
+                <div class="hint">Duración total de la trayectoria simulada.</div>
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="seed">Semilla aleatoria</label>
+                <input id="seed" type="number" step="1" value="12345" />
+                <div class="hint">Permite reproducir la misma corrida.</div>
+              </div>
+              <div class="field">
+                <label for="speed">Velocidad de reproducción</label>
+                <select id="speed">
+                  <option value="0.25">0.25×</option>
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                  <option value="8">8×</option>
+                </select>
+                <div class="hint">Controla la animación de eventos.</div>
+              </div>
+            </div>
+
+            <div class="field-stack">
+              <div class="stage-title">Tasas de servicio por etapa</div>
+              <div class="row-2">
+                <div class="field">
+                  <label for="mu1">Etapa 1 — μ₁</label>
+                  <input id="mu1" type="number" min="0.01" step="0.01" value="1.30" />
+                </div>
+                <div class="field">
+                  <label for="mu2">Etapa 2 — μ₂</label>
+                  <input id="mu2" type="number" min="0.01" step="0.01" value="1.20" />
+                </div>
+                <div class="field">
+                  <label for="mu3">Etapa 3 — μ₃</label>
+                  <input id="mu3" type="number" min="0.01" step="0.01" value="1.45" />
+                </div>
+                <div class="field">
+                  <label for="mu4">Etapa 4 — μ₄</label>
+                  <input id="mu4" type="number" min="0.01" step="0.01" value="1.15" />
+                </div>
+                <div class="field">
+                  <label for="mu5">Etapa 5 — μ₅</label>
+                  <input id="mu5" type="number" min="0.01" step="0.01" value="1.55" />
+                </div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn-primary" id="runBtn">Calcular y simular</button>
+              <button class="btn-secondary" id="exampleBtn">Cargar ejemplo</button>
+              <button class="btn-ghost" id="exportCsvBtn">Exportar CSV</button>
+              <button class="btn-ghost" id="resetBtn">Reiniciar reproducción</button>
+            </div>
+
+            <div class="play-actions">
+              <button class="btn-primary" id="playBtn">▶ Reproducir</button>
+              <button class="btn-secondary" id="pauseBtn">❚❚ Pausar</button>
+              <button class="btn-ghost" id="stepBtn">Paso a paso</button>
+            </div>
+
+            <div class="note-box">
+              <strong>Qué hace la página:</strong><br>
+              1) calcula métricas analíticas por etapa y globales;<br>
+              2) estima la distribución de la cola total acumulada <span class="mono">Q = ΣQᵢ</span>;<br>
+              3) simula la línea por eventos discretos;<br>
+              4) muestra colas, estados de los servidores y gráficos temporales.
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="content-stack">
+        <section class="panel">
+          <div class="hd">
+            <h2>Indicadores globales del sistema</h2>
+            <p>Incluye tiempos medios, fracciones de tiempo en cola/proceso, utilización media y throughput.</p>
+          </div>
+          <div class="body">
+            <div class="stats-grid" id="globalStats"></div>
+            <div id="stabilityBanner" class="status-banner status-ok"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Resultados analíticos por etapa</h2>
+            <p>Cada estación se modela como M/M/1 con arribo efectivo igual a <span class="mono">λ</span>, válido si el sistema es estable.</p>
+          </div>
+          <div class="body table-wrap">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Etapa</th>
+                  <th>μᵢ</th>
+                  <th>ρᵢ</th>
+                  <th>Lqᵢ</th>
+                  <th>Lᵢ</th>
+                  <th>Wqᵢ</th>
+                  <th>Wᵢ</th>
+                  <th>1/μᵢ</th>
+                </tr>
+              </thead>
+              <tbody id="stageAnalyticBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="two-col">
+          <div class="panel">
+            <div class="hd">
+              <h3>Probabilidad de cola total acumulada</h3>
+              <p>Distribución teórica y empírica del total <span class="mono">Q = Q₁ + … + Q₅</span> para tamaños 0 a 10.</p>
+            </div>
+            <div class="body table-wrap">
+              <table class="prob-table">
+                <thead>
+                  <tr>
+                    <th>Q total</th>
+                    <th>Analítica</th>
+                    <th>Empírica</th>
+                    <th>Visual analítica</th>
+                  </tr>
+                </thead>
+                <tbody id="probTableBody"></tbody>
+              </table>
+              <div class="footer-note">La masa restante se informa como <span class="mono">P(Q &gt; 10)</span>.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="hd">
+              <h3>Detalle conceptual</h3>
+              <p>Fórmulas del modelo M/M/1 en serie, con sustitución numérica usando los parámetros actuales.</p>
+            </div>
+            <div class="body">
+              <div class="formula-grid" id="formulaGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Resultados de la simulación</h2>
+            <p>Promedios observados en la trayectoria generada, tanto globales como por etapa.</p>
+          </div>
+          <div class="body table-wrap">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Métrica</th>
+                  <th>Global</th>
+                  <th>Etapa 1</th>
+                  <th>Etapa 2</th>
+                  <th>Etapa 3</th>
+                  <th>Etapa 4</th>
+                  <th>Etapa 5</th>
+                </tr>
+              </thead>
+              <tbody id="simSummaryBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Gráficos temporales</h2>
+            <p>Evolución temporal del sistema total, de las colas por etapa y de la utilización de cada servidor.</p>
+          </div>
+          <div class="body">
+            <div class="chart-grid">
+              <div class="chart-card">
+                <h4>Lq total y Ls total</h4>
+                <p>Serie escalonada del total de personas esperando y del total en sistema (Ls) a lo largo del tiempo.</p>
+                <canvas id="totalChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Colas por etapa</h4>
+                <p>Se muestran <span class="mono">Q₁(t)</span>, …, <span class="mono">Q₅(t)</span> en una misma vista.</p>
+                <canvas id="stageQueueChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Utilización temporal de cada servidor</h4>
+                <p>Cada banda representa ocupación 0/1 de una etapa a través del tiempo.</p>
+                <canvas id="usageChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Utilización acumulada durante la reproducción</h4>
+                <p>Permite comparar cómo converge la utilización simulada de cada etapa.</p>
+                <canvas id="utilCumulativeChart" width="760" height="280"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Simulación en vivo</h2>
+            <p>Podés avanzar evento por evento o reproducir la trayectoria. Se muestran las cinco colas y sus servidores.</p>
+          </div>
+          <div class="body">
+            <div class="badge-row">
+              <span class="badge">Tiempo actual: <span id="clockText" class="mono">0.000</span></span>
+              <span class="badge">Evento: <span id="eventTypeText" class="mono">—</span></span>
+              <span class="badge">Q total: <span id="totalQueueText" class="mono">0</span></span>
+              <span class="badge">Ls total: <span id="totalSystemText" class="mono">0</span></span>
+              <span class="badge">Salidas: <span id="departuresText" class="mono">0</span></span>
+            </div>
+
+            <div class="timeline-wrap">
+              <div class="slider-line">
+                <input id="timeline" type="range" min="0" max="0" value="0" />
+                <div class="small">Evento <span id="timelineIndexText" class="mono">0</span> / <span id="timelineTotalText" class="mono">0</span></div>
+              </div>
+            </div>
+
+            <div class="factory-card">
+              <div class="factory-header">
+                <strong>Vista animada de la línea</strong>
+                <span class="small">Buffers antes de cada etapa, máquinas en servicio y flujo entre estaciones.</span>
+              </div>
+              <div class="factory-line" id="factoryLine"></div>
+            </div>
+
+            <div class="stages-grid" id="stagesGrid"></div>
+
+            <div class="event-card" style="margin-top:16px;">
+              <div class="queue-title">
+                <span>Últimos eventos</span>
+                <span class="small">Se muestran los 7 más recientes respecto del punto seleccionado.</span>
+              </div>
+              <div class="event-log" id="eventLog"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const STAGES = 5;
+    const $ = (id) => document.getElementById(id);
+    const fmt = (x, d = 4) => Number.isFinite(x) ? x.toFixed(d) : '—';
+    const fmtPct = (x, d = 2) => Number.isFinite(x) ? (100 * x).toFixed(d) + '%' : '—';
+
+    function safeDiv(a, b) {
+      return (Number.isFinite(a) && Number.isFinite(b) && Math.abs(b) > 1e-12) ? (a / b) : NaN;
+    }
+
+    function escCsv(value) {
+      const txt = String(value ?? '');
+      return /[",\n;]/.test(txt) ? '"' + txt.replace(/"/g, '""') + '"' : txt;
+    }
+
+    function downloadCsv(filename, rows) {
+      const csv = rows.map(row => row.map(escCsv).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function getVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+    function theme(name, fallback='') {
+      const v = getVar(name);
+      return v || fallback;
+    }
+    function hexToRgba(hex, alpha) {
+      const h = (hex || '').replace('#', '').trim();
+      if (![3, 6].includes(h.length)) return `rgba(255,255,255,${alpha})`;
+      const full = h.length === 3 ? h.split('').map(ch => ch + ch).join('') : h;
+      const n = parseInt(full, 16);
+      const r = (n >> 16) & 255;
+      const g = (n >> 8) & 255;
+      const b = n & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    const inputs = {
+      lambda: $('lambda'),
+      horizon: $('horizon'),
+      seed: $('seed'),
+      speed: $('speed'),
+      mus: [1,2,3,4,5].map(i => $(`mu${i}`))
+    };
+
+    const state = {
+      analytic: null,
+      sim: null,
+      playIndex: -1,
+      playTimer: null,
+      playbackSpeed: 1
+    };
+
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), t | 1);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function expSample(rate, rng) {
+      const u = Math.max(1e-12, 1 - rng());
+      return -Math.log(u) / rate;
+    }
+
+    function mean(arr) {
+      return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : NaN;
+    }
+
+    function mm1Metrics(lambda, mu) {
+      const rho = lambda / mu;
+      const stable = rho < 1;
+      if (!stable) {
+        return { lambda, mu, rho, stable, Lq: NaN, L: NaN, Wq: NaN, W: NaN, serviceMean: 1 / mu };
+      }
+      const Lq = (rho * rho) / (1 - rho);
+      const L = rho / (1 - rho);
+      const Wq = Lq / lambda;
+      const W = L / lambda;
+      return { lambda, mu, rho, stable, Lq, L, Wq, W, serviceMean: 1 / mu };
+    }
+
+    function queuePmfMM1(rho, maxK) {
+      const out = Array(maxK + 1).fill(0);
+      if (!(rho >= 0) || rho >= 1) return out.map(() => NaN);
+      out[0] = 1 - rho * rho;
+      for (let q = 1; q <= maxK; q++) {
+        out[q] = (1 - rho) * Math.pow(rho, q + 1);
+      }
+      return out;
+    }
+
+    function convolveUpTo(a, b, maxK) {
+      const out = Array(maxK + 1).fill(0);
+      for (let i = 0; i <= maxK; i++) {
+        for (let j = 0; j <= maxK - i; j++) {
+          out[i + j] += a[i] * b[j];
+        }
+      }
+      return out;
+    }
+
+    function tandemAnalytics(lambda, mus, maxK = 10) {
+      const stages = mus.map(mu => mm1Metrics(lambda, mu));
+      const stable = stages.every(s => s.stable);
+      const bottleneckMu = Math.min(...mus);
+
+      let totalLq = NaN, totalL = NaN, totalWq = NaN, totalW = NaN;
+      let totalService = NaN, processShare = NaN, waitShare = NaN, outputRate = NaN, meanUtil = NaN;
+      let pmf = Array(maxK + 1).fill(NaN), tailProb = NaN;
+
+      if (stable) {
+        totalLq = stages.reduce((acc, s) => acc + s.Lq, 0);
+        totalL = stages.reduce((acc, s) => acc + s.L, 0);
+        totalWq = stages.reduce((acc, s) => acc + s.Wq, 0);
+        totalW = stages.reduce((acc, s) => acc + s.W, 0);
+        totalService = stages.reduce((acc, s) => acc + s.serviceMean, 0);
+        processShare = totalService / totalW;
+        waitShare = totalWq / totalW;
+        outputRate = lambda;
+        meanUtil = stages.reduce((acc, s) => acc + s.rho, 0) / STAGES;
+
+        let accPmf = [1, ...Array(maxK).fill(0)];
+        for (const s of stages) {
+          accPmf = convolveUpTo(accPmf, queuePmfMM1(s.rho, maxK), maxK);
+        }
+        pmf = accPmf;
+        tailProb = Math.max(0, 1 - pmf.reduce((a,b) => a+b, 0));
+      }
+
+      return {
+        lambda, mus, stages, stable, bottleneckMu,
+        totalLq, totalL, totalWq, totalW,
+        totalService, processShare, waitShare, outputRate, meanUtil,
+        pmf, tailProb
+      };
+    }
+
+    function simulateTandem(lambda, mus, horizon, seed) {
+      const rng = mulberry32(Number(seed) || 1);
+
+      const servers = mus.map((mu, idx) => ({
+        id: idx + 1,
+        mu,
+        busy: false,
+        customerId: null,
+        startTime: null,
+        endTime: Infinity,
+        serviceTime: null,
+        totalBusy: 0,
+        completed: 0,
+        intervals: []
+      }));
+
+      const queues = Array.from({ length: STAGES }, () => []);
+      const customers = [];
+      const events = [];
+      const areasQ = Array(STAGES).fill(0);
+      const areasL = Array(STAGES).fill(0);
+      const timeInTotalQ = Array(12).fill(0); // 0..10, 11=>overflow
+      const cumulativeUtilSeries = [];
+      const timeSeries = [{ time: 0, totalQ: 0, totalL: 0, stageQ: Array(STAGES).fill(0), stageBusy: Array(STAGES).fill(0) }];
+
+      let t = 0;
+      let lastTime = 0;
+      let nextArrival = expSample(lambda, rng);
+      let customerCounter = 0;
+      let arrivals = 0;
+      let departures = 0;
+      let eventCounter = 0;
+
+      function snapshot(type, customerId, stage, detail) {
+        events.push({
+          idx: eventCounter++,
+          time: t,
+          type,
+          customerId,
+          stage,
+          detail,
+          departures,
+          stageQueues: queues.map(q => q.slice(0, 12).map(c => c.id)),
+          stageBusy: servers.map(s => s.busy),
+          stageServerCustomer: servers.map(s => s.customerId),
+          stageEndTime: servers.map(s => s.endTime),
+          totalQ: queues.reduce((acc, q) => acc + q.length, 0),
+          totalL: queues.reduce((acc, q) => acc + q.length, 0) + servers.filter(s => s.busy).length
+        });
+      }
+
+      function registerSeriesPoint(timeValue) {
+        timeSeries.push({
+          time: timeValue,
+          totalQ: queues.reduce((acc, q) => acc + q.length, 0),
+          totalL: queues.reduce((acc, q) => acc + q.length, 0) + servers.filter(s => s.busy).length,
+          stageQ: queues.map(q => q.length),
+          stageBusy: servers.map(s => s.busy ? 1 : 0)
+        });
+
+        cumulativeUtilSeries.push({
+          time: timeValue,
+          utils: servers.map((s, i) => timeValue > 0 ? ((areasL[i] - areasQ[i]) / timeValue) : 0)
+        });
+      }
+
+      function updateAreas(newTime) {
+        const dt = newTime - lastTime;
+        if (dt < 0) return;
+        const totalQ = queues.reduce((acc, q) => acc + q.length, 0);
+        for (let i = 0; i < STAGES; i++) {
+          areasQ[i] += queues[i].length * dt;
+          areasL[i] += (queues[i].length + (servers[i].busy ? 1 : 0)) * dt;
+        }
+        const bucket = Math.min(totalQ, 11);
+        timeInTotalQ[bucket] += dt;
+        lastTime = newTime;
+      }
+
+      function ensureStageRecord(customer, stageIndex, entryTime) {
+        if (!customer.stages[stageIndex]) {
+          customer.stages[stageIndex] = {
+            arrivalQueue: entryTime,
+            serviceStart: null,
+            serviceEnd: null,
+            wait: null,
+            serviceTime: null
+          };
+        }
+        return customer.stages[stageIndex];
+      }
+
+      function startService(stageIndex, customer, now, source) {
+        const server = servers[stageIndex];
+        const rec = ensureStageRecord(customer, stageIndex, now);
+        if (rec.arrivalQueue == null) rec.arrivalQueue = now;
+        const st = expSample(server.mu, rng);
+        rec.serviceStart = now;
+        rec.wait = now - rec.arrivalQueue;
+        rec.serviceTime = st;
+        server.busy = true;
+        server.customerId = customer.id;
+        server.startTime = now;
+        server.endTime = now + st;
+        server.serviceTime = st;
+        server.intervals.push({ start: now, end: null, customerId: customer.id });
+        customer.currentStage = stageIndex + 1;
+        customer.lastMove = source;
+      }
+
+      function enterStage(stageIndex, customer, now, source) {
+        const rec = ensureStageRecord(customer, stageIndex, now);
+        rec.arrivalQueue = now;
+        const server = servers[stageIndex];
+        if (!server.busy) {
+          startService(stageIndex, customer, now, source);
+          return `Cliente ${customer.id} entra directo a servicio en etapa ${stageIndex + 1}.`;
+        }
+        queues[stageIndex].push(customer);
+        customer.currentStage = stageIndex + 1;
+        customer.lastMove = source;
+        return `Cliente ${customer.id} entra a cola en etapa ${stageIndex + 1}.`;
+      }
+
+      function maybeStartNext(stageIndex, now) {
+        if (servers[stageIndex].busy) return;
+        if (queues[stageIndex].length === 0) return;
+        const customer = queues[stageIndex].shift();
+        startService(stageIndex, customer, now, 'cola');
+      }
+
+      while (true) {
+        let nextCompletion = Infinity;
+        let compStage = -1;
+        for (let i = 0; i < STAGES; i++) {
+          if (servers[i].busy && servers[i].endTime < nextCompletion) {
+            nextCompletion = servers[i].endTime;
+            compStage = i;
+          }
+        }
+
+        const nextEventTime = Math.min(nextArrival, nextCompletion);
+        if (!Number.isFinite(nextEventTime) || nextEventTime > horizon) break;
+
+        updateAreas(nextEventTime);
+        t = nextEventTime;
+
+        if (nextArrival <= nextCompletion) {
+          customerCounter += 1;
+          arrivals += 1;
+          const customer = {
+            id: customerCounter,
+            arrivalSystem: t,
+            departureSystem: null,
+            stages: [],
+            currentStage: 0,
+            lastMove: 'arribo'
+          };
+          customers.push(customer);
+          const detail = enterStage(0, customer, t, 'arribo externo');
+          snapshot('arribo', customer.id, 1, detail);
+          registerSeriesPoint(t);
+          nextArrival = t + expSample(lambda, rng);
+        } else {
+          const server = servers[compStage];
+          const customer = customers[server.customerId - 1];
+          const rec = ensureStageRecord(customer, compStage, t);
+          rec.serviceEnd = t;
+          server.totalBusy += t - server.startTime;
+          server.completed += 1;
+          const lastInterval = server.intervals[server.intervals.length - 1];
+          if (lastInterval && lastInterval.end === null) lastInterval.end = t;
+
+          server.busy = false;
+          server.customerId = null;
+          server.startTime = null;
+          server.endTime = Infinity;
+          server.serviceTime = null;
+
+          let detail = `Cliente ${customer.id} completa etapa ${compStage + 1}.`;
+
+          if (compStage < STAGES - 1) {
+            detail += ' ' + enterStage(compStage + 1, customer, t, `salida etapa ${compStage + 1}`);
+          } else {
+            customer.departureSystem = t;
+            departures += 1;
+            detail += ` Cliente ${customer.id} sale del sistema.`;
+          }
+
+          maybeStartNext(compStage, t);
+          snapshot('salida de servicio', customer.id, compStage + 1, detail);
+          registerSeriesPoint(t);
+        }
+      }
+
+      updateAreas(horizon);
+      t = horizon;
+      for (const server of servers) {
+        if (server.busy && server.startTime !== null) {
+          server.totalBusy += horizon - server.startTime;
+          const lastInterval = server.intervals[server.intervals.length - 1];
+          if (lastInterval && lastInterval.end === null) lastInterval.end = horizon;
+        }
+      }
+      registerSeriesPoint(horizon);
+
+      const completed = customers.filter(c => Number.isFinite(c.departureSystem));
+      const totalWaits = completed.map(c => c.stages.reduce((acc, s) => acc + (s.wait || 0), 0));
+      const totalServices = completed.map(c => c.stages.reduce((acc, s) => acc + (s.serviceTime || 0), 0));
+      const totalSystems = completed.map(c => c.departureSystem - c.arrivalSystem);
+
+      const stageWaits = Array.from({ length: STAGES }, (_, i) => completed.filter(c => c.stages[i]).map(c => c.stages[i].wait || 0));
+      const stageTimes = Array.from({ length: STAGES }, (_, i) => completed.filter(c => c.stages[i]).map(c => (c.stages[i].wait || 0) + (c.stages[i].serviceTime || 0)));
+
+      const result = {
+        lambda, mus, horizon, seed,
+        customers, completed, events, timeSeries, cumulativeUtilSeries,
+        arrivals, departures,
+        totalQMean: areasQ.reduce((a,b) => a+b, 0) / horizon,
+        totalLMean: areasL.reduce((a,b) => a+b, 0) / horizon,
+        totalWaitMean: mean(totalWaits),
+        totalSystemMean: mean(totalSystems),
+        totalServiceMean: mean(totalServices),
+        processShareMean: mean(totalServices) / mean(totalSystems),
+        waitShareMean: mean(totalWaits) / mean(totalSystems),
+        throughput: departures / horizon,
+        stageQMean: areasQ.map(a => a / horizon),
+        stageLMean: areasL.map(a => a / horizon),
+        stageWaitMean: stageWaits.map(arr => mean(arr)),
+        stageSystemMean: stageTimes.map(arr => mean(arr)),
+        stageUtil: servers.map(s => s.totalBusy / horizon),
+        stageCompleted: servers.map(s => s.completed),
+        servers,
+        probTotalQ: timeInTotalQ.map(x => x / horizon)
+      };
+
+      return result;
+    }
+
+    function analyticalCards(a, sim) {
+      return [
+        { key: 'Lq total', value: fmt(a.totalLq), sub: 'Promedio teórico de personas esperando en las 5 colas.' },
+        { key: 'Ls total', value: fmt(a.totalL), sub: 'Promedio teórico de personas en todo el sistema.' },
+        { key: 'Wq total', value: fmt(a.totalWq), sub: 'Tiempo medio total de espera, sumando las 5 colas.' },
+        { key: 'W total', value: fmt(a.totalW), sub: 'Tiempo medio total en el sistema.' },
+        { key: 'Proceso / sistema', value: fmtPct(a.processShare), sub: 'Fracción del tiempo total dedicada al servicio.' },
+        { key: 'Espera / sistema', value: fmtPct(a.waitShare), sub: 'Fracción del tiempo total dedicada a espera.' },
+        { key: 'Utilización media', value: fmt(a.meanUtil), sub: 'Promedio de ρᵢ en las cinco etapas.' },
+        { key: 'Tasa de salida', value: fmt(sim ? sim.throughput : a.outputRate), sub: 'Throughput del sistema: analítico ≈ λ y empírico = salidas/T.' }
+      ];
+    }
+
+    function renderGlobalStats(a, sim) {
+      $('globalStats').innerHTML = analyticalCards(a, sim).map(card => `
+        <div class="stat">
+          <div class="k">${card.key}</div>
+          <div class="v">${card.value}</div>
+          <div class="s">${card.sub}</div>
+        </div>
+      `).join('');
+
+      const banner = $('stabilityBanner');
+      if (a.stable) {
+        banner.className = 'status-banner status-ok';
+        banner.innerHTML = `Sistema estable. La etapa más exigida tiene <span class="mono">μ = ${fmt(a.bottleneckMu, 3)}</span> y se cumple <span class="mono">λ = ${fmt(a.lambda, 3)} &lt; μᵢ</span> para todas las estaciones.`;
+      } else {
+        banner.className = 'status-banner status-danger';
+        const unstableStages = a.stages.map((s, i) => s.stable ? null : (i + 1)).filter(x => x !== null).join(', ');
+        banner.innerHTML = `Atención: el régimen estacionario no aplica. Las etapas no estables son: <span class="mono">${unstableStages}</span>. La simulación finita sí se muestra, pero las fórmulas analíticas de equilibrio quedan invalidadas.`;
+      }
+    }
+
+    function renderStageAnalytic(a) {
+      $('stageAnalyticBody').innerHTML = a.stages.map((s, i) => `
+        <tr>
+          <td><strong>Etapa ${i + 1}</strong></td>
+          <td>${fmt(s.mu)}</td>
+          <td>${fmt(s.rho)}</td>
+          <td>${fmt(s.Lq)}</td>
+          <td>${fmt(s.L)}</td>
+          <td>${fmt(s.Wq)}</td>
+          <td>${fmt(s.W)}</td>
+          <td>${fmt(s.serviceMean)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProbTable(a, sim) {
+      const rows = [];
+      for (let k = 0; k <= 10; k++) {
+        const pA = a.pmf[k];
+        const pE = sim.probTotalQ[k];
+        const pct = Number.isFinite(pA) ? Math.max(0, Math.min(100, pA * 100)) : 0;
+        rows.push(`
+          <tr>
+            <td><strong>${k}</strong></td>
+            <td>${fmt(pA)}</td>
+            <td>${fmt(pE)}</td>
+            <td><div class="prob-bar-wrap"><div class="prob-bar" style="width:${pct}%;"></div></div></td>
+          </tr>
+        `);
+      }
+      const tailPct = Number.isFinite(a.tailProb) ? Math.max(0, Math.min(100, a.tailProb * 100)) : 0;
+      rows.push(`
+        <tr>
+          <td><strong>&gt; 10</strong></td>
+          <td>${fmt(a.tailProb)}</td>
+          <td>${fmt(sim.probTotalQ[11])}</td>
+          <td><div class="prob-bar-wrap"><div class="prob-bar" style="width:${tailPct}%;"></div></div></td>
+        </tr>
+      `);
+      $('probTableBody').innerHTML = rows.join('');
+    }
+
+    function renderFormulaGrid(a, sim) {
+      const stageCards = a.stages.map((s, i) => {
+        const lambdaTxt = fmt(a.lambda);
+        const muTxt = fmt(s.mu);
+        const stageSimUtil = sim ? fmt(sim.stageUtil[i]) : '—';
+        if (!s.stable) {
+          return `
+            <div class="formula-card">
+              <div class="formula-title">Etapa ${i + 1}</div>
+              <div class="formula">ρ${i + 1} = λ / μ${i + 1} = ${lambdaTxt} / ${muTxt} = ${fmt(s.rho)}
+No se cumple ρ${i + 1} &lt; 1, por lo que las fórmulas estacionarias M/M/1 no aplican.
+Utilización simulada observada ≈ ${stageSimUtil}</div>
+            </div>
+          `;
+        }
+        return `
+          <div class="formula-card">
+            <div class="formula-title">Etapa ${i + 1}</div>
+            <div class="formula">ρ${i + 1} = λ / μ${i + 1} = ${lambdaTxt} / ${muTxt} = ${fmt(s.rho)}
+Lq${i + 1} = ρ${i + 1}² / (1 - ρ${i + 1}) = ${fmt(s.Lq)}
+L${i + 1}  = ρ${i + 1} / (1 - ρ${i + 1}) = ${fmt(s.L)}
+Wq${i + 1} = Lq${i + 1} / λ = ${fmt(s.Wq)}
+W${i + 1}  = L${i + 1} / λ = ${fmt(s.W)}
+1 / μ${i + 1} = ${fmt(s.serviceMean)}
+<small>Utilización simulada observada: ${stageSimUtil}</small></div>
+            </div>
+          `;
+      }).join('');
+
+      const globalCard = a.stable ? `
+        <div class="formula-card">
+          <div class="formula-title">Agregación de la línea</div>
+          <div class="formula">Lq = Σ Lqᵢ = ${a.stages.map(s => fmt(s.Lq)).join(' + ')} = ${fmt(a.totalLq)}
+L  = Σ Lᵢ  = ${a.stages.map(s => fmt(s.L)).join(' + ')} = ${fmt(a.totalL)}
+Wq = Σ Wqᵢ = ${a.stages.map(s => fmt(s.Wq)).join(' + ')} = ${fmt(a.totalWq)}
+W  = Σ Wᵢ  = ${a.stages.map(s => fmt(s.W)).join(' + ')} = ${fmt(a.totalW)}
+Throughput teórico = λ = ${fmt(a.outputRate)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">Descomposición del tiempo total</div>
+          <div class="formula">Tiempo esperado de proceso = Σ (1 / μᵢ) = ${a.stages.map(s => fmt(s.serviceMean)).join(' + ')} = ${fmt(a.totalService)}
+Tiempo esperado de espera = Wq = ${fmt(a.totalWq)}
+Proporción de proceso = [Σ (1 / μᵢ)] / W = ${fmt(a.processShare)}
+Proporción de espera  = Wq / W = ${fmt(a.waitShare)}</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-title">Cola total acumulada</div>
+          <div class="formula">Q = Q₁ + Q₂ + Q₃ + Q₄ + Q₅
+P(Q = k) se obtiene por convolución de las distribuciones de cada Qᵢ.
+P(Q = 0) = ${fmt(a.pmf[0])}
+P(Q ≤ 10) = ${fmt(1 - a.tailProb)}
+P(Q &gt; 10) = ${fmt(a.tailProb)}</div>
+        </div>
+      ` : `
+        <div class="formula-card">
+          <div class="formula-title">Agregación de la línea</div>
+          <div class="formula">Como al menos una etapa no cumple ρᵢ &lt; 1, las fórmulas de régimen estacionario para Lq, L, Wq y W no son válidas.
+La simulación finita sigue mostrándose como aproximación transitoria.</div>
+        </div>
+      `;
+
+      $('formulaGrid').innerHTML = stageCards + globalCard;
+    }
+
+
+    function renderSimSummary(a, sim) {
+      const rows = [
+        ['Lq medio', fmt(sim.totalQMean), ...sim.stageQMean.map(v => fmt(v))],
+        ['Ls medio', fmt(sim.totalLMean), ...sim.stageLMean.map(v => fmt(v))],
+        ['Wq medio', fmt(sim.totalWaitMean), ...sim.stageWaitMean.map(v => fmt(v))],
+        ['W medio', fmt(sim.totalSystemMean), ...sim.stageSystemMean.map(v => fmt(v))],
+        ['Utilización', fmt(mean(sim.stageUtil)), ...sim.stageUtil.map(v => fmt(v))],
+        ['Throughput', fmt(sim.throughput), ...sim.stageCompleted.map(v => fmt(v / sim.horizon))],
+        ['Servicio / sistema', fmtPct(sim.processShareMean), '—', '—', '—', '—', '—'],
+        ['Espera / sistema', fmtPct(sim.waitShareMean), '—', '—', '—', '—', '—'],
+        ['Clientes completados', fmt(sim.departures, 0), ...sim.stageCompleted.map(v => fmt(v, 0))]
+      ];
+
+      $('simSummaryBody').innerHTML = rows.map(r => `
+        <tr>
+          <td><strong>${r[0]}</strong></td>
+          <td>${r[1]}</td>
+          <td>${r[2]}</td>
+          <td>${r[3]}</td>
+          <td>${r[4]}</td>
+          <td>${r[5]}</td>
+          <td>${r[6]}</td>
+        </tr>
+      `).join('');
+    }
+
+    function drawAxes(ctx, W, H, pad, xLabel, yLabel, xMin, xMax, yMax, tickCountX = 4, tickCountY = 4) {
+      const chartW = W - pad.l - pad.r;
+      const chartH = H - pad.t - pad.b;
+      ctx.strokeStyle = theme('--border', '#1e2646');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, pad.t + chartH);
+      ctx.lineTo(pad.l + chartW, pad.t + chartH);
+      ctx.stroke();
+
+      ctx.font = '11px system-ui';
+      ctx.fillStyle = theme('--muted', '#9aa4b2');
+      ctx.textAlign = 'center';
+      for (let i = 0; i <= tickCountX; i++) {
+        const x = pad.l + (chartW * i / tickCountX);
+        const t = xMin + (xMax - xMin) * i / tickCountX;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t + chartH);
+        ctx.lineTo(x, pad.t + chartH + 4);
+        ctx.stroke();
+        ctx.fillText(fmt(t, 1), x, H - 12);
+      }
+
+      ctx.textAlign = 'right';
+      for (let i = 0; i <= tickCountY; i++) {
+        const y = pad.t + chartH - (chartH * i / tickCountY);
+        const v = yMax * i / tickCountY;
+        ctx.beginPath();
+        ctx.moveTo(pad.l - 4, y);
+        ctx.lineTo(pad.l, y);
+        ctx.stroke();
+        ctx.fillText(fmt(v, 1), pad.l - 7, y + 4);
+      }
+
+      ctx.textAlign = 'center';
+      ctx.fillText(xLabel, pad.l + chartW / 2, H - 2);
+      ctx.save();
+      ctx.translate(14, pad.t + chartH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+
+      return { chartW, chartH };
+    }
+
+    function drawStepMulti(canvasId, series, seriesDefs, horizon, yLabel) {
+      const canvas = $(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = theme('--chart-bg', '#0c1226');
+      ctx.fillRect(0, 0, W, H);
+
+      const pad = { l: 48, r: 18, t: 20, b: 40 };
+      const yMax = Math.max(1, ...series.flatMap(s => seriesDefs.map(def => def.get(s))));
+      const { chartW, chartH } = drawAxes(ctx, W, H, pad, 'Tiempo', yLabel, 0, Math.max(horizon, 1e-9), yMax, 5, Math.min(6, Math.max(2, Math.ceil(yMax))));
+      const xScale = t => pad.l + (t / Math.max(horizon, 1e-9)) * chartW;
+      const yScale = y => pad.t + chartH - (y / yMax) * chartH;
+
+      ctx.strokeStyle = hexToRgba(theme('--ink', '#e7ecf3'), 0.08);
+      for (let i = 1; i < Math.min(6, Math.max(2, Math.ceil(yMax))); i++) {
+        const y = yScale(i);
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(pad.l + chartW, y);
+        ctx.stroke();
+      }
+
+      seriesDefs.forEach((def, idx) => {
+        ctx.beginPath();
+        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = def.color;
+        let started = false;
+        for (let i = 0; i < series.length - 1; i++) {
+          const a = series[i];
+          const b = series[i + 1];
+          const x1 = xScale(a.time), x2 = xScale(b.time);
+          const y1 = yScale(def.get(a));
+          const y2 = yScale(def.get(b));
+          if (!started) { ctx.moveTo(x1, y1); started = true; }
+          ctx.lineTo(x2, y1);
+          ctx.lineTo(x2, y2);
+        }
+        ctx.stroke();
+        ctx.fillStyle = def.color;
+        ctx.font = '12px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText(def.label, pad.l + 10, 18 + idx * 14);
+      });
+    }
+
+    function drawUsageBands(canvasId, sim, horizon) {
+      const canvas = $(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = theme('--chart-bg', '#0c1226');
+      ctx.fillRect(0, 0, W, H);
+
+      const pad = { l: 54, r: 18, t: 20, b: 38 };
+      const rowH = (H - pad.t - pad.b) / STAGES;
+      const chartW = W - pad.l - pad.r;
+      const fullHorizon = Math.max(horizon, 1e-9);
+      const xScale = t => pad.l + (t / fullHorizon) * chartW;
+
+      ctx.strokeStyle = theme('--border', '#1e2646');
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, H - pad.b);
+      ctx.lineTo(W - pad.r, H - pad.b);
+      ctx.stroke();
+
+      for (let i = 0; i < STAGES; i++) {
+        const yTop = pad.t + i * rowH;
+        const yMid = yTop + rowH / 2;
+        ctx.strokeStyle = hexToRgba(theme('--ink', '#e7ecf3'), 0.08);
+        ctx.beginPath();
+        ctx.moveTo(pad.l, yTop + rowH);
+        ctx.lineTo(W - pad.r, yTop + rowH);
+        ctx.stroke();
+        ctx.fillStyle = theme('--muted', '#9aa4b2');
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText(`Etapa ${i + 1}`, pad.l - 8, yMid + 4);
+      }
+
+      const colors = [theme('--p0','#8ec5ff'), theme('--p1','#ffd166'), theme('--p2','#78a6ff'), theme('--p3','#21c07a'), theme('--p5','#ef476f')];
+      sim.servers.forEach((srv, idx) => {
+        const y = pad.t + idx * rowH + 8;
+        const h = Math.max(18, rowH - 16);
+        srv.intervals.forEach((intv) => {
+          const x1 = xScale(Math.max(0, intv.start));
+          const x2 = xScale(Math.min(fullHorizon, intv.end ?? fullHorizon));
+          const grad = ctx.createLinearGradient(0, y, 0, y + h);
+          grad.addColorStop(0, colors[idx % colors.length]);
+          grad.addColorStop(1, hexToRgba(colors[idx % colors.length], 0.65));
+          ctx.fillStyle = grad;
+          ctx.fillRect(x1, y, Math.max(1, x2 - x1), h);
+        });
+      });
+
+      ctx.fillStyle = theme('--muted', '#9aa4b2');
+      ctx.font = '11px system-ui';
+      ctx.textAlign = 'center';
+      for (let i = 0; i <= 4; i++) {
+        const x = pad.l + chartW * i / 4;
+        const tt = fullHorizon * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(x, H - pad.b);
+        ctx.lineTo(x, H - pad.b + 4);
+        ctx.strokeStyle = theme('--border', '#1e2646');
+        ctx.stroke();
+        ctx.fillText(fmt(tt, 1), x, H - 14);
+      }
+      ctx.fillText('Tiempo', pad.l + chartW / 2, H - 2);
+    }
+
+    function renderCharts(sim) {
+      drawStepMulti('totalChart', sim.timeSeries, [
+        { label: 'Lq total', color: theme('--p1', '#ffd166'), get: s => s.totalQ },
+        { label: 'L total', color: theme('--p0', '#8ec5ff'), get: s => s.totalL }
+      ], sim.horizon, 'Clientes');
+
+      drawStepMulti('stageQueueChart', sim.timeSeries, [
+        { label: 'Q1', color: theme('--p0', '#8ec5ff'), get: s => s.stageQ[0] },
+        { label: 'Q2', color: theme('--p1', '#ffd166'), get: s => s.stageQ[1] },
+        { label: 'Q3', color: theme('--p2', '#78a6ff'), get: s => s.stageQ[2] },
+        { label: 'Q4', color: theme('--p3', '#21c07a'), get: s => s.stageQ[3] },
+        { label: 'Q5', color: theme('--p5', '#ef476f'), get: s => s.stageQ[4] }
+      ], sim.horizon, 'Clientes en cola');
+
+      drawUsageBands('usageChart', sim, sim.horizon);
+
+      drawStepMulti('utilCumulativeChart', sim.cumulativeUtilSeries, [
+        { label: 'U1', color: theme('--p0', '#8ec5ff'), get: s => s.utils[0] },
+        { label: 'U2', color: theme('--p1', '#ffd166'), get: s => s.utils[1] },
+        { label: 'U3', color: theme('--p2', '#78a6ff'), get: s => s.utils[2] },
+        { label: 'U4', color: theme('--p3', '#21c07a'), get: s => s.utils[3] },
+        { label: 'U5', color: theme('--p5', '#ef476f'), get: s => s.utils[4] }
+      ], sim.horizon, 'Utilización acumulada');
+    }
+
+    function machineProgressPercent(ev, stageIndex, sim) {
+      if (!ev || !ev.stageBusy[stageIndex]) return 0;
+      const server = sim.servers[stageIndex];
+      const intv = [...server.intervals].reverse().find(seg => seg.start <= ev.time && (seg.end ?? sim.horizon) >= ev.time);
+      if (!intv) return 0.45;
+      const span = Math.max(1e-9, (intv.end ?? sim.horizon) - intv.start);
+      const progress = (ev.time - intv.start) / span;
+      return Math.max(0.06, Math.min(0.98, progress));
+    }
+
+    function renderFactoryView(ev) {
+      const line = $('factoryLine');
+      if (!state.sim) {
+        line.innerHTML = '';
+        return;
+      }
+      const sim = state.sim;
+      const currentEv = ev || null;
+      const totalQ = currentEv ? currentEv.totalQ : 0;
+      const totalL = currentEv ? currentEv.totalL : 0;
+      const departures = currentEv ? currentEv.departures : 0;
+      const currentStage = currentEv ? Number(currentEv.stage || 0) : 0;
+      const pieces = [];
+
+      pieces.push(`
+        <div class="factory-end ${currentEv && currentEv.type === 'arribo' ? 'highlight' : ''}">
+          <div class="factory-end-title">Entrada</div>
+          <div class="factory-end-value">λ</div>
+          <div class="factory-end-sub">Arribos externos a la línea.<br><span class="mono">${fmt(sim.lambda, 2)}</span> clientes / tiempo</div>
+        </div>
+      `);
+
+      for (let i = 0; i < STAGES; i++) {
+        const q = currentEv ? (currentEv.stageQueues[i] || []) : [];
+        const busy = currentEv ? !!currentEv.stageBusy[i] : false;
+        const cust = currentEv ? currentEv.stageServerCustomer[i] : null;
+        const flowActive = currentEv ? (i === 0 ? (currentEv.type === 'arribo' || q.length > 0 || busy) : (!!currentEv.stageBusy[i - 1] || q.length > 0 || busy)) : false;
+        const beltClass = flowActive ? (q.length >= 3 ? 'factory-belt flowing fast alert' : 'factory-belt flowing') : 'factory-belt slow';
+        const highlightStage = currentEv && currentStage === (i + 1);
+        const progressPct = machineProgressPercent(currentEv, i, sim) * 100;
+        const utilTxt = fmt(sim.stageUtil[i]);
+        const muTxt = fmt(sim.mus[i], 2);
+        const crates = q.length
+          ? q.slice(0, 5).map(id => `<span class="factory-crate">${id}</span>`).join('') + (q.length > 5 ? `<span class="factory-crate">+${q.length - 5}</span>` : '')
+          : '<span>Buffer vacío</span>';
+
+        pieces.push(`
+          <div class="${beltClass}">
+            <div class="factory-belt-id">flujo ${i === 0 ? 'in' : i}</div>
+            <div class="belt-track"></div>
+            <span class="belt-dot"></span>
+            <span class="belt-dot delay-1"></span>
+            <span class="belt-dot delay-2"></span>
+          </div>
+          <div class="factory-stage ${highlightStage ? 'highlight' : ''}">
+            <div class="factory-stage-title">
+              <span>Etapa ${i + 1}</span>
+              <span class="eta">μ = ${muTxt}</span>
+            </div>
+            <div class="factory-node-name">Centro de trabajo ${i + 1}</div>
+            <div class="factory-buffer">
+              <div class="factory-buffer-top">
+                <span>Buffer previo</span>
+                <span class="badge">Q = ${q.length}</span>
+              </div>
+              <div class="factory-buffer-bin ${q.length ? '' : 'empty'}">${crates}</div>
+            </div>
+            <div class="factory-machine ${busy ? 'busy' : ''}">
+              <div class="machine-top">
+                <span class="machine-icon">⚙</span>
+                <span class="machine-state ${busy ? 'busy' : 'idle'}">${busy ? 'Procesando' : 'Libre'}</span>
+              </div>
+              <div class="machine-customer">${busy ? `<strong>Cliente ${cust}</strong> en servicio.` : 'Sin cliente en proceso.'}</div>
+              <div class="machine-progress"><div class="machine-progress-fill" style="width:${busy ? progressPct : 0}%;"></div></div>
+              <div class="machine-stats"><strong>U sim:</strong> ${utilTxt} · <strong>WIP:</strong> ${q.length + (busy ? 1 : 0)}</div>
+            </div>
+          </div>
+        `);
+      }
+
+      pieces.push(`
+        <div class="factory-belt ${currentEv && departures > 0 ? 'flowing' : 'slow'}">
+          <div class="factory-belt-id">out</div>
+          <div class="belt-track"></div>
+          <span class="belt-dot"></span>
+          <span class="belt-dot delay-1"></span>
+          <span class="belt-dot delay-2"></span>
+        </div>
+        <div class="factory-end ${currentEv && currentEv.stage === 5 && currentEv.type === 'salida de servicio' ? 'highlight' : ''}">
+          <div class="factory-end-title">Salida</div>
+          <div class="factory-end-value">${departures}</div>
+          <div class="factory-end-sub">Unidades terminadas.<br>Q total = <span class="mono">${totalQ}</span> · L total = <span class="mono">${totalL}</span></div>
+        </div>
+      `);
+
+      line.innerHTML = pieces.join('');
+    }
+
+    function emptyStageVisual(i) {
+      return `
+        <div class="stage-visual">
+          <div class="stage-head">
+            <span>Etapa ${i + 1}</span>
+            <span class="badge">ρ sim: <span class="mono">${fmt(state.sim ? state.sim.stageUtil[i] : NaN)}</span></span>
+          </div>
+          <div class="queue-strip">
+            <div class="queue-title">
+              <span>Cola</span>
+              <span class="badge">0</span>
+            </div>
+            <div class="queue-people"></div>
+          </div>
+          <div class="server-strip">
+            <div class="server-title">
+              <span>Servidor</span>
+            </div>
+            <div class="server-card">
+              <span class="tag tag-idle">Libre</span>
+              <div class="small">Sin cliente en servicio.</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPlayback(index) {
+      if (!state.sim) return;
+      const sim = state.sim;
+      const timeline = $('timeline');
+      const maxIndex = sim.events.length - 1;
+
+      if (index < 0) {
+        $('clockText').textContent = '0.000';
+        $('eventTypeText').textContent = '—';
+        $('totalQueueText').textContent = '0';
+        $('totalSystemText').textContent = '0';
+        $('departuresText').textContent = '0';
+        $('timelineIndexText').textContent = '0';
+        $('timelineTotalText').textContent = String(maxIndex + 1);
+        timeline.max = Math.max(0, maxIndex);
+        timeline.value = 0;
+        $('stagesGrid').innerHTML = Array.from({ length: STAGES }, (_, i) => emptyStageVisual(i)).join('');
+        renderFactoryView(null);
+        $('eventLog').innerHTML = `<div class="event-row">Todavía no se reprodujo ningún evento.</div>`;
+        state.playIndex = -1;
+        return;
+      }
+
+      const ev = sim.events[index];
+      $('clockText').textContent = fmt(ev.time, 3);
+      $('eventTypeText').textContent = `${ev.type} · etapa ${ev.stage || '—'}`;
+      $('totalQueueText').textContent = String(ev.totalQ);
+      $('totalSystemText').textContent = String(ev.totalL);
+      $('departuresText').textContent = String(ev.departures);
+      $('timelineIndexText').textContent = String(index + 1);
+      $('timelineTotalText').textContent = String(maxIndex + 1);
+      timeline.max = Math.max(0, maxIndex);
+      timeline.value = index;
+
+      renderFactoryView(ev);
+      $('stagesGrid').innerHTML = Array.from({ length: STAGES }, (_, i) => {
+        const q = ev.stageQueues[i] || [];
+        const busy = ev.stageBusy[i];
+        const cust = ev.stageServerCustomer[i];
+        const chips = q.length
+          ? q.slice(0, 8).map(id => `<span class="person-chip">${id}</span>`).join('') + (q.length > 8 ? `<span class="person-chip">+${q.length - 8}</span>` : '')
+          : `<span class="small">Sin espera.</span>`;
+        return `
+          <div class="stage-visual">
+            <div class="stage-head">
+              <span>Etapa ${i + 1}</span>
+              <span class="badge">U sim: <span class="mono">${fmt(sim.stageUtil[i])}</span></span>
+            </div>
+            <div class="queue-strip">
+              <div class="queue-title">
+                <span>Cola</span>
+                <span class="badge">${q.length}</span>
+              </div>
+              <div class="queue-people">${chips}</div>
+            </div>
+            <div class="server-strip">
+              <div class="server-title">
+                <span>Servidor</span>
+                <span class="badge">μ = <span class="mono">${fmt(sim.mus[i], 2)}</span></span>
+              </div>
+              <div class="server-card ${busy ? 'busy' : ''}">
+                <span class="tag ${busy ? 'tag-busy' : 'tag-idle'}">${busy ? 'Ocupado' : 'Libre'}</span>
+                <div class="small">${busy ? `Cliente ${cust} en servicio.` : 'Sin cliente en servicio.'}</div>
+                <div class="small">Q(t) = ${q.length} · B(t) = ${busy ? 1 : 0}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const start = Math.max(0, index - 6);
+      $('eventLog').innerHTML = sim.events.slice(start, index + 1).reverse().map(row => `
+        <div class="event-row">
+          <strong>${fmt(row.time, 3)}</strong> · ${row.type} · cliente ${row.customerId} · etapa ${row.stage || '—'}<br>
+          ${row.detail}<br>
+          <span class="muted">Q total = ${row.totalQ} · L total = ${row.totalL} · salidas = ${row.departures}</span>
+        </div>
+      `).join('');
+
+      state.playIndex = index;
+    }
+
+    function pausePlayback() {
+      if (state.playTimer) {
+        clearInterval(state.playTimer);
+        state.playTimer = null;
+      }
+    }
+
+    function playPlayback() {
+      if (!state.sim || state.sim.events.length === 0) return;
+      pausePlayback();
+      const intervalMs = Math.max(20, 300 / state.playbackSpeed);
+      state.playTimer = setInterval(() => {
+        if (state.playIndex >= state.sim.events.length - 1) {
+          pausePlayback();
+          return;
+        }
+        renderPlayback(state.playIndex + 1);
+      }, intervalMs);
+    }
+
+    function exportCsv() {
+      if (!state.analytic || !state.sim) return;
+
+      const a = state.analytic;
+      const sim = state.sim;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const rows = [
+        ['seccion', 'subseccion', 'indice', 'metrica', 'valor']
+      ];
+
+      rows.push(
+        ['parametros', 'global', '', 'lambda', a.lambda],
+        ['parametros', 'global', '', 'horizonte', sim.horizon],
+        ['parametros', 'global', '', 'semilla', sim.seed],
+        ['parametros', 'global', '', 'estable', a.stable ? 1 : 0]
+      );
+
+      a.mus.forEach((mu, i) => {
+        rows.push(['parametros', 'etapa', i + 1, 'mu', mu]);
+      });
+
+      [
+        ['Lq_total_analitico', a.totalLq],
+        ['L_total_analitico', a.totalL],
+        ['Wq_total_analitico', a.totalWq],
+        ['W_total_analitico', a.totalW],
+        ['tiempo_proceso_total_analitico', a.totalService],
+        ['proporcion_proceso_analitica', a.processShare],
+        ['proporcion_espera_analitica', a.waitShare],
+        ['throughput_analitico', a.outputRate],
+        ['utilizacion_media_analitica', a.meanUtil],
+        ['bottleneck_mu', a.bottleneckMu],
+        ['cola_total_gt_10_analitica', a.tailProb]
+      ].forEach(([metric, value]) => rows.push(['analitico', 'global', '', metric, value]));
+
+      a.stages.forEach((s, i) => {
+        rows.push(
+          ['analitico', 'etapa', i + 1, 'rho', s.rho],
+          ['analitico', 'etapa', i + 1, 'Lq', s.Lq],
+          ['analitico', 'etapa', i + 1, 'L', s.L],
+          ['analitico', 'etapa', i + 1, 'Wq', s.Wq],
+          ['analitico', 'etapa', i + 1, 'W', s.W],
+          ['analitico', 'etapa', i + 1, 'service_mean', s.serviceMean]
+        );
+      });
+
+      for (let k = 0; k <= 10; k++) {
+        rows.push(
+          ['probabilidades', 'cola_total', k, 'analitica', a.pmf[k]],
+          ['probabilidades', 'cola_total', k, 'empirica', sim.probTotalQ[k]]
+        );
+      }
+      rows.push(['probabilidades', 'cola_total', '>10', 'analitica', a.tailProb]);
+      rows.push(['probabilidades', 'cola_total', '>10', 'empirica', sim.probTotalQ[11]]);
+
+      [
+        ['Lq_total_simulado', sim.totalQMean],
+        ['L_total_simulado', sim.totalLMean],
+        ['Wq_total_simulado', sim.totalWaitMean],
+        ['W_total_simulado', sim.totalSystemMean],
+        ['servicio_total_simulado', sim.totalServiceMean],
+        ['proporcion_proceso_simulada', sim.processShareMean],
+        ['proporcion_espera_simulada', sim.waitShareMean],
+        ['throughput_simulado', sim.throughput],
+        ['clientes_arribados', sim.arrivals],
+        ['clientes_completados', sim.departures]
+      ].forEach(([metric, value]) => rows.push(['simulacion', 'global', '', metric, value]));
+
+      sim.stageUtil.forEach((u, i) => {
+        rows.push(
+          ['simulacion', 'etapa', i + 1, 'Lq_medio', sim.stageQMean[i]],
+          ['simulacion', 'etapa', i + 1, 'L_medio', sim.stageLMean[i]],
+          ['simulacion', 'etapa', i + 1, 'Wq_medio', sim.stageWaitMean[i]],
+          ['simulacion', 'etapa', i + 1, 'W_medio', sim.stageSystemMean[i]],
+          ['simulacion', 'etapa', i + 1, 'utilizacion', u],
+          ['simulacion', 'etapa', i + 1, 'completados', sim.stageCompleted[i]]
+        );
+      });
+
+      sim.timeSeries.forEach((row, idx) => {
+        rows.push(
+          ['serie_temporal', 'global', idx, 'tiempo', row.time],
+          ['serie_temporal', 'global', idx, 'Q_total', row.totalQ],
+          ['serie_temporal', 'global', idx, 'L_total', row.totalL]
+        );
+        row.stageQ.forEach((v, i) => rows.push(['serie_temporal', 'etapa', `${idx}-${i + 1}`, `Q${i + 1}`, v]));
+        row.stageBusy.forEach((v, i) => rows.push(['serie_temporal', 'etapa', `${idx}-${i + 1}`, `B${i + 1}`, v]));
+      });
+
+      sim.cumulativeUtilSeries.forEach((row, idx) => {
+        row.utils.forEach((v, i) => rows.push(['serie_temporal_utilizacion', 'etapa', `${idx}-${i + 1}`, `U${i + 1}`, v]));
+      });
+
+      downloadCsv(`colas_serie_5_etapas_${timestamp}.csv`, rows);
+    }
+
+    function readInputs() {
+      return {
+        lambda: Number(inputs.lambda.value),
+        horizon: Number(inputs.horizon.value),
+        seed: Number(inputs.seed.value),
+        mus: inputs.mus.map(el => Number(el.value))
+      };
+    }
+
+    function runAll() {
+      pausePlayback();
+      const { lambda, mus, horizon, seed } = readInputs();
+      state.playbackSpeed = Number(inputs.speed.value) || 1;
+      state.analytic = tandemAnalytics(lambda, mus, 10);
+      state.sim = simulateTandem(lambda, mus, horizon, seed);
+
+      renderGlobalStats(state.analytic, state.sim);
+      renderStageAnalytic(state.analytic);
+      renderProbTable(state.analytic, state.sim);
+      renderFormulaGrid(state.analytic, state.sim);
+      renderSimSummary(state.analytic, state.sim);
+      renderCharts(state.sim);
+      renderPlayback(-1);
+    }
+
+    function loadExample() {
+      inputs.lambda.value = '0.82';
+      inputs.horizon.value = '450';
+      inputs.seed.value = '20260324';
+      const vals = ['1.35', '1.18', '1.42', '1.10', '1.50'];
+      inputs.mus.forEach((el, i) => el.value = vals[i]);
+      inputs.speed.value = '1';
+      runAll();
+    }
+
+    $('runBtn').addEventListener('click', runAll);
+    $('exampleBtn').addEventListener('click', loadExample);
+    $('exportCsvBtn').addEventListener('click', exportCsv);
+    $('resetBtn').addEventListener('click', () => {
+      pausePlayback();
+      renderPlayback(-1);
+    });
+    $('playBtn').addEventListener('click', playPlayback);
+    $('pauseBtn').addEventListener('click', pausePlayback);
+    $('stepBtn').addEventListener('click', () => {
+      if (!state.sim) return;
+      pausePlayback();
+      renderPlayback(Math.min(state.playIndex + 1, state.sim.events.length - 1));
+    });
+    $('timeline').addEventListener('input', (e) => {
+      if (!state.sim) return;
+      pausePlayback();
+      renderPlayback(Number(e.target.value));
+    });
+    inputs.speed.addEventListener('change', () => {
+      state.playbackSpeed = Number(inputs.speed.value) || 1;
+      if (state.playTimer) playPlayback();
+    });
+
+    window.addEventListener('load', runAll);
+  </script>
+</body>
+</html>
