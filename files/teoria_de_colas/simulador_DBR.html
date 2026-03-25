@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador DBR — Drum Buffer Rope</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-2: #162045;
+      --panel: #0f1428;
+      --panel-soft: #0d1328;
+      --ink: #e7ecf3;
+      --muted: #9aa4b2;
+      --line: #1e2646;
+      --border: #1e2646;
+      --accent: #8ec5ff;
+      --accent-2: #78a6ff;
+      --accent-3: #0e1a3c;
+      --ok: #21c07a;
+      --warn: #ffb454;
+      --danger: #ef476f;
+      --p0: #8ec5ff;
+      --p1: #ffd166;
+      --p2: #78a6ff;
+      --p3: #21c07a;
+      --p4: #ff9f1c;
+      --p5: #ef476f;
+      --shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+      --chart-bg: #0c1226;
+      --input-bg: #0d1631;
+      --soft-top: rgba(255,255,255,0.02);
+      --soft-bottom: rgba(0,0,0,0.04);
+      --grid: rgba(255,255,255,0.08);
+      --grid-strong: rgba(255,255,255,0.14);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 700px at 20% -10%, var(--bg-2) 0%, var(--bg) 50%);
+    }
+
+    .wrap {
+      max-width: 1640px;
+      margin: 0 auto;
+      padding: 24px 16px 42px;
+    }
+
+    .hero {
+      background: var(--bg);
+      color: var(--ink);
+      border-radius: 22px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.30);
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.55rem, 2.4vw, 2.45rem);
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 1180px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .content-stack, .controls, .stages-grid, .chart-grid, .row-2, .row-3, .mini-grid, .kpi-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+    .chart-grid { grid-template-columns: repeat(2, 1fr); }
+    .stages-grid { grid-template-columns: repeat(5, 1fr); }
+    .mini-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid { grid-template-columns: repeat(4, minmax(150px, 1fr)); }
+
+    .panel,
+    .stat,
+    .chart-card,
+    .line-card,
+    .stage-card,
+    .event-card,
+    .legend-card {
+      background: linear-gradient(180deg, var(--soft-top), var(--soft-bottom)), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel .hd {
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+    }
+
+    .panel .hd h2,
+    .panel .hd h3 {
+      margin: 0 0 5px;
+      font-size: 1.04rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .panel .hd p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 0.92rem;
+    }
+
+    .body { padding: 16px 18px 18px; }
+
+    .field, .field-stack { display: grid; gap: 6px; }
+    .field-stack {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .stage-title {
+      font-size: 0.84rem;
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+      background: var(--input-bg);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(142, 197, 255, 0.12);
+    }
+
+    .hint, .small, .muted {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .note-box {
+      border: 1px dashed var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft);
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: var(--ink);
+      line-height: 1.42;
+      font-size: 0.86rem;
+    }
+
+    .actions, .play-actions, .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--p2) 0%, var(--p0) 100%);
+      color: #08111f;
+      box-shadow: 0 10px 20px rgba(120, 166, 255, 0.22);
+    }
+
+    .btn-secondary,
+    .btn-ghost {
+      background: #0f1734;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .stat {
+      padding: 14px 15px;
+      min-height: 100px;
+    }
+
+    .stat .k {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .stat .v {
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 5px;
+      color: var(--ink);
+    }
+
+    .stat .s {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.34;
+    }
+
+    .status-banner {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      line-height: 1.45;
+    }
+
+    .status-ok {
+      background: rgba(33, 192, 122, 0.10);
+      color: var(--ok);
+      border-color: rgba(33, 192, 122, 0.22);
+    }
+
+    .status-warn {
+      background: rgba(255, 180, 84, 0.10);
+      color: var(--warn);
+      border-color: rgba(255, 180, 84, 0.22);
+    }
+
+    .status-danger {
+      background: rgba(239, 71, 111, 0.10);
+      color: var(--danger);
+      border-color: rgba(239, 71, 111, 0.22);
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid #141a33;
+      padding: 9px 9px;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    thead th {
+      background: #0d1631;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.76rem;
+      position: sticky;
+      top: 0;
+    }
+
+    .mono { font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #0f1734;
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .tiny-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--ink);
+      font-size: 0.73rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tiny-badge.drum { color: var(--p0); }
+    .tiny-badge.constraint { color: var(--warn); }
+    .tiny-badge.both {
+      color: var(--ok);
+      border-color: rgba(33,192,122,0.25);
+      background: rgba(33,192,122,0.10);
+    }
+
+    .chart-card { padding: 12px 14px; }
+    .chart-card h4 {
+      margin: 0 0 4px;
+      font-size: 0.98rem;
+      color: var(--ink);
+    }
+
+    .chart-card p {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: var(--chart-bg);
+      border: 1px solid var(--border);
+    }
+
+    .line-card {
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)), var(--panel-soft);
+    }
+
+    .factory-line {
+      display: grid;
+      grid-template-columns: 170px repeat(5, minmax(170px, 1fr)) 170px;
+      gap: 10px;
+      align-items: stretch;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .line-node, .line-end {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), var(--panel);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      position: relative;
+      min-height: 190px;
+    }
+
+    .line-node.highlight-drum {
+      box-shadow: 0 0 0 1px rgba(142,197,255,0.20), 0 0 0 6px rgba(142,197,255,0.05), var(--shadow);
+    }
+
+    .line-node.highlight-constraint {
+      box-shadow: 0 0 0 1px rgba(255,180,84,0.20), 0 0 0 6px rgba(255,180,84,0.05), var(--shadow);
+    }
+
+    .line-node.highlight-both {
+      box-shadow: 0 0 0 1px rgba(33,192,122,0.28), 0 0 0 6px rgba(33,192,122,0.06), var(--shadow);
+    }
+
+    .node-top, .end-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .node-title, .end-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .node-name {
+      font-weight: 900;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .queue-box {
+      min-height: 56px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: rgba(255,255,255,0.025);
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-content: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .queue-box.empty {
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .person-chip {
+      min-width: 28px;
+      height: 24px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(120,166,255,0.18), rgba(142,197,255,0.08));
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .server-box {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(120,166,255,0.08), rgba(255,255,255,0.02));
+      padding: 10px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .server-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .machine-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid var(--border);
+    }
+
+    .machine-state.busy {
+      color: var(--p0);
+      background: rgba(142,197,255,0.10);
+    }
+
+    .machine-state.idle {
+      color: var(--ok);
+      background: rgba(33,192,122,0.10);
+    }
+
+    .machine-progress {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #0b132d;
+      border: 1px solid var(--border);
+    }
+
+    .machine-progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--p2), var(--p0));
+    }
+
+    .stage-card { padding: 12px; }
+    .stage-card h4 {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+      letter-spacing: -0.02em;
+    }
+
+    .stage-card ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .stage-card strong { color: var(--ink); }
+
+    .event-card { padding: 12px 14px; }
+    .event-log {
+      display: grid;
+      gap: 8px;
+    }
+
+    .event-row {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: rgba(255,255,255,0.02);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .event-row strong { color: var(--ink); }
+
+    input[type="range"] {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .timeline-wrap {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .slider-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.42;
+    }
+
+    @media (max-width: 1450px) {
+      .grid-main, .chart-grid { grid-template-columns: 1fr; }
+      .stages-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 980px) {
+      .factory-line { grid-template-columns: 1fr; }
+      .row-2, .row-3, .mini-grid, .kpi-grid, .stages-grid, .slider-line { grid-template-columns: 1fr; }
+      .wrap { padding: 16px 10px 30px; }
+      .hero { padding: 20px 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Simulador DBR (Drum‑Buffer‑Rope) — línea de 5 servidores en serie</h1>
+      <p>
+        Simulá una línea con arribos Poisson y tiempos entre servicios exponenciales. Podés elegir cuál estación será el <span class="mono">Drum</span>,
+        fijar el <span class="mono">Buffer</span> protegido y observar cómo la <span class="mono">Rope</span> libera trabajo para sostener ese buffer.
+        El simulador también muestra qué pasa cuando el drum elegido no coincide con la verdadera restricción.
+      </p>
+    </section>
+
+    <div class="grid-main">
+      <aside class="panel">
+        <div class="hd">
+          <h2>Parámetros del sistema</h2>
+          <p>
+            Se modela demanda externa con tasa <span class="mono">λ</span>. La cuerda libera trabajo al sistema para sostener el buffer del drum considerando
+            el WIP ya liberado aguas arriba.
+          </p>
+        </div>
+        <div class="body">
+          <div class="controls">
+            <div class="row-2">
+              <div class="field">
+                <label for="lambda">Tasa de arribos externos λ</label>
+                <input id="lambda" type="number" min="0.01" step="0.01" value="1.10" />
+                <div class="hint">Pedidos por unidad de tiempo al backlog de mercado.</div>
+              </div>
+              <div class="field">
+                <label for="horizon">Horizonte de simulación</label>
+                <input id="horizon" type="number" min="20" step="20" value="500" />
+                <div class="hint">Duración total de la corrida.</div>
+              </div>
+            </div>
+
+            <div class="row-3">
+              <div class="field">
+                <label for="drum">Drum seleccionado</label>
+                <select id="drum">
+                  <option value="1">Servidor 1</option>
+                  <option value="2">Servidor 2</option>
+                  <option value="3" selected>Servidor 3</option>
+                  <option value="4">Servidor 4</option>
+                  <option value="5">Servidor 5</option>
+                </select>
+                <div class="hint">El servidor que marcará el ritmo para la cuerda.</div>
+              </div>
+              <div class="field">
+                <label for="buffer">Buffer DBR</label>
+                <input id="buffer" type="number" min="1" step="1" value="6" />
+                <div class="hint">Unidades protegidas antes del drum.</div>
+              </div>
+              <div class="field">
+                <label for="seed">Semilla aleatoria</label>
+                <input id="seed" type="number" step="1" value="12345" />
+                <div class="hint">Permite reproducir la misma corrida.</div>
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="speed">Velocidad de reproducción</label>
+                <select id="speed">
+                  <option value="0.25">0.25×</option>
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                  <option value="8">8×</option>
+                </select>
+                <div class="hint">Controla la animación de eventos.</div>
+              </div>
+              <div class="field">
+                <label for="example">Escenario</label>
+                <select id="example">
+                  <option value="correcto" selected>Drum correcto</option>
+                  <option value="incorrecto">Drum mal elegido</option>
+                  <option value="subbuffer">Buffer demasiado chico</option>
+                </select>
+                <div class="hint">Carga un conjunto de parámetros típico.</div>
+              </div>
+            </div>
+
+            <div class="field-stack">
+              <div class="stage-title">Tasas de servicio μᵢ</div>
+              <div class="mini-grid">
+                <div class="field">
+                  <label for="mu1">Servidor 1 — μ₁</label>
+                  <input id="mu1" type="number" min="0.01" step="0.01" value="1.45" />
+                </div>
+                <div class="field">
+                  <label for="mu2">Servidor 2 — μ₂</label>
+                  <input id="mu2" type="number" min="0.01" step="0.01" value="1.30" />
+                </div>
+                <div class="field">
+                  <label for="mu3">Servidor 3 — μ₃</label>
+                  <input id="mu3" type="number" min="0.01" step="0.01" value="0.95" />
+                </div>
+                <div class="field">
+                  <label for="mu4">Servidor 4 — μ₄</label>
+                  <input id="mu4" type="number" min="0.01" step="0.01" value="1.25" />
+                </div>
+                <div class="field">
+                  <label for="mu5">Servidor 5 — μ₅</label>
+                  <input id="mu5" type="number" min="0.01" step="0.01" value="1.40" />
+                </div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn-primary" id="runBtn">Calcular y simular</button>
+              <button class="btn-secondary" id="exampleBtn">Cargar escenario</button>
+              <button class="btn-ghost" id="resetBtn">Reiniciar reproducción</button>
+            </div>
+
+            <div class="play-actions">
+              <button class="btn-primary" id="playBtn">▶ Reproducir</button>
+              <button class="btn-secondary" id="pauseBtn">❚❚ Pausar</button>
+              <button class="btn-ghost" id="stepBtn">Paso a paso</button>
+            </div>
+
+            <div class="note-box">
+              <strong>Mecánica DBR implementada</strong><br>
+              • La demanda llega a un backlog externo.<br>
+              • La cuerda libera trabajo para sostener el buffer del drum en base al WIP ya liberado aguas arriba.<br>
+              • Todas las estaciones tienen colas antes del servidor, incluso si el drum fue mal elegido.<br>
+              • Si el drum o el buffer están mal, el buffer visible frente al drum puede vaciarse, pero nunca se vuelve negativo.
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="content-stack">
+        <section class="panel">
+          <div class="hd">
+            <h2>Indicadores globales</h2>
+            <p>Métricas de flujo, inventario, tiempos, utilización y desempeño de la restricción real.</p>
+          </div>
+          <div class="body">
+            <div class="kpi-grid" id="globalStats"></div>
+            <div id="statusBanner" class="status-banner status-ok"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Diagnóstico por servidor</h2>
+            <p>Utilización, colas, tiempos, completados e identificación de drum seleccionado versus restricción real.</p>
+          </div>
+          <div class="body table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Servidor</th>
+                  <th>μᵢ</th>
+                  <th>Rol</th>
+                  <th>Utilización</th>
+                  <th>Cola media</th>
+                  <th>En sistema medio</th>
+                  <th>Wq medio</th>
+                  <th>W medio</th>
+                  <th>Completados</th>
+                  <th>Tiempo ocioso</th>
+                </tr>
+              </thead>
+              <tbody id="stageTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Indicadores DBR</h2>
+            <p>Se muestra el estado del buffer protegido, el backlog externo y el impacto de la política de liberación.</p>
+          </div>
+          <div class="body table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Métrica</th>
+                  <th>Valor</th>
+                  <th>Interpretación</th>
+                </tr>
+              </thead>
+              <tbody id="dbrTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Gráficos temporales</h2>
+            <p>Evolución del inventario, del buffer del drum, del backlog de mercado y de la ocupación de los servidores.</p>
+          </div>
+          <div class="body">
+            <div class="chart-grid">
+              <div class="chart-card">
+                <h4>Inventario total y clientes en sistema</h4>
+                <p>Longitud total de colas y cantidad total en sistema a lo largo del tiempo.</p>
+                <canvas id="totalChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Colas por servidor</h4>
+                <p>Comparación de las colas delante de cada servidor.</p>
+                <canvas id="queueChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Buffer del drum y backlog externo</h4>
+                <p>Se compara el buffer visible frente al drum con el objetivo DBR y el backlog fuera del sistema.</p>
+                <canvas id="bufferChart" width="760" height="280"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>Ocupación temporal de los servidores</h4>
+                <p>Cada banda representa el estado ocupado/libre de un servidor.</p>
+                <canvas id="usageChart" width="760" height="280"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd">
+            <h2>Simulación en vivo</h2>
+            <p>La línea se puede reproducir evento por evento. El drum seleccionado y la restricción real se destacan visualmente.</p>
+          </div>
+          <div class="body">
+            <div class="badge-row">
+              <span class="badge">Tiempo actual: <span id="clockText" class="mono">0.000</span></span>
+              <span class="badge">Evento: <span id="eventTypeText" class="mono">—</span></span>
+              <span class="badge">Buffer drum: <span id="bufferText" class="mono">0</span></span>
+              <span class="badge">Backlog mercado: <span id="backlogText" class="mono">0</span></span>
+              <span class="badge">Colas totales: <span id="totalQueueText" class="mono">0</span></span>
+              <span class="badge">Salidas: <span id="departuresText" class="mono">0</span></span>
+            </div>
+
+            <div class="timeline-wrap">
+              <div class="slider-line">
+                <input id="timeline" type="range" min="0" max="0" value="0" />
+                <div class="small">Evento <span id="timelineIndexText" class="mono">0</span> / <span id="timelineTotalText" class="mono">0</span></div>
+              </div>
+            </div>
+
+            <div class="line-card">
+              <div class="node-top" style="margin-bottom: 12px;">
+                <strong>Vista de la línea</strong>
+                <span class="small">El backlog está fuera del sistema; las colas visibles pertenecen al sistema liberado por la cuerda.</span>
+              </div>
+              <div class="factory-line" id="factoryLine"></div>
+            </div>
+
+            <div class="stages-grid" id="stagesGrid"></div>
+
+            <div class="event-card" style="margin-top:16px;">
+              <div class="node-top">
+                <span>Últimos eventos</span>
+                <span class="small">Se muestran los 8 más recientes respecto del punto seleccionado.</span>
+              </div>
+              <div class="event-log" id="eventLog"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const STAGES = 5;
+    const COLORS = ['#8ec5ff', '#ffd166', '#78a6ff', '#21c07a', '#ef476f'];
+    const $ = (id) => document.getElementById(id);
+    const fmt = (x, d = 3) => Number.isFinite(x) ? Number(x).toFixed(d) : '—';
+    const fmtPct = (x, d = 1) => Number.isFinite(x) ? (100 * x).toFixed(d) + '%' : '—';
+
+    const inputs = {
+      lambda: $('lambda'),
+      horizon: $('horizon'),
+      drum: $('drum'),
+      buffer: $('buffer'),
+      seed: $('seed'),
+      speed: $('speed'),
+      example: $('example'),
+      mus: [1,2,3,4,5].map(i => $('mu' + i))
+    };
+
+    const uiState = {
+      result: null,
+      playIndex: 0,
+      timer: null
+    };
+
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), t | 1);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function expSample(rate, rng) {
+      const u = Math.max(1e-12, 1 - rng());
+      return -Math.log(u) / rate;
+    }
+
+    function mean(values) {
+      return values.length ? values.reduce((a,b) => a + b, 0) / values.length : NaN;
+    }
+
+    function getParams() {
+      return {
+        lambda: Math.max(0.01, parseFloat(inputs.lambda.value) || 0.01),
+        horizon: Math.max(20, parseFloat(inputs.horizon.value) || 500),
+        drumIndex: Math.min(STAGES - 1, Math.max(0, parseInt(inputs.drum.value, 10) - 1)),
+        bufferTarget: Math.max(1, parseInt(inputs.buffer.value, 10) || 1),
+        seed: parseInt(inputs.seed.value, 10) || 1,
+        playbackSpeed: parseFloat(inputs.speed.value) || 1,
+        mus: inputs.mus.map(el => Math.max(0.01, parseFloat(el.value) || 0.01))
+      };
+    }
+
+    function scenario(name) {
+      if (name === 'incorrecto') {
+        return { lambda: 1.10, horizon: 500, drum: 2, buffer: 4, mus: [1.45, 1.30, 0.90, 1.22, 1.35] };
+      }
+      if (name === 'subbuffer') {
+        return { lambda: 1.05, horizon: 500, drum: 3, buffer: 2, mus: [1.42, 1.28, 0.95, 1.20, 1.34] };
+      }
+      return { lambda: 1.10, horizon: 500, drum: 3, buffer: 6, mus: [1.45, 1.30, 0.95, 1.25, 1.40] };
+    }
+
+    function applyScenario(name) {
+      const sc = scenario(name);
+      inputs.lambda.value = sc.lambda;
+      inputs.horizon.value = sc.horizon;
+      inputs.drum.value = sc.drum;
+      inputs.buffer.value = sc.buffer;
+      sc.mus.forEach((mu, i) => inputs.mus[i].value = mu);
+    }
+
+    function simulateDBR(params) {
+      const rng = mulberry32(params.seed);
+      const actualConstraint = params.mus.reduce((best, mu, i, arr) => mu < arr[best] ? i : best, 0);
+      const servers = params.mus.map((mu, idx) => ({
+        id: idx + 1,
+        mu,
+        busy: false,
+        customerId: null,
+        startTime: null,
+        endTime: Infinity,
+        serviceTime: null,
+        busyTime: 0,
+        completed: 0
+      }));
+      const queues = Array.from({ length: STAGES }, () => []);
+      const backlog = [];
+      const customers = [];
+      const snapshots = [];
+      const series = [];
+
+      let t = 0;
+      let lastTime = 0;
+      let nextArrival = expSample(params.lambda, rng);
+      let arrivals = 0;
+      let releases = 0;
+      let departures = 0;
+      let nextId = 1;
+
+      const areasQueue = Array(STAGES).fill(0);
+      const areasSystem = Array(STAGES).fill(0);
+      let areaBacklog = 0;
+      let areaTotalQ = 0;
+      let areaTotalL = 0;
+      let areaDrumQueue = 0;
+      let areaProtected = 0;
+      let timeDrumEmpty = 0;
+      let timeRealConstraintIdle = 0;
+
+      const stageWaits = Array.from({ length: STAGES }, () => []);
+      const stageSystems = Array.from({ length: STAGES }, () => []);
+      const totalWaits = [];
+      const totalSystems = [];
+      const eventLog = [];
+
+      function newCustomer(origin, marketArrival) {
+        const customer = {
+          id: nextId++,
+          origin,
+          marketArrival,
+          releaseTime: null,
+          systemArrival: null,
+          departureTime: null,
+          stages: Array.from({ length: STAGES }, () => null)
+        };
+        customers.push(customer);
+        return customer;
+      }
+
+      function protectedBeforeDrum() {
+        let count = 0;
+        for (let i = 0; i < params.drumIndex; i++) {
+          count += queues[i].length + (servers[i].busy ? 1 : 0);
+        }
+        count += queues[params.drumIndex].length;
+        return count;
+      }
+
+      function totalQueue() {
+        return queues.reduce((acc, q) => acc + q.length, 0);
+      }
+
+      function totalSystem() {
+        return totalQueue() + servers.filter(s => s.busy).length;
+      }
+
+      function updateAreas(newTime) {
+        const dt = newTime - lastTime;
+        if (dt <= 0) { lastTime = newTime; return; }
+        for (let i = 0; i < STAGES; i++) {
+          areasQueue[i] += queues[i].length * dt;
+          areasSystem[i] += (queues[i].length + (servers[i].busy ? 1 : 0)) * dt;
+        }
+        areaBacklog += backlog.length * dt;
+        areaTotalQ += totalQueue() * dt;
+        areaTotalL += totalSystem() * dt;
+        areaDrumQueue += queues[params.drumIndex].length * dt;
+        areaProtected += protectedBeforeDrum() * dt;
+        if (queues[params.drumIndex].length === 0) timeDrumEmpty += dt;
+        if (!servers[actualConstraint].busy) timeRealConstraintIdle += dt;
+        lastTime = newTime;
+      }
+
+      function stageRecord(customer, stageIndex, now) {
+        if (!customer.stages[stageIndex]) {
+          customer.stages[stageIndex] = {
+            queueEnter: now,
+            serviceStart: null,
+            serviceEnd: null,
+            wait: null,
+            service: null
+          };
+        }
+        return customer.stages[stageIndex];
+      }
+
+      function startService(stageIndex, customer, now) {
+        const server = servers[stageIndex];
+        const rec = stageRecord(customer, stageIndex, now);
+        const service = expSample(server.mu, rng);
+        rec.serviceStart = now;
+        rec.wait = now - rec.queueEnter;
+        rec.service = service;
+        server.busy = true;
+        server.customerId = customer.id;
+        server.startTime = now;
+        server.endTime = now + service;
+        server.serviceTime = service;
+      }
+
+      function maybeStart(stageIndex, notes) {
+        const server = servers[stageIndex];
+        if (server.busy || queues[stageIndex].length === 0) return;
+        const customer = queues[stageIndex].shift();
+        startService(stageIndex, customer, t);
+        notes.push(`Cliente ${customer.id} inicia servicio en S${stageIndex + 1}.`);
+      }
+
+      function enterStage(stageIndex, customer, now, notes) {
+        const rec = stageRecord(customer, stageIndex, now);
+        rec.queueEnter = now;
+        queues[stageIndex].push(customer);
+        notes.push(`Cliente ${customer.id} entra a cola de S${stageIndex + 1}.`);
+        maybeStart(stageIndex, notes);
+      }
+
+      function tryRelease(notes) {
+        let releasedNow = 0;
+        while (backlog.length > 0 && protectedBeforeDrum() < params.bufferTarget) {
+          const customer = backlog.shift();
+          if (customer.releaseTime == null) customer.releaseTime = t;
+          if (customer.systemArrival == null) customer.systemArrival = t;
+          releases += 1;
+          releasedNow += 1;
+          notes.push(`Rope libera cliente ${customer.id} al sistema.`);
+          enterStage(0, customer, t, notes);
+        }
+        return releasedNow;
+      }
+
+      function registerSnapshot(label, notes) {
+        const snap = {
+          index: snapshots.length,
+          time: t,
+          label,
+          notes: notes.slice(),
+          totalQueue: totalQueue(),
+          totalSystem: totalSystem(),
+          drumQueue: queues[params.drumIndex].length,
+          protectedCount: protectedBeforeDrum(),
+          backlog: backlog.length,
+          departures,
+          releases,
+          stageQueues: queues.map(q => q.slice(0, 8).map(c => c.id)),
+          stageQueueCounts: queues.map(q => q.length),
+          stageBusy: servers.map(s => s.busy),
+          stageCustomer: servers.map(s => s.customerId),
+          stageProgress: servers.map(s => s.busy && s.startTime !== null && s.endTime > s.startTime ? (t - s.startTime) / (s.endTime - s.startTime) : 0)
+        };
+        snapshots.push(snap);
+        series.push({
+          time: t,
+          totalQ: snap.totalQueue,
+          totalL: snap.totalSystem,
+          drumQueue: snap.drumQueue,
+          protectedCount: snap.protectedCount,
+          backlog: snap.backlog,
+          departures,
+          stageQ: snap.stageQueueCounts.slice(),
+          busy: snap.stageBusy.map(v => v ? 1 : 0)
+        });
+        eventLog.push({ time: t, label, notes: notes.slice() });
+      }
+
+      function initialize() {
+        const notes = [];
+        for (let i = 0; i < params.bufferTarget; i++) {
+          const seedCustomer = newCustomer('seed', 0);
+          backlog.push(seedCustomer);
+        }
+        if (params.bufferTarget > 0) {
+          notes.push(`Se cargan ${params.bufferTarget} unidades iniciales para construir el buffer protegido del drum.`);
+        }
+        tryRelease(notes);
+        registerSnapshot('Inicialización DBR', notes.length ? notes : ['Sistema inicializado.']);
+      }
+
+      initialize();
+
+      while (true) {
+        let nextCompletion = Infinity;
+        let completionStage = -1;
+        for (let i = 0; i < STAGES; i++) {
+          if (servers[i].busy && servers[i].endTime < nextCompletion) {
+            nextCompletion = servers[i].endTime;
+            completionStage = i;
+          }
+        }
+        const nextEventTime = Math.min(nextArrival, nextCompletion);
+        if (!Number.isFinite(nextEventTime) || nextEventTime > params.horizon) break;
+
+        updateAreas(nextEventTime);
+        t = nextEventTime;
+        const notes = [];
+
+        if (nextArrival <= nextCompletion) {
+          const customer = newCustomer('market', t);
+          arrivals += 1;
+          backlog.push(customer);
+          notes.push(`Arriba pedido ${customer.id} al backlog externo.`);
+          tryRelease(notes);
+          registerSnapshot('Arribo externo', notes);
+          nextArrival = t + expSample(params.lambda, rng);
+        } else {
+          const server = servers[completionStage];
+          const customer = customers.find(c => c.id === server.customerId);
+          const rec = stageRecord(customer, completionStage, t);
+          rec.serviceEnd = t;
+          server.busyTime += t - server.startTime;
+          server.completed += 1;
+          stageWaits[completionStage].push(rec.wait);
+          stageSystems[completionStage].push((rec.wait || 0) + (rec.service || 0));
+
+          notes.push(`Cliente ${customer.id} completa S${completionStage + 1}.`);
+
+          server.busy = false;
+          server.customerId = null;
+          server.startTime = null;
+          server.endTime = Infinity;
+          server.serviceTime = null;
+
+          if (completionStage < STAGES - 1) {
+            enterStage(completionStage + 1, customer, t, notes);
+          } else {
+            customer.departureTime = t;
+            departures += 1;
+            const totalWait = customer.stages.reduce((acc, st) => acc + (st ? (st.wait || 0) : 0), 0);
+            totalWaits.push(totalWait);
+            totalSystems.push(customer.departureTime - customer.systemArrival);
+            notes.push(`Cliente ${customer.id} sale del sistema.`);
+          }
+
+          maybeStart(completionStage, notes);
+          tryRelease(notes);
+          registerSnapshot(`Fin de servicio en S${completionStage + 1}`, notes);
+        }
+      }
+
+      updateAreas(params.horizon);
+      t = params.horizon;
+      for (const server of servers) {
+        if (server.busy && server.startTime !== null) {
+          server.busyTime += params.horizon - server.startTime;
+        }
+      }
+      registerSnapshot('Fin del horizonte', ['Finaliza la simulación.']);
+
+      const avgQueue = areasQueue.map(v => v / params.horizon);
+      const avgSystem = areasSystem.map(v => v / params.horizon);
+      const stageUtil = servers.map(s => s.busyTime / params.horizon);
+      const throughput = departures / params.horizon;
+      const realConstraintIdlePct = timeRealConstraintIdle / params.horizon;
+      const drumEmptyPct = timeDrumEmpty / params.horizon;
+      const avgBacklog = areaBacklog / params.horizon;
+      const avgProtected = areaProtected / params.horizon;
+      const avgDrumQueue = areaDrumQueue / params.horizon;
+      const avgTotalQueue = areaTotalQ / params.horizon;
+      const avgTotalSystem = areaTotalL / params.horizon;
+
+      return {
+        params,
+        actualConstraint,
+        servers,
+        arrivals,
+        departures,
+        releases,
+        avgQueue,
+        avgSystem,
+        stageWaits: stageWaits.map(mean),
+        stageSystems: stageSystems.map(mean),
+        stageUtil,
+        throughput,
+        realConstraintIdleTime: timeRealConstraintIdle,
+        realConstraintIdlePct,
+        drumEmptyTime: timeDrumEmpty,
+        drumEmptyPct,
+        avgBacklog,
+        avgProtected,
+        avgDrumQueue,
+        avgTotalQueue,
+        avgTotalSystem,
+        totalWaitMean: mean(totalWaits),
+        totalSystemMean: mean(totalSystems),
+        inventoryAccumulated: areaTotalQ,
+        snapshots,
+        series,
+        eventLog
+      };
+    }
+
+    function roleLabel(result, idx) {
+      const isDrum = idx === result.params.drumIndex;
+      const isConstraint = idx === result.actualConstraint;
+      if (isDrum && isConstraint) return '<span class="tiny-badge both">Drum = restricción</span>';
+      if (isDrum) return '<span class="tiny-badge drum">Drum</span>';
+      if (isConstraint) return '<span class="tiny-badge constraint">Restricción real</span>';
+      return '<span class="tiny-badge">Normal</span>';
+    }
+
+    function renderGlobal(result) {
+      const drum = result.params.drumIndex;
+      const isAligned = drum === result.actualConstraint;
+      const stats = [
+        { key: 'Throughput', value: fmt(result.throughput), sub: 'Salidas por unidad de tiempo.' },
+        { key: 'Inventario medio', value: fmt(result.avgTotalQueue), sub: 'Suma media de todas las colas.' },
+        { key: 'Clientes en sistema', value: fmt(result.avgTotalSystem), sub: 'Colas + servicios en curso.' },
+        { key: 'Wq total', value: fmt(result.totalWaitMean), sub: 'Espera media total por cliente completado.' },
+        { key: 'W total', value: fmt(result.totalSystemMean), sub: 'Tiempo medio total en sistema.' },
+        { key: 'Buffer drum medio', value: fmt(result.avgDrumQueue), sub: 'Cola visible media frente al drum.' },
+        { key: 'Backlog externo medio', value: fmt(result.avgBacklog), sub: 'Trabajo esperando fuera del sistema.' },
+        { key: 'Parada restricción real', value: fmt(result.realConstraintIdleTime), sub: 'Tiempo ocioso del servidor más lento.' }
+      ];
+      $('globalStats').innerHTML = stats.map(s => `
+        <div class="stat">
+          <div class="k">${s.key}</div>
+          <div class="v">${s.value}</div>
+          <div class="s">${s.sub}</div>
+        </div>
+      `).join('');
+
+      const banner = $('statusBanner');
+      if (isAligned && result.drumEmptyPct < 0.15) {
+        banner.className = 'status-banner status-ok';
+        banner.innerHTML = `El drum elegido coincide con la restricción real (<span class="mono">S${drum + 1}</span>) y el buffer se vacía solo el <span class="mono">${fmtPct(result.drumEmptyPct)}</span> del tiempo.`;
+      } else if (isAligned) {
+        banner.className = 'status-banner status-warn';
+        banner.innerHTML = `El drum elegido coincide con la restricción real (<span class="mono">S${drum + 1}</span>), pero el buffer visible frente al drum se vacía el <span class="mono">${fmtPct(result.drumEmptyPct)}</span> del tiempo. Probablemente el buffer es demasiado chico.`;
+      } else {
+        banner.className = 'status-banner status-danger';
+        banner.innerHTML = `El drum elegido es <span class="mono">S${drum + 1}</span>, pero la restricción real es <span class="mono">S${result.actualConstraint + 1}</span>. Eso suele generar liberaciones mal alineadas y colas innecesarias. El buffer del drum se vacía el <span class="mono">${fmtPct(result.drumEmptyPct)}</span> del tiempo.`;
+      }
+    }
+
+    function renderStageTable(result) {
+      $('stageTableBody').innerHTML = result.params.mus.map((mu, i) => `
+        <tr>
+          <td><strong>Servidor ${i + 1}</strong></td>
+          <td>${fmt(mu)}</td>
+          <td>${roleLabel(result, i)}</td>
+          <td>${fmtPct(result.stageUtil[i])}</td>
+          <td>${fmt(result.avgQueue[i])}</td>
+          <td>${fmt(result.avgSystem[i])}</td>
+          <td>${fmt(result.stageWaits[i])}</td>
+          <td>${fmt(result.stageSystems[i])}</td>
+          <td>${result.servers[i].completed}</td>
+          <td>${fmt(result.params.horizon - result.servers[i].busyTime)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderDBRTable(result) {
+      const rows = [
+        ['Drum seleccionado', `S${result.params.drumIndex + 1}`, 'Servidor usado para marcar la liberación del trabajo.'],
+        ['Restricción real', `S${result.actualConstraint + 1}`, 'Servidor con menor tasa μ.'],
+        ['Buffer objetivo', `${result.params.bufferTarget} unidades`, 'Cantidad de unidades protegidas antes del drum.'],
+        ['WIP protegido medio', fmt(result.avgProtected), 'Promedio de unidades liberadas entre la entrada y el drum.'],
+        ['Buffer visible medio', fmt(result.avgDrumQueue), 'Cola media observada justo antes del drum.'],
+        ['Tiempo con buffer vacío', fmt(result.drumEmptyTime), 'Mide cuántas veces el drum se queda sin protección.'],
+        ['% tiempo con buffer vacío', fmtPct(result.drumEmptyPct), 'Indica riesgo de starvation del drum.'],
+        ['Liberaciones de la rope', result.releases, 'Cantidad de trabajos efectivamente liberados al sistema.'],
+        ['Inventario acumulado', fmt(result.inventoryAccumulated), 'Área bajo la curva de la suma de colas.'],
+        ['% tiempo ocioso restricción real', fmtPct(result.realConstraintIdlePct), 'Si es alto, la restricción real se está quedando sin material.']
+      ];
+      $('dbrTableBody').innerHTML = rows.map(r => `
+        <tr>
+          <td><strong>${r[0]}</strong></td>
+          <td>${r[1]}</td>
+          <td>${r[2]}</td>
+        </tr>
+      `).join('');
+    }
+
+    function drawAxes(ctx, W, H, pad, xMax, yMax, yLabel) {
+      const chartW = W - pad.l - pad.r;
+      const chartH = H - pad.t - pad.b;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0c1226';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + chartH * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(pad.l + chartW, y);
+        ctx.stroke();
+      }
+      for (let i = 0; i <= 4; i++) {
+        const x = pad.l + chartW * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t);
+        ctx.lineTo(x, pad.t + chartH);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, pad.t + chartH);
+      ctx.lineTo(pad.l + chartW, pad.t + chartH);
+      ctx.stroke();
+
+      ctx.font = '11px system-ui';
+      ctx.fillStyle = '#9aa4b2';
+      ctx.textAlign = 'center';
+      for (let i = 0; i <= 4; i++) {
+        const x = pad.l + chartW * i / 4;
+        const v = xMax * i / 4;
+        ctx.fillText(fmt(v, 0), x, H - 10);
+      }
+      ctx.textAlign = 'right';
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + chartH - chartH * i / 4;
+        const v = yMax * i / 4;
+        ctx.fillText(fmt(v, 1), pad.l - 8, y + 4);
+      }
+      ctx.save();
+      ctx.translate(16, pad.t + chartH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+      return { chartW, chartH };
+    }
+
+    function drawLegend(ctx, lines, x, y) {
+      let yy = y;
+      ctx.font = '12px system-ui';
+      lines.forEach(line => {
+        ctx.fillStyle = line.color;
+        ctx.fillRect(x, yy, 12, 3);
+        ctx.fillStyle = '#e7ecf3';
+        ctx.fillText(line.label, x + 18, yy + 6);
+        yy += 16;
+      });
+    }
+
+    function drawStepChart(canvasId, data, lines, yLabel) {
+      const canvas = $(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const pad = { l: 52, r: 20, t: 16, b: 32 };
+      const xMax = data.length ? data[data.length - 1].time : 1;
+      const yMaxRaw = Math.max(1, ...data.flatMap(p => lines.map(line => line.get(p))));
+      const yMax = yMaxRaw * 1.1;
+      const { chartW, chartH } = drawAxes(ctx, W, H, pad, xMax, yMax, yLabel);
+      const xScale = (x) => pad.l + chartW * (x / Math.max(1e-9, xMax));
+      const yScale = (y) => pad.t + chartH - chartH * (y / Math.max(1e-9, yMax));
+
+      lines.forEach(line => {
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < data.length - 1; i++) {
+          const p0 = data[i];
+          const p1 = data[i + 1];
+          const x0 = xScale(p0.time), x1 = xScale(p1.time);
+          const y0 = yScale(line.get(p0));
+          const y1 = yScale(line.get(p1));
+          if (i === 0) ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y0);
+          ctx.lineTo(x1, y1);
+        }
+        ctx.stroke();
+      });
+      drawLegend(ctx, lines, W - 160, 20);
+    }
+
+    function drawUsageBands(canvasId, data) {
+      const canvas = $(canvasId);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const pad = { l: 70, r: 20, t: 18, b: 30 };
+      const xMax = data.length ? data[data.length - 1].time : 1;
+      const chartW = W - pad.l - pad.r;
+      const chartH = H - pad.t - pad.b;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0c1226';
+      ctx.fillRect(0, 0, W, H);
+
+      const xScale = (x) => pad.l + chartW * (x / Math.max(1e-9, xMax));
+      const bandH = chartH / STAGES;
+      ctx.font = '12px system-ui';
+      ctx.fillStyle = '#9aa4b2';
+
+      for (let i = 0; i < STAGES; i++) {
+        const y = pad.t + i * bandH;
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeRect(pad.l, y, chartW, bandH - 4);
+        ctx.fillStyle = '#9aa4b2';
+        ctx.textAlign = 'right';
+        ctx.fillText('S' + (i + 1), pad.l - 10, y + bandH / 2 + 4);
+        for (let j = 0; j < data.length - 1; j++) {
+          const p0 = data[j];
+          const p1 = data[j + 1];
+          if (p0.busy[i] === 1) {
+            const x0 = xScale(p0.time);
+            const x1 = xScale(p1.time);
+            ctx.fillStyle = COLORS[i];
+            ctx.globalAlpha = 0.75;
+            ctx.fillRect(x0, y + 3, Math.max(1, x1 - x0), bandH - 10);
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#9aa4b2';
+      for (let i = 0; i <= 4; i++) {
+        const x = pad.l + chartW * i / 4;
+        const v = xMax * i / 4;
+        ctx.fillText(fmt(v, 0), x, H - 8);
+      }
+    }
+
+    function renderCharts(result) {
+      drawStepChart('totalChart', result.series, [
+        { label: 'Colas totales', color: COLORS[0], get: p => p.totalQ },
+        { label: 'En sistema', color: COLORS[3], get: p => p.totalL }
+      ], 'Nivel');
+
+      drawStepChart('queueChart', result.series, COLORS.map((color, i) => ({
+        label: 'Q' + (i + 1), color, get: p => p.stageQ[i]
+      })), 'Cola');
+
+      drawStepChart('bufferChart', result.series, [
+        { label: 'Buffer visible drum', color: COLORS[1], get: p => p.drumQueue },
+        { label: 'Objetivo buffer', color: COLORS[2], get: () => result.params.bufferTarget },
+        { label: 'Backlog externo', color: COLORS[4], get: p => p.backlog }
+      ], 'Unidades');
+
+      drawUsageBands('usageChart', result.series);
+    }
+
+    function chips(ids, count) {
+      if (!count) return '<div class="queue-box empty">vacío</div>';
+      const shown = ids.map(id => `<span class="person-chip">${id}</span>`).join('');
+      const extra = count > ids.length ? `<span class="person-chip">+${count - ids.length}</span>` : '';
+      return `<div class="queue-box">${shown}${extra}</div>`;
+    }
+
+    function renderFactory(snapshot, result) {
+      const drum = result.params.drumIndex;
+      const constraint = result.actualConstraint;
+      const left = `
+        <div class="line-end">
+          <div class="end-top"><span class="end-title">Backlog mercado</span></div>
+          <div class="node-name">Pedidos esperando</div>
+          <div class="stat" style="padding:0; min-height:auto; background:none; border:none; box-shadow:none;">
+            <div class="v">${snapshot.backlog}</div>
+            <div class="s">Llegan con tasa λ y esperan la liberación de la rope.</div>
+          </div>
+        </div>
+      `;
+      const right = `
+        <div class="line-end">
+          <div class="end-top"><span class="end-title">Salida</span></div>
+          <div class="node-name">Throughput acumulado</div>
+          <div class="stat" style="padding:0; min-height:auto; background:none; border:none; box-shadow:none;">
+            <div class="v">${snapshot.departures}</div>
+            <div class="s">Clientes completados al instante seleccionado.</div>
+          </div>
+        </div>
+      `;
+      const stagesHtml = result.params.mus.map((mu, i) => {
+        const isDrum = i === drum;
+        const isConstraint = i === constraint;
+        const klass = isDrum && isConstraint ? 'highlight-both' : isDrum ? 'highlight-drum' : isConstraint ? 'highlight-constraint' : '';
+        const role = isDrum && isConstraint ? '<span class="tiny-badge both">Drum + restricción</span>' : isDrum ? '<span class="tiny-badge drum">Drum</span>' : isConstraint ? '<span class="tiny-badge constraint">Restricción real</span>' : '<span class="tiny-badge">Servidor</span>';
+        return `
+          <div class="line-node ${klass}">
+            <div class="node-top">
+              <span class="node-title">Servidor ${i + 1}</span>
+              ${role}
+            </div>
+            <div class="node-name">μ = ${fmt(mu)}</div>
+            <div class="small" style="margin-bottom:6px;">Cola previa</div>
+            ${chips(snapshot.stageQueues[i], snapshot.stageQueueCounts[i])}
+            <div class="server-box">
+              <div class="server-top">
+                <strong>${snapshot.stageBusy[i] ? 'Procesando' : 'Disponible'}</strong>
+                <span class="machine-state ${snapshot.stageBusy[i] ? 'busy' : 'idle'}">${snapshot.stageBusy[i] ? 'Busy' : 'Idle'}</span>
+              </div>
+              <div class="small">Cliente en servicio: <strong>${snapshot.stageCustomer[i] ?? '—'}</strong></div>
+              <div class="machine-progress"><div class="machine-progress-fill" style="width:${Math.max(0, Math.min(100, (snapshot.stageProgress[i] || 0) * 100))}%;"></div></div>
+              <div class="small">Cola actual: <strong>${snapshot.stageQueueCounts[i]}</strong></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      $('factoryLine').innerHTML = left + stagesHtml + right;
+    }
+
+    function renderStageCards(snapshot, result) {
+      $('stagesGrid').innerHTML = result.params.mus.map((mu, i) => `
+        <div class="stage-card ${i === result.params.drumIndex ? 'highlight-drum' : ''}">
+          <h4>Servidor ${i + 1}</h4>
+          <ul>
+            <li>${roleLabel(result, i)}</li>
+            <li>μ: <strong>${fmt(mu)}</strong></li>
+            <li>Utilización final: <strong>${fmtPct(result.stageUtil[i])}</strong></li>
+            <li>Cola media: <strong>${fmt(result.avgQueue[i])}</strong></li>
+            <li>Wq medio: <strong>${fmt(result.stageWaits[i])}</strong></li>
+            <li>Cliente actual: <strong>${snapshot.stageCustomer[i] ?? '—'}</strong></li>
+            <li>Cola actual: <strong>${snapshot.stageQueueCounts[i]}</strong></li>
+          </ul>
+        </div>
+      `).join('');
+    }
+
+    function renderEvents(result, index) {
+      const start = Math.max(0, index - 7);
+      const rows = result.eventLog.slice(start, index + 1).reverse().map(ev => `
+        <div class="event-row">
+          <strong>${fmt(ev.time)}</strong> — ${ev.label}<br>
+          ${ev.notes.map(note => '• ' + note).join('<br>')}
+        </div>
+      `).join('');
+      $('eventLog').innerHTML = rows || '<div class="event-row">Sin eventos.</div>';
+    }
+
+    function renderSnapshot(index) {
+      const result = uiState.result;
+      if (!result) return;
+      const safeIndex = Math.max(0, Math.min(index, result.snapshots.length - 1));
+      const snap = result.snapshots[safeIndex];
+      uiState.playIndex = safeIndex;
+      $('timeline').value = safeIndex;
+      $('timelineIndexText').textContent = safeIndex;
+      $('timelineTotalText').textContent = result.snapshots.length - 1;
+      $('clockText').textContent = fmt(snap.time);
+      $('eventTypeText').textContent = snap.label;
+      $('bufferText').textContent = snap.drumQueue;
+      $('backlogText').textContent = snap.backlog;
+      $('totalQueueText').textContent = snap.totalQueue;
+      $('departuresText').textContent = snap.departures;
+      renderFactory(snap, result);
+      renderStageCards(snap, result);
+      renderEvents(result, safeIndex);
+    }
+
+    function pausePlayback() {
+      if (uiState.timer) {
+        clearInterval(uiState.timer);
+        uiState.timer = null;
+      }
+    }
+
+    function playPlayback() {
+      if (!uiState.result) return;
+      pausePlayback();
+      const baseMs = 500;
+      const speed = parseFloat(inputs.speed.value) || 1;
+      uiState.timer = setInterval(() => {
+        if (!uiState.result || uiState.playIndex >= uiState.result.snapshots.length - 1) {
+          pausePlayback();
+          return;
+        }
+        renderSnapshot(uiState.playIndex + 1);
+      }, Math.max(40, baseMs / speed));
+    }
+
+    function runSimulation() {
+      pausePlayback();
+      const params = getParams();
+      const result = simulateDBR(params);
+      uiState.result = result;
+      renderGlobal(result);
+      renderStageTable(result);
+      renderDBRTable(result);
+      renderCharts(result);
+      $('timeline').min = 0;
+      $('timeline').max = Math.max(0, result.snapshots.length - 1);
+      renderSnapshot(0);
+    }
+
+    $('runBtn').addEventListener('click', runSimulation);
+    $('exampleBtn').addEventListener('click', () => applyScenario(inputs.example.value));
+    $('resetBtn').addEventListener('click', () => {
+      pausePlayback();
+      if (uiState.result) renderSnapshot(0);
+    });
+    $('playBtn').addEventListener('click', playPlayback);
+    $('pauseBtn').addEventListener('click', pausePlayback);
+    $('stepBtn').addEventListener('click', () => {
+      pausePlayback();
+      if (uiState.result) renderSnapshot(uiState.playIndex + 1);
+    });
+    $('timeline').addEventListener('input', (e) => {
+      pausePlayback();
+      renderSnapshot(parseInt(e.target.value, 10) || 0);
+    });
+    inputs.example.addEventListener('change', () => applyScenario(inputs.example.value));
+
+    applyScenario('correcto');
+    runSimulation();
+  </script>
+</body>
+</html>
