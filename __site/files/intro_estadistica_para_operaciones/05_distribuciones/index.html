@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Distribuciones y densidades de probabilidad</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f; --s3:#21c07a;
+      --stage1:#8ec5ff; --stage2:#78a6ff; --stage3:#21c07a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotMain{height:370px}
+    #plotTheory{height:290px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols,.triple{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+    .metric{border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;}
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .insight{border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .sample-strip{display:grid; grid-template-columns:repeat(20, minmax(0,1fr)); gap:6px; margin-top:8px}
+    .sample-chip{height:24px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:1px solid #1b2340; background:#0b1230}
+    .qa{display:grid; gap:10px}
+    .hidden{display:none !important}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Distribuciones y densidades de probabilidad</h1>
+      <div class="muted">Compará datos simulados con un modelo teórico. Cambiá la distribución, ajustá sus parámetros y observá cómo se modifica la forma, la dispersión y la probabilidad de distintos rangos de valores.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Muestra simulada</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Modelo teórico</span>
+        <span class="pill"><span class="box" style="background:rgba(239,71,111,.55)"></span> Intervalo resaltado</span>
+        <span class="pill"><span class="box" style="background:var(--accent)"></span> Probabilidad observada</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante entienda que una <strong>distribución</strong> describe cómo se reparten los valores posibles de una variable aleatoria y que, en variables continuas, la <strong>densidad</strong> no es una probabilidad puntual sino una forma de representar dónde se concentra la probabilidad.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>¿Qué cambia si modelás el tiempo entre llegadas con una exponencial, la cantidad de llegadas por hora con una Poisson o la demanda diaria con una distribución aproximadamente normal?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>Una distribución es un <strong>modelo de comportamiento posible</strong> de los datos. Algunas sirven para conteos discretos y otras para tiempos o magnitudes continuas. Cambiar la distribución o sus parámetros cambia la forma del fenómeno que estás describiendo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Marco teórico: qué significa “distribución” y qué significa “densidad”</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>1. Una distribución es una regla de reparto</strong></div>
+            <p>Cuando una variable aleatoria puede tomar distintos valores, una <strong>distribución de probabilidad</strong> indica cómo se reparte la probabilidad entre esos valores. No dice qué va a pasar en una observación particular, sino qué resultados son más o menos plausibles a largo plazo.</p>
+            <p>En gestión de operaciones esto aparece todo el tiempo: cantidad de clientes que llegan, tiempo entre llegadas, tiempo de atención, demanda de una semana o cantidad de defectos.</p>
+            <p>Por eso, elegir una distribución es proponer un <strong>modelo para la incertidumbre</strong>. No es la realidad misma, pero sí una forma útil de describirla y analizarla.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>2. Discreto versus continuo</strong></div>
+            <p>Una variable es <strong>discreta</strong> cuando toma valores separados, como 0, 1, 2 o 3 llegadas por hora. En ese caso tiene sentido hablar de una probabilidad puntual, por ejemplo:</p>
+            <p><strong>P(X = k)</strong></p>
+            <p>Una variable es <strong>continua</strong> cuando puede tomar cualquier valor dentro de un intervalo, como 3.2 minutos, 3.21 o 3.213. En ese caso no se trabaja con probabilidades puntuales, sino con una <strong>densidad</strong>, que suele escribirse como:</p>
+            <p><strong>f(x)</strong></p>
+            <p>La idea importante es esta: en una variable continua, la probabilidad de un único punto es 0. Lo que importa es la probabilidad de un <strong>rango</strong>.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>3. La densidad se interpreta por áreas</strong></div>
+            <p>En una distribución continua, la curva amarilla no muestra “la probabilidad exacta” de cada valor. Muestra la <strong>forma</strong> de la distribución. La probabilidad de que la variable caiga entre dos valores <strong>a</strong> y <strong>b</strong> se interpreta como el área bajo la curva entre esos puntos:</p>
+            <p><strong>P(a ≤ X ≤ b)</strong></p>
+            <p>No hace falta entrar en integrales para captar la intuición. Al ver la zona resaltada, lo importante es entender que <strong>más área implica más probabilidad</strong>.</p>
+            <p>En cambio, en una distribución discreta como Poisson, la lectura es distinta: cada barra representa directamente la probabilidad de un valor entero posible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Parámetros y forma</strong></div>
+            <p>Los parámetros de una distribución controlan su comportamiento. En una normal, la media mueve el centro y el desvío cambia la dispersión. En una uniforme, el mínimo y el máximo fijan un intervalo donde todos los valores tienen la misma densidad. En una triangular, la moda concentra más peso en una zona intermedia. En una exponencial, la tasa regula qué tan frecuentes son los valores pequeños. En una Poisson, el parámetro λ controla el nivel esperado de eventos por intervalo.</p>
+            <p>Por eso, cuando movés sliders no solo cambian números: cambia la <strong>historia operativa</strong> que el modelo está contando.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Media, dispersión y cola</strong></div>
+            <p>Dos distribuciones pueden tener medias parecidas y, sin embargo, comportarse de manera muy distinta. Una puede concentrar casi todo cerca del promedio, mientras otra puede generar valores extremos con más frecuencia.</p>
+            <p>Eso es clave en operaciones. No alcanza con conocer un promedio. También importa la <strong>dispersión</strong>, la asimetría y la presencia de <strong>colas largas</strong>, porque allí suelen aparecer atrasos, faltantes, esperas o picos de carga.</p>
+            <p>En la página se muestran tanto estadísticas teóricas como estadísticas de la muestra para reforzar esa comparación.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Conexión con operaciones</strong></div>
+            <p>Esta distinción ayuda a elegir modelos más razonables según el fenómeno:</p>
+            <ul>
+              <li><strong>Poisson:</strong> cantidad de eventos en un intervalo, como llegadas por hora.</li>
+              <li><strong>Exponencial:</strong> tiempo entre eventos o entre llegadas.</li>
+              <li><strong>Normal:</strong> variables continuas aproximadamente simétricas y concentradas alrededor de un centro.</li>
+              <li><strong>Uniforme:</strong> situaciones donde cualquier valor de un intervalo es igual de plausible.</li>
+              <li><strong>Triangular:</strong> útil cuando se conoce mínimo, máximo y valor más probable.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo usar la interactividad</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>1. Elegí una distribución y mové parámetros</strong></div>
+            <p>Primero seleccioná la distribución en el desplegable. Después ajustá sus parámetros con los sliders. Cada distribución habilita controles distintos.</p>
+            <ul>
+              <li>En <strong>normal</strong>, variá media y desvío.</li>
+              <li>En <strong>uniforme</strong>, mové mínimo y máximo.</li>
+              <li>En <strong>triangular</strong>, ajustá mínimo, moda y máximo.</li>
+              <li>En <strong>exponencial</strong> y <strong>Poisson</strong>, variá la tasa o media λ.</li>
+            </ul>
+            <p>Al hacerlo, observá cómo cambia la forma amarilla: centro, amplitud, asimetría y cola.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>2. Compará teoría con muestra</strong></div>
+            <p>Usá <strong>Tamaño muestra</strong> para decidir cuántos datos simulados querés generar. Luego presioná <strong>Simular muestra</strong> o <strong>Nueva muestra</strong>.</p>
+            <p>El gráfico principal compara la muestra azul con el modelo teórico amarillo. Cuando la muestra es chica, el histograma suele verse irregular. Cuando la muestra crece, la forma observada tiende a parecerse más a la teórica.</p>
+            <p>El selector <strong>Visualización</strong> te deja mirar ambos juntos, solo la muestra o solo la teoría. Eso ayuda a aislar mejor la idea que querés discutir en clase.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>3. Leé probabilidades sobre un intervalo</strong></div>
+            <p>Con <strong>Rango inferior</strong> y <strong>Rango superior</strong> marcás una zona de interés. La página resalta ese intervalo y calcula:</p>
+            <ul>
+              <li>la <strong>probabilidad teórica</strong> de caer en ese rango;</li>
+              <li>la <strong>proporción observada</strong> en la muestra simulada.</li>
+            </ul>
+            <p>En variables continuas, interpretá esa zona como un <strong>área bajo la curva</strong>. En Poisson, interpretala como la suma de las barras enteras incluidas en el rango.</p>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px; margin-top:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Qué conviene mirar</strong></div>
+            <ul>
+              <li>Si el centro de la distribución se desplaza cuando cambiás parámetros.</li>
+              <li>Si la distribución se vuelve más ancha o más concentrada.</li>
+              <li>Si aparecen colas largas o asimetrías marcadas.</li>
+              <li>Si la muestra reproduce razonablemente la teoría o todavía fluctúa mucho.</li>
+              <li>Si la probabilidad teórica del intervalo se parece o no a la proporción observada.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Sugerencias de exploración</strong></div>
+            <ul>
+              <li>Compará <strong>Poisson</strong> con <strong>exponencial</strong> y discutí cuál representa conteos y cuál tiempos.</li>
+              <li>Probá una <strong>normal</strong> con desvío chico y luego con desvío grande.</li>
+              <li>Contrastá una <strong>uniforme</strong> con una <strong>triangular</strong> usando intervalos similares.</li>
+              <li>Usá una muestra chica y después una grande para mostrar por qué la teoría no siempre se “ve” enseguida en los datos.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Distribución: <span id="distLabel">Normal</span></span>
+          <span class="pill">Tipo: <span id="typeLabel">Continua</span></span>
+          <span class="pill">Muestra: <span id="sampleLabel">600</span></span>
+          <span class="pill">Barras: <span id="binsLabel">18</span></span>
+        </div>
+        <canvas id="plotMain" aria-label="Histograma o barras de la muestra con modelo teórico"></canvas>
+        <div class="insight" style="margin-top:12px;" id="dynamicInsight">
+          La muestra azul cambia cada vez que simulás de nuevo, pero la forma amarilla del modelo teórico se mantiene. Cuando la muestra es grande, ambas suelen parecerse más.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del experimento</h3>
+        <div class="controls">
+          <div class="triple">
+            <div>
+              <label class="muted" for="dist">Distribución</label>
+              <select id="dist">
+                <option value="normal">Normal</option>
+                <option value="uniform">Uniforme</option>
+                <option value="triangular">Triangular</option>
+                <option value="exponential">Exponencial</option>
+                <option value="poisson">Poisson</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+            <div>
+              <label class="muted" for="showTheory">Visualización</label>
+              <select id="showTheory">
+                <option value="both">Muestra + teoría</option>
+                <option value="sample">Solo muestra</option>
+                <option value="theory">Solo teoría</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" id="param1Row">
+            <label for="param1" id="param1Label">Media μ</label>
+            <input id="param1" type="range" min="-5" max="20" step="0.1" value="8" />
+            <output id="param1Val">8.0</output>
+          </div>
+          <div class="row" id="param2Row">
+            <label for="param2" id="param2Label">Desvío σ</label>
+            <input id="param2" type="range" min="0.3" max="8" step="0.1" value="2.2" />
+            <output id="param2Val">2.2</output>
+          </div>
+          <div class="row hidden" id="param3Row">
+            <label for="param3" id="param3Label">Máximo</label>
+            <input id="param3" type="range" min="0" max="20" step="0.1" value="12" />
+            <output id="param3Val">12.0</output>
+          </div>
+
+          <div class="row">
+            <label for="sampleSize">Tamaño muestra</label>
+            <input id="sampleSize" type="range" min="40" max="3000" step="20" value="600" />
+            <output id="sampleSizeVal">600</output>
+          </div>
+          <div class="row">
+            <label for="bins">Barras</label>
+            <input id="bins" type="range" min="6" max="35" step="1" value="18" />
+            <output id="binsVal">18</output>
+          </div>
+          <div class="row">
+            <label for="intervalLow">Rango inferior</label>
+            <input id="intervalLow" type="range" min="0" max="95" step="1" value="30" />
+            <output id="intervalLowVal">30%</output>
+          </div>
+          <div class="row">
+            <label for="intervalHigh">Rango superior</label>
+            <input id="intervalHigh" type="range" min="5" max="100" step="1" value="70" />
+            <output id="intervalHighVal">70%</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="replaySpeed">Velocidad replay</label>
+              <select id="replaySpeed">
+                <option value="400">Lenta</option>
+                <option value="180" selected>Media</option>
+                <option value="70">Rápida</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="intervalMode">Interpretación del rango</label>
+              <select id="intervalMode">
+                <option value="relative" selected>Porcentaje de la escala</option>
+                <option value="center">Alrededor del centro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="simulateBtn" class="btn" type="button">Simular muestra</button>
+            <button id="resampleBtn" class="btn" type="button">Nueva muestra</button>
+            <button id="replayBtn" class="btn" type="button">Reproducir</button>
+          </div>
+          <div class="btnrow">
+            <button id="presetQueue" class="btn" type="button">Preset colas</button>
+            <button id="presetDemand" class="btn" type="button">Preset demanda</button>
+            <button id="presetStable" class="btn" type="button">Preset estable</button>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Media teórica</div><div class="v" id="theoryMean">–</div></div>
+          <div class="metric"><div class="k">Media muestra</div><div class="v" id="sampleMean">–</div></div>
+          <div class="metric"><div class="k">Desvío teórico</div><div class="v" id="theorySd">–</div></div>
+          <div class="metric"><div class="k">Desvío muestra</div><div class="v" id="sampleSd">–</div></div>
+          <div class="metric"><div class="k">Prob. teórica del rango</div><div class="v" id="theoryProb">–</div></div>
+          <div class="metric"><div class="k">Proporción observada</div><div class="v" id="sampleProb">–</div></div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Intervalo resaltado = <span id="intervalText">–</span></span>
+          <span class="pill">La altura no es probabilidad puntual</span>
+        </div>
+        <canvas id="plotTheory" aria-label="Representación teórica con intervalo resaltado"></canvas>
+      </div>
+
+      <div class="card span-5">
+        <div class="panel mono">
+          <strong>Lectura guiada</strong>
+          <ul>
+            <li>Las distribuciones <strong>discretas</strong> asignan probabilidad a valores separados, como 0, 1, 2, 3 llegadas.</li>
+            <li>Las distribuciones <strong>continuas</strong> describen valores de un continuo, como tiempos o longitudes.</li>
+            <li>En variables continuas, la densidad indica dónde se concentra la probabilidad; la probabilidad de un rango es un <strong>área</strong>.</li>
+            <li>La muestra simulada cambia, pero si el modelo es adecuado y la muestra es grande, la forma general suele parecerse a la teórica.</li>
+          </ul>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Muestra actual (primeros valores)</strong></div>
+          <div id="sampleStrip" class="sample-strip"></div>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Aplicación a operaciones</strong></div>
+          <p>En gestión de operaciones, distintos fenómenos requieren modelos distintos: la cantidad de llegadas por hora puede modelarse con Poisson, el tiempo entre llegadas con exponencial y una demanda agregada con una distribución aproximadamente normal.</p>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Mini actividad</strong></div>
+          <p>Probá Poisson y exponencial con parámetros altos y bajos. Después compará con una normal o una uniforme. ¿En cuáles aparecen colas largas? ¿En cuáles los valores quedan más concentrados?</p>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Preguntas y respuestas</h3>
+        <div class="qa">
+          <details>
+            <summary>¿La altura de una densidad en un punto es la probabilidad exacta de ese valor?</summary>
+            <p>No. En distribuciones continuas, la probabilidad exacta de un solo punto es cero. Lo que importa es el área bajo la curva en un intervalo.</p>
+          </details>
+          <details>
+            <summary>¿Poisson y normal sirven para lo mismo?</summary>
+            <p>No necesariamente. Poisson se usa típicamente para conteos de eventos en un intervalo. La normal es continua y suele utilizarse cuando los valores se agrupan alrededor de un centro con forma aproximadamente simétrica.</p>
+          </details>
+          <details>
+            <summary>¿Por qué una muestra simulada no coincide exactamente con la distribución teórica?</summary>
+            <p>Porque la muestra es finita y aleatoria. Al aumentar el tamaño muestral, la forma observada suele aproximarse mejor al modelo teórico.</p>
+          </details>
+          <details>
+            <summary>¿Qué diferencia hay entre una distribución uniforme y una triangular?</summary>
+            <p>En la uniforme todos los valores del intervalo tienen la misma densidad. En la triangular algunos valores intermedios son más probables que otros, porque la densidad sube hasta una moda y luego baja.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const state = {
+    dist:'normal',
+    seed:1234,
+    showTheory:'both',
+    sampleSize:600,
+    bins:18,
+    intervalLow:30,
+    intervalHigh:70,
+    intervalMode:'relative',
+    sample:[],
+    replayTimer:null,
+    replayIndex:0,
+    p1:8,
+    p2:2.2,
+    p3:12
+  };
+
+  const plotMain = $('#plotMain'); const ctxMain = plotMain.getContext('2d');
+  const plotTheory = $('#plotTheory'); const ctxTheory = plotTheory.getContext('2d');
+  const dynamicInsight = $('#dynamicInsight');
+  const sampleStrip = $('#sampleStrip');
+
+  function mulberry32(seed){ let t = seed >>> 0; return function(){
+    t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1 | t); r ^= r + Math.imul(r ^ (r>>>7), 61 | r);
+    return ((r ^ (r>>>14)) >>> 0) / 4294967296;
+  }}
+  function randn(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  const sd = arr => { if(arr.length<2) return 0; const m=mean(arr); return Math.sqrt(arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1)); };
+  const fmt = (v,d=2) => Number.isFinite(v) ? v.toFixed(d) : '–';
+  function erf(x){
+    const sign = x < 0 ? -1 : 1; x = Math.abs(x);
+    const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+    const t = 1/(1+p*x);
+    const y = 1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
+    return sign*y;
+  }
+  function normalCdf(x,mu,sig){ return 0.5*(1+erf((x-mu)/(Math.sqrt(2)*sig))); }
+  function resizeCanvasToDisplaySize(canvas,ctx){
+    const dpr=window.devicePixelRatio||1;
+    const cssW=Math.max(1,Math.round(canvas.clientWidth));
+    const cssH=Math.max(1,Math.round(canvas.clientHeight));
+    if(canvas.width!==cssW*dpr || canvas.height!==cssH*dpr){ canvas.width=cssW*dpr; canvas.height=cssH*dpr; }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function niceTicks(min,max,count=6){
+    const span=max-min; if(span<=0 || !isFinite(span)) return {start:min, step:1, count:1};
+    const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+    const nice=norm<1.5?1:norm<3?2:norm<7?5:10; const step=nice*mag;
+    const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+    return {start, step, count:Math.max(1, Math.round((end-start)/step)+1)};
+  }
+
+  function distName(){
+    return ({normal:'Normal',uniform:'Uniforme',triangular:'Triangular',exponential:'Exponencial',poisson:'Poisson'})[state.dist] || state.dist;
+  }
+  function isDiscrete(){ return state.dist==='poisson'; }
+
+  function configureParamUI(){
+    const p1Row=$('#param1Row'), p2Row=$('#param2Row'), p3Row=$('#param3Row');
+    const p1=$('#param1'), p2=$('#param2'), p3=$('#param3');
+    if(state.dist==='normal'){
+      p1Row.classList.remove('hidden'); p2Row.classList.remove('hidden'); p3Row.classList.add('hidden');
+      $('#param1Label').textContent='Media μ'; p1.min=-5; p1.max=20; p1.step=0.1;
+      $('#param2Label').textContent='Desvío σ'; p2.min=0.3; p2.max=8; p2.step=0.1;
+      if(!(state.p2>0)) state.p2=2.2;
+    } else if(state.dist==='uniform'){
+      p1Row.classList.remove('hidden'); p2Row.classList.remove('hidden'); p3Row.classList.add('hidden');
+      $('#param1Label').textContent='Mínimo a'; p1.min=-5; p1.max=18; p1.step=0.1;
+      $('#param2Label').textContent='Máximo b'; p2.min=-2; p2.max=25; p2.step=0.1;
+      if(state.p2<=state.p1+0.5) state.p2=state.p1+3;
+    } else if(state.dist==='triangular'){
+      p1Row.classList.remove('hidden'); p2Row.classList.remove('hidden'); p3Row.classList.remove('hidden');
+      $('#param1Label').textContent='Mínimo a'; p1.min=-5; p1.max=18; p1.step=0.1;
+      $('#param2Label').textContent='Moda m'; p2.min=-5; p2.max=20; p2.step=0.1;
+      $('#param3Label').textContent='Máximo b'; p3.min=-2; p3.max=25; p3.step=0.1;
+      if(state.p2<=state.p1+0.3) state.p2=state.p1+2;
+      if(state.p3<=state.p2+0.3) state.p3=state.p2+2;
+    } else if(state.dist==='exponential'){
+      p1Row.classList.remove('hidden'); p2Row.classList.add('hidden'); p3Row.classList.add('hidden');
+      $('#param1Label').textContent='Tasa λ'; p1.min=0.15; p1.max=2.5; p1.step=0.01;
+      if(!(state.p1>0)) state.p1=0.45;
+    } else if(state.dist==='poisson'){
+      p1Row.classList.remove('hidden'); p2Row.classList.add('hidden'); p3Row.classList.add('hidden');
+      $('#param1Label').textContent='Media λ'; p1.min=0.5; p1.max=20; p1.step=0.1;
+      if(!(state.p1>0)) state.p1=6;
+    }
+    syncControlValues();
+  }
+
+  function enforceParamConsistency(){
+    if(state.dist==='uniform'){
+      if(state.p2<=state.p1+0.5) state.p2=state.p1+0.5;
+    } else if(state.dist==='triangular'){
+      if(state.p2<=state.p1+0.3) state.p2=state.p1+0.3;
+      if(state.p3<=state.p2+0.3) state.p3=state.p2+0.3;
+    } else if(state.dist==='normal'){
+      state.p2=Math.max(0.3,state.p2);
+    } else if(state.dist==='exponential' || state.dist==='poisson'){
+      state.p1=Math.max(0.05,state.p1);
+    }
+  }
+
+  function sampleOne(rng){
+    if(state.dist==='uniform'){
+      const a=state.p1,b=state.p2; return a + (b-a)*rng();
+    }
+    if(state.dist==='triangular'){
+      const a=state.p1,m=state.p2,b=state.p3; const u=rng(); const c=(m-a)/(b-a);
+      return u<c ? a + Math.sqrt(u*(b-a)*(m-a)) : b - Math.sqrt((1-u)*(b-a)*(b-m));
+    }
+    if(state.dist==='normal') return state.p1 + state.p2*randn(rng);
+    if(state.dist==='exponential') return -Math.log(1-rng())/state.p1;
+    // poisson
+    const L=Math.exp(-state.p1); let p=1,k=0;
+    do { k++; p*=rng(); } while(p>L);
+    return k-1;
+  }
+
+  function simulateSample(seedOffset=0){
+    const rng = mulberry32((+state.seed||0) + seedOffset);
+    const N = Math.max(1,+state.sampleSize|0);
+    state.sample = Array.from({length:N}, ()=>sampleOne(rng));
+  }
+
+  function statsTheoretical(){
+    if(state.dist==='uniform'){
+      const a=state.p1,b=state.p2; return {mean:(a+b)/2, sd:(b-a)/Math.sqrt(12)};
+    }
+    if(state.dist==='triangular'){
+      const a=state.p1,m=state.p2,b=state.p3;
+      return {mean:(a+m+b)/3, sd:Math.sqrt((a*a+b*b+m*m-a*b-a*m-b*m)/18)};
+    }
+    if(state.dist==='normal') return {mean:state.p1, sd:state.p2};
+    if(state.dist==='exponential') return {mean:1/state.p1, sd:1/state.p1};
+    return {mean:state.p1, sd:Math.sqrt(state.p1)};
+  }
+
+  function viewBounds(){
+    if(state.dist==='uniform') return [state.p1-0.1*(state.p2-state.p1||1), state.p2+0.1*(state.p2-state.p1||1)];
+    if(state.dist==='triangular') return [state.p1-0.1*(state.p3-state.p1||1), state.p3+0.1*(state.p3-state.p1||1)];
+    if(state.dist==='normal') return [state.p1-4*state.p2, state.p1+4*state.p2];
+    if(state.dist==='exponential') return [0, -Math.log(0.003)/state.p1];
+    const hi = Math.max(8, Math.ceil(state.p1 + 5*Math.sqrt(state.p1) + 2));
+    return [0, hi];
+  }
+
+  function pdf(x){
+    if(state.dist==='uniform'){
+      const a=state.p1,b=state.p2; return (x>=a && x<=b) ? 1/(b-a) : 0;
+    }
+    if(state.dist==='triangular'){
+      const a=state.p1,m=state.p2,b=state.p3;
+      if(x<a || x>b) return 0;
+      if(x===m) return 2/(b-a);
+      return x<m ? 2*(x-a)/((b-a)*(m-a)) : 2*(b-x)/((b-a)*(b-m));
+    }
+    if(state.dist==='normal'){
+      const mu=state.p1,s=state.p2,z=(x-mu)/s; return Math.exp(-0.5*z*z)/(s*Math.sqrt(2*Math.PI));
+    }
+    if(state.dist==='exponential') return x<0 ? 0 : state.p1*Math.exp(-state.p1*x);
+    return 0;
+  }
+
+  function cdf(x){
+    if(state.dist==='uniform'){
+      const a=state.p1,b=state.p2; if(x<=a) return 0; if(x>=b) return 1; return (x-a)/(b-a);
+    }
+    if(state.dist==='triangular'){
+      const a=state.p1,m=state.p2,b=state.p3;
+      if(x<=a) return 0; if(x>=b) return 1;
+      if(x<=m) return ((x-a)*(x-a))/((b-a)*(m-a));
+      return 1 - ((b-x)*(b-x))/((b-a)*(b-m));
+    }
+    if(state.dist==='normal') return normalCdf(x,state.p1,state.p2);
+    if(state.dist==='exponential') return x<=0 ? 0 : 1-Math.exp(-state.p1*x);
+    return 0;
+  }
+
+  function poissonPmf(k){
+    if(k<0 || Math.floor(k)!==k) return 0;
+    const lam=state.p1;
+    let p=Math.exp(-lam);
+    for(let i=1;i<=k;i++) p*=lam/i;
+    return p;
+  }
+
+  function intervalBounds(){
+    const [minV,maxV]=viewBounds();
+    let loPct=Math.min(state.intervalLow,state.intervalHigh);
+    let hiPct=Math.max(state.intervalLow,state.intervalHigh);
+    if(hiPct-loPct<4) hiPct=Math.min(100,loPct+4);
+    if(state.intervalMode==='center'){
+      const center=(minV+maxV)/2;
+      const span=(maxV-minV)*(hiPct-loPct)/200;
+      let lo=center-span, hi=center+span;
+      if(isDiscrete()){ lo=Math.round(lo); hi=Math.round(hi); if(hi<=lo) hi=lo+1; }
+      return [Math.max(minV,lo), Math.min(maxV,hi)];
+    }
+    let lo=minV + (loPct/100)*(maxV-minV);
+    let hi=minV + (hiPct/100)*(maxV-minV);
+    if(isDiscrete()){ lo=Math.round(lo); hi=Math.round(hi); if(hi<=lo) hi=lo+1; }
+    return [lo,hi];
+  }
+
+  function intervalProbability(){
+    const [lo,hi]=intervalBounds();
+    if(isDiscrete()){
+      let s=0; for(let k=Math.ceil(lo); k<=Math.floor(hi); k++) s+=poissonPmf(k); return s;
+    }
+    return Math.max(0, cdf(hi)-cdf(lo));
+  }
+
+  function observedProportion(){
+    const [lo,hi]=intervalBounds();
+    if(!state.sample.length) return 0;
+    const c = state.sample.filter(x => x>=lo && x<=hi).length;
+    return c/state.sample.length;
+  }
+
+  function histogram(arr,bins,min,max){
+    const counts = Array(bins).fill(0);
+    const width = (max-min)/bins || 1;
+    for(const x of arr){
+      let k = Math.floor((x-min)/width);
+      if(k<0) k=0; if(k>=bins) k=bins-1;
+      counts[k]++;
+    }
+    return counts.map((c,i)=>({x0:min+i*width,x1:min+(i+1)*width,count:c,density:arr.length? c/(arr.length*width):0}));
+  }
+
+  function discreteBars(arr,min,max){
+    const counts = [];
+    for(let k=min;k<=max;k++) counts.push({x:k,count:0,prop:0});
+    for(const x of arr){
+      const k=Math.round(x);
+      if(k>=min && k<=max) counts[k-min].count++;
+    }
+    counts.forEach(d=> d.prop = arr.length ? d.count/arr.length : 0);
+    return counts;
+  }
+
+  function drawMain(){
+    resizeCanvasToDisplaySize(plotMain,ctxMain);
+    const W=plotMain.clientWidth, H=plotMain.clientHeight;
+    ctxMain.clearRect(0,0,W,H);
+    const m={l:54,r:16,t:16,b:40};
+    ctxMain.fillStyle='#0c1226'; roundRect(ctxMain,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxMain.fill();
+    const [minV,maxV]=viewBounds();
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const xScale = x => x0 + (x-minV)/(maxV-minV || 1)*(x1-x0);
+
+    ctxMain.strokeStyle='rgba(255,255,255,0.06)'; ctxMain.lineWidth=1;
+    const xt=niceTicks(minV,maxV,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctxMain,xScale(x),y1,xScale(x),y0); }
+
+    let ymax = 0.001;
+    const showSample = state.showTheory !== 'theory';
+    const showTheory = state.showTheory !== 'sample';
+
+    if(isDiscrete()){
+      const kMin=Math.max(0,Math.floor(minV)), kMax=Math.floor(maxV);
+      const bars = discreteBars(state.sample,kMin,kMax);
+      ymax = Math.max(ymax, ...bars.map(d=>d.prop), ...bars.map(d=>poissonPmf(d.x)))*1.15;
+      const yScale = y => y0 - (y/ymax)*(y0-y1);
+      const yt=niceTicks(0,ymax,5);
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctxMain,x0,yScale(y),x1,yScale(y)); }
+      const gap = Math.max(6,(x1-x0)/(bars.length*10));
+      bars.forEach(d=>{
+        const xc=xScale(d.x), bw=Math.max(8,(x1-x0)/(bars.length*1.35));
+        if(showSample){
+          ctxMain.fillStyle='rgba(142,197,255,0.60)';
+          const Y=yScale(d.prop); ctxMain.fillRect(xc-bw/2, Y, bw, y0-Y);
+        }
+        if(showTheory){
+          ctxMain.strokeStyle='rgba(255,209,102,0.95)'; ctxMain.lineWidth=2;
+          const Y=yScale(poissonPmf(d.x)); line(ctxMain, xc-bw/2+gap, Y, xc+bw/2-gap, Y);
+        }
+      });
+      const [lo,hi]=intervalBounds();
+      ctxMain.fillStyle='rgba(239,71,111,0.10)';
+      ctxMain.fillRect(xScale(lo-0.5), y1, xScale(hi+0.5)-xScale(lo-0.5), y0-y1);
+
+      ctxMain.strokeStyle='rgba(255,255,255,0.18)'; ctxMain.lineWidth=1.2; line(ctxMain,x0,y1,x0,y0); line(ctxMain,x0,y0,x1,y0);
+      ctxMain.fillStyle='rgba(231,236,243,0.9)'; ctxMain.font='12px system-ui,sans-serif';
+      ctxMain.textAlign='center'; ctxMain.textBaseline='top';
+      bars.forEach(d=>{ if(bars.length<=18 || d.x % Math.ceil(bars.length/14)===0) ctxMain.fillText(String(d.x), xScale(d.x), y0+6); });
+      ctxMain.textAlign='right'; ctxMain.textBaseline='middle';
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctxMain.fillText(y.toFixed(2), x0-6, yScale(y)); }
+      return;
+    }
+
+    const bins = Math.max(4,+state.bins|0);
+    const h = histogram(state.sample,bins,minV,maxV);
+    const theoryHeights = Array.from({length:220}, (_,i)=> pdf(minV + i*(maxV-minV)/219));
+    ymax = Math.max(ymax, ...h.map(d=>d.density), ...theoryHeights)*1.15;
+    const yScale = y => y0 - (y/ymax)*(y0-y1);
+    const yt=niceTicks(0,ymax,5);
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctxMain,x0,yScale(y),x1,yScale(y)); }
+
+    if(showSample){
+      ctxMain.fillStyle='rgba(142,197,255,0.55)';
+      h.forEach(d=>{ const X=xScale(d.x0)+1; const Y=yScale(d.density); const w=Math.max(2,xScale(d.x1)-xScale(d.x0)-2); ctxMain.fillRect(X,Y,w,y0-Y); });
+    }
+    const [lo,hi]=intervalBounds();
+    ctxMain.fillStyle='rgba(239,71,111,0.10)';
+    ctxMain.fillRect(xScale(lo), y1, xScale(hi)-xScale(lo), y0-y1);
+    if(showTheory){
+      ctxMain.strokeStyle='rgba(255,209,102,0.98)'; ctxMain.lineWidth=2;
+      ctxMain.beginPath();
+      for(let i=0;i<220;i++){
+        const x=minV + i*(maxV-minV)/219, X=xScale(x), Y=yScale(pdf(x));
+        if(i===0) ctxMain.moveTo(X,Y); else ctxMain.lineTo(X,Y);
+      }
+      ctxMain.stroke();
+    }
+    ctxMain.strokeStyle='rgba(255,255,255,0.18)'; ctxMain.lineWidth=1.2; line(ctxMain,x0,y1,x0,y0); line(ctxMain,x0,y0,x1,y0);
+    ctxMain.fillStyle='rgba(231,236,243,0.9)'; ctxMain.font='12px system-ui,sans-serif';
+    ctxMain.textAlign='center'; ctxMain.textBaseline='top';
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctxMain.fillText(fmtTick(x), xScale(x), y0+6); }
+    ctxMain.textAlign='right'; ctxMain.textBaseline='middle';
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctxMain.fillText(y.toFixed(2), x0-6, yScale(y)); }
+  }
+
+  function drawTheory(){
+    resizeCanvasToDisplaySize(plotTheory,ctxTheory);
+    const W=plotTheory.clientWidth, H=plotTheory.clientHeight;
+    ctxTheory.clearRect(0,0,W,H);
+    const m={l:54,r:16,t:16,b:40};
+    ctxTheory.fillStyle='#0c1226'; roundRect(ctxTheory,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxTheory.fill();
+    const [minV,maxV]=viewBounds();
+    const [lo,hi]=intervalBounds();
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const xScale = x => x0 + (x-minV)/(maxV-minV || 1)*(x1-x0);
+
+    ctxTheory.strokeStyle='rgba(255,255,255,0.06)'; ctxTheory.lineWidth=1;
+    const xt=niceTicks(minV,maxV,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctxTheory,xScale(x),y1,xScale(x),y0); }
+
+    let ymax = 0.001;
+    if(isDiscrete()){
+      const kMin=Math.max(0,Math.floor(minV)), kMax=Math.floor(maxV);
+      const vals=[]; for(let k=kMin;k<=kMax;k++) vals.push({k,p:poissonPmf(k)});
+      ymax = Math.max(ymax, ...vals.map(d=>d.p))*1.15;
+      const yScale = y => y0 - (y/ymax)*(y0-y1);
+      const yt=niceTicks(0,ymax,5);
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctxTheory,x0,yScale(y),x1,yScale(y)); }
+      const bw=Math.max(10,(x1-x0)/(vals.length*1.4));
+      vals.forEach(d=>{
+        const xc=xScale(d.k), Y=yScale(d.p);
+        ctxTheory.fillStyle = (d.k>=Math.ceil(lo) && d.k<=Math.floor(hi)) ? 'rgba(239,71,111,0.55)' : 'rgba(255,209,102,0.55)';
+        ctxTheory.fillRect(xc-bw/2, Y, bw, y0-Y);
+      });
+      ctxTheory.strokeStyle='rgba(255,255,255,0.18)'; ctxTheory.lineWidth=1.2; line(ctxTheory,x0,y1,x0,y0); line(ctxTheory,x0,y0,x1,y0);
+      ctxTheory.fillStyle='rgba(231,236,243,0.9)'; ctxTheory.font='12px system-ui,sans-serif';
+      ctxTheory.textAlign='center'; ctxTheory.textBaseline='top';
+      vals.forEach(d=>{ if(vals.length<=18 || d.k % Math.ceil(vals.length/14)===0) ctxTheory.fillText(String(d.k), xScale(d.k), y0+6); });
+      ctxTheory.textAlign='right'; ctxTheory.textBaseline='middle';
+      for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctxTheory.fillText(y.toFixed(2), x0-6, yScale(y)); }
+      return;
+    }
+
+    const heights = Array.from({length:260}, (_,i)=> pdf(minV + i*(maxV-minV)/259));
+    ymax = Math.max(ymax, ...heights)*1.15;
+    const yScale = y => y0 - (y/ymax)*(y0-y1);
+    const yt=niceTicks(0,ymax,5);
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctxTheory,x0,yScale(y),x1,yScale(y)); }
+
+    // shaded area
+    ctxTheory.beginPath();
+    ctxTheory.moveTo(xScale(lo), y0);
+    for(let i=0;i<220;i++){
+      const x = lo + i*(hi-lo)/219;
+      ctxTheory.lineTo(xScale(x), yScale(pdf(x)));
+    }
+    ctxTheory.lineTo(xScale(hi), y0); ctxTheory.closePath();
+    ctxTheory.fillStyle='rgba(239,71,111,0.42)'; ctxTheory.fill();
+
+    ctxTheory.strokeStyle='rgba(255,209,102,0.98)'; ctxTheory.lineWidth=2;
+    ctxTheory.beginPath();
+    for(let i=0;i<260;i++){
+      const x=minV + i*(maxV-minV)/259, X=xScale(x), Y=yScale(pdf(x));
+      if(i===0) ctxTheory.moveTo(X,Y); else ctxTheory.lineTo(X,Y);
+    }
+    ctxTheory.stroke();
+
+    ctxTheory.strokeStyle='rgba(255,255,255,0.18)'; ctxTheory.lineWidth=1.2; line(ctxTheory,x0,y1,x0,y0); line(ctxTheory,x0,y0,x1,y0);
+    ctxTheory.fillStyle='rgba(231,236,243,0.9)'; ctxTheory.font='12px system-ui,sans-serif';
+    ctxTheory.textAlign='center'; ctxTheory.textBaseline='top';
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctxTheory.fillText(fmtTick(x), xScale(x), y0+6); }
+    ctxTheory.textAlign='right'; ctxTheory.textBaseline='middle';
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctxTheory.fillText(y.toFixed(2), x0-6, yScale(y)); }
+  }
+
+  function updateMetrics(){
+    const t = statsTheoretical();
+    $('#theoryMean').textContent = fmt(t.mean);
+    $('#theorySd').textContent = fmt(t.sd);
+    $('#sampleMean').textContent = state.sample.length ? fmt(mean(state.sample)) : '–';
+    $('#sampleSd').textContent = state.sample.length ? fmt(sd(state.sample)) : '–';
+    $('#theoryProb').textContent = (100*intervalProbability()).toFixed(1)+'%';
+    $('#sampleProb').textContent = (100*observedProportion()).toFixed(1)+'%';
+
+    $('#distLabel').textContent = distName();
+    $('#typeLabel').textContent = isDiscrete() ? 'Discreta' : 'Continua';
+    $('#sampleLabel').textContent = state.sampleSize;
+    $('#binsLabel').textContent = isDiscrete() ? 'auto' : state.bins;
+    const [lo,hi]=intervalBounds();
+    $('#intervalText').textContent = isDiscrete() ? `${Math.ceil(lo)} a ${Math.floor(hi)}` : `${fmt(lo)} a ${fmt(hi)}`;
+
+    const obs = observedProportion(), theo = intervalProbability(), diff=Math.abs(obs-theo);
+    if(isDiscrete()){
+      dynamicInsight.textContent = 'Acá cada barra corresponde a un valor entero posible. A diferencia de las continuas, sí tiene sentido hablar de la probabilidad de valores puntuales como 0, 1, 2 o 3 llegadas.';
+    } else if(state.sampleSize<120){
+      dynamicInsight.textContent = 'Con muestras chicas, el histograma azul puede verse bastante irregular. La curva teórica amarilla ayuda a ver la forma general que el modelo propone.';
+    } else if(diff<0.03){
+      dynamicInsight.textContent = 'En este rango, la proporción observada y la probabilidad teórica quedaron bastante cerca. Eso sugiere que la muestra ya está reflejando bien el comportamiento esperado del modelo.';
+    } else if(state.dist==='exponential'){
+      dynamicInsight.textContent = 'La exponencial concentra muchos valores pequeños y deja una cola larga a la derecha. Por eso suele usarse para modelar tiempos entre eventos o tiempos de servicio con mucha asimetría.';
+    } else if(state.dist==='uniform'){
+      dynamicInsight.textContent = 'En la uniforme no hay una zona más favorecida que otra dentro del intervalo: la densidad es constante. Eso contrasta con distribuciones que concentran más masa en ciertas regiones.';
+    } else {
+      dynamicInsight.textContent = 'La muestra azul cambia cada vez que simulás de nuevo, pero la forma amarilla del modelo teórico se mantiene. Cuando la muestra es grande, ambas suelen parecerse más.';
+    }
+  }
+
+  function updateSampleStrip(){
+    sampleStrip.innerHTML='';
+    const vals = state.sample.slice(0,20);
+    vals.forEach(v => {
+      const d=document.createElement('div'); d.className='sample-chip'; d.textContent = isDiscrete() ? String(Math.round(v)) : fmtTick(v);
+      d.style.background = 'linear-gradient(180deg, rgba(142,197,255,0.22), rgba(142,197,255,0.08))';
+      d.style.borderColor = '#385a7a'; sampleStrip.appendChild(d);
+    });
+    while(sampleStrip.children.length<20){ const d=document.createElement('div'); d.className='sample-chip'; d.textContent='·'; d.style.opacity='0.35'; sampleStrip.appendChild(d); }
+  }
+
+  function fmtTick(v){ return Math.abs(v)>=100 ? v.toFixed(0) : Math.abs(v)>=10 ? v.toFixed(1) : v.toFixed(2); }
+
+  function syncControlValues(){
+    $('#seed').value = state.seed;
+    $('#showTheory').value = state.showTheory;
+    $('#sampleSize').value = state.sampleSize;
+    $('#bins').value = state.bins;
+    $('#intervalLow').value = state.intervalLow;
+    $('#intervalHigh').value = state.intervalHigh;
+    $('#intervalMode').value = state.intervalMode;
+    $('#param1').value = state.p1;
+    $('#param2').value = state.p2;
+    $('#param3').value = state.p3;
+    $('#param1Val').textContent = fmt(state.p1,2);
+    $('#param2Val').textContent = fmt(state.p2,2);
+    $('#param3Val').textContent = fmt(state.p3,2);
+    $('#sampleSizeVal').textContent = state.sampleSize;
+    $('#binsVal').textContent = state.bins;
+    $('#intervalLowVal').textContent = state.intervalLow + '%';
+    $('#intervalHighVal').textContent = state.intervalHigh + '%';
+    $('#dist').value = state.dist;
+  }
+
+  function refresh(){
+    enforceParamConsistency();
+    syncControlValues();
+    updateMetrics();
+    updateSampleStrip();
+    drawMain();
+    drawTheory();
+  }
+
+  function stopReplay(){ if(state.replayTimer){ clearInterval(state.replayTimer); state.replayTimer=null; } }
+  function runReplay(){
+    stopReplay();
+    const rngSeedBase = (+state.seed||0) + 20000;
+    const targetN = Math.max(1,+state.sampleSize|0);
+    const step = Math.max(5, Math.floor(targetN/20));
+    let n=0;
+    state.sample = [];
+    refresh();
+    state.replayTimer = setInterval(() => {
+      n += step;
+      const old = state.sampleSize;
+      state.sampleSize = Math.min(targetN,n);
+      simulateSample(rngSeedBase + n);
+      refresh();
+      state.sampleSize = old;
+      if(n>=targetN) stopReplay();
+    }, +$('#replaySpeed').value || 180);
+  }
+
+  function attachEvents(){
+    $('#dist').addEventListener('change', e => { state.dist=e.target.value; configureParamUI(); simulateSample(); refresh(); });
+    $('#seed').addEventListener('change', e => { state.seed=+e.target.value|0; simulateSample(); refresh(); });
+    $('#showTheory').addEventListener('change', e => { state.showTheory=e.target.value; refresh(); });
+    $('#sampleSize').addEventListener('input', e => { state.sampleSize=+e.target.value|0; syncControlValues(); });
+    $('#sampleSize').addEventListener('change', e => { state.sampleSize=+e.target.value|0; simulateSample(); refresh(); });
+    $('#bins').addEventListener('input', e => { state.bins=+e.target.value|0; refresh(); });
+    $('#intervalLow').addEventListener('input', e => { state.intervalLow=+e.target.value|0; refresh(); });
+    $('#intervalHigh').addEventListener('input', e => { state.intervalHigh=+e.target.value|0; refresh(); });
+    $('#intervalMode').addEventListener('change', e => { state.intervalMode=e.target.value; refresh(); });
+
+    $('#param1').addEventListener('input', e => { state.p1=+e.target.value; enforceParamConsistency(); syncControlValues(); refresh(); });
+    $('#param2').addEventListener('input', e => { state.p2=+e.target.value; enforceParamConsistency(); syncControlValues(); refresh(); });
+    $('#param3').addEventListener('input', e => { state.p3=+e.target.value; enforceParamConsistency(); syncControlValues(); refresh(); });
+
+    $('#simulateBtn').addEventListener('click', ()=>{ simulateSample(); refresh(); });
+    $('#resampleBtn').addEventListener('click', ()=>{ simulateSample(Date.now()%100000); refresh(); });
+    $('#replayBtn').addEventListener('click', ()=>{ runReplay(); });
+
+    $('#presetQueue').addEventListener('click', ()=>{
+      state.dist='exponential'; state.p1=0.45; state.sampleSize=600; state.bins=18; state.intervalLow=0; state.intervalHigh=30;
+      configureParamUI(); simulateSample(); refresh();
+    });
+    $('#presetDemand').addEventListener('click', ()=>{
+      state.dist='normal'; state.p1=100; state.p2=12; state.sampleSize=800; state.bins=20; state.intervalLow=35; state.intervalHigh=65;
+      configureParamUI(); simulateSample(); refresh();
+    });
+    $('#presetStable').addEventListener('click', ()=>{
+      state.dist='uniform'; state.p1=8; state.p2=12; state.sampleSize=500; state.bins=14; state.intervalLow=25; state.intervalHigh=75;
+      configureParamUI(); simulateSample(); refresh();
+    });
+
+    const ro1 = new ResizeObserver(()=>drawMain()); ro1.observe(plotMain);
+    const ro2 = new ResizeObserver(()=>drawTheory()); ro2.observe(plotTheory);
+  }
+
+  function init(){
+    configureParamUI();
+    simulateSample();
+    refresh();
+    attachEvents();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regresión y series de tiempo</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f; --s3:#21c07a; --s4:#b892ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotRegression{height:360px}
+    #plotSeries{height:360px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols,.triple{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .metric-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0}
+    .metric{border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;}
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .insight{border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .qa{display:grid; gap:10px}
+    .table-note{font-size:12px; color:var(--muted); margin-top:6px}
+    @media (max-width: 860px){ .metric-grid{grid-template-columns:1fr 1fr} }
+    @media (max-width: 520px){ .metric-grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Regresión y series de tiempo</h1>
+      <div class="muted">Explorá dos formas distintas de pronosticar y entender datos. La regresión relaciona una variable con otra. Las series de tiempo buscan patrones dentro del tiempo: nivel, tendencia, estacionalidad y ruido, y comparan métodos con métricas como MAE, RMSE, MAPE y error relativo.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Datos observados</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Relación verdadera / patrón generador</span>
+        <span class="pill"><span class="box" style="background:var(--s3)"></span> Ajuste / pronóstico</span>
+        <span class="pill"><span class="box" style="background:var(--s2)"></span> Zona de prueba</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante distinga entre <strong>regresión</strong> y <strong>serie de tiempo</strong>: la primera busca una relación promedio entre variables; la segunda busca patrones internos de una variable observada en el tiempo para pronosticar períodos futuros.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>Si las ventas cambian con el precio, ¿conviene mirar un gráfico precio-ventas? ¿Y si las ventas cambian semana a semana por tendencia y estacionalidad, no conviene mirar la secuencia temporal?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>Ambos enfoques ayudan a pronosticar, pero <strong>miran estructuras distintas</strong>. La regresión explica una variable con ayuda de otra. La serie de tiempo usa el propio pasado de la variable para construir un pronóstico.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Marco conceptual antes de experimentar</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>1. Regresión: explicar una variable con ayuda de otra</strong></div>
+            <p>La idea de la <strong>regresión</strong> es describir una relación promedio entre una variable explicativa y una variable respuesta. Por ejemplo: precio y demanda, publicidad y ventas, horas-personal y producción. No busca adivinar cada observación individual, sino capturar la <strong>tendencia central</strong> del vínculo.</p>
+            <p>En su forma más simple, una regresión lineal puede escribirse como:</p>
+            <p class="mono">Y = a + bX + error</p>
+            <ul>
+              <li><strong>a</strong> es el intercepto: el valor base de Y cuando X vale 0.</li>
+              <li><strong>b</strong> es la pendiente: cuánto cambia Y, en promedio, cuando X aumenta una unidad.</li>
+              <li><strong>error</strong> resume todo lo que también influye sobre Y y no está siendo explicado por X.</li>
+            </ul>
+            <p>Si la pendiente es positiva, al aumentar X la respuesta tiende a subir. Si es negativa, tiende a bajar. Pero aun con una relación real bien definida, los datos observados no quedan perfectamente alineados: aparece <strong>ruido</strong>, dispersión y variabilidad.</p>
+            <p>Por eso conviene distinguir entre:</p>
+            <ul>
+              <li><strong>relación estructural</strong>: el patrón que querríamos describir;</li>
+              <li><strong>datos observados</strong>: puntos concretos afectados por ruido;</li>
+              <li><strong>recta ajustada</strong>: la mejor síntesis lineal de esa nube de puntos.</li>
+            </ul>
+            <p>Algunas métricas útiles para leer el ajuste son:</p>
+            <ul>
+              <li><strong>correlación</strong>: indica dirección e intensidad lineal de la asociación;</li>
+              <li><strong>R²</strong>: muestra qué proporción de la variabilidad de Y queda capturada por la recta;</li>
+              <li><strong>RMSE</strong>: mide el tamaño típico del error del ajuste, en las mismas unidades de Y.</li>
+            </ul>
+            <p>Didácticamente, lo importante es no confundir <strong>tendencia</strong> con <strong>certeza</strong>. Una regresión puede ser útil aunque no pase cerca de todos los puntos.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>2. Series de tiempo: pronosticar mirando la secuencia temporal</strong></div>
+            <p>En una <strong>serie de tiempo</strong> no miramos una variable en función de otra, sino una misma variable ordenada en el tiempo: demanda semanal, ventas mensuales, ocupación diaria, pedidos por hora. Acá importa no solo cuánto vale la variable, sino también <strong>cuándo</strong> lo hace.</p>
+            <p>Una serie puede combinar varios componentes:</p>
+            <ul>
+              <li><strong>nivel</strong>: la altura general de la serie;</li>
+              <li><strong>tendencia</strong>: movimiento persistente hacia arriba o hacia abajo;</li>
+              <li><strong>estacionalidad</strong>: patrón que se repite cada cierta cantidad de períodos;</li>
+              <li><strong>ruido</strong>: fluctuación irregular que no sigue un patrón claro.</li>
+            </ul>
+            <p>Pronosticar consiste en usar la información disponible hasta hoy para estimar los valores futuros. No todos los métodos sirven igual para todos los procesos:</p>
+            <ul>
+              <li>un método <strong>ingenuo</strong> copia el último dato;</li>
+              <li>un <strong>promedio móvil</strong> suaviza ruido usando varios períodos recientes;</li>
+              <li>un método <strong>con tendencia</strong> extiende una dirección de cambio;</li>
+              <li>un método <strong>estacional ingenuo</strong> repite el patrón del último ciclo;</li>
+              <li>los suavizados como <strong>SES</strong> o <strong>Holt</strong> dan más peso a lo reciente y pueden captar estabilidad o tendencia;</li>
+              <li>un esquema tipo <strong>ARIMA simplificado</strong> intenta aprender la dinámica de cambio entre períodos.</li>
+            </ul>
+            <p>Para comparar pronósticos no alcanza con “mirar si la curva parece razonable”. Conviene separar una parte final de la serie como <strong>zona de prueba</strong> y evaluar allí el error:</p>
+            <ul>
+              <li><strong>MAE</strong>: error absoluto medio;</li>
+              <li><strong>RMSE</strong>: penaliza más fuerte los errores grandes;</li>
+              <li><strong>MAPE</strong>: error porcentual absoluto medio;</li>
+              <li><strong>error relativo medio</strong>: conserva el signo y ayuda a ver sesgo sistemático, es decir, si el método tiende a sobrepronosticar o subpronosticar.</li>
+            </ul>
+            <p>En síntesis: la regresión pregunta “¿cómo cambia Y cuando cambia X?”, mientras que la serie de tiempo pregunta “¿qué patrón temporal sigue Y y cómo podría continuar?”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo usar la interactividad</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Guía de exploración del bloque A — Regresión</strong></div>
+            <ul>
+              <li><strong>Intercepto:</strong> mueve la nube y las rectas hacia arriba o hacia abajo.</li>
+              <li><strong>Pendiente:</strong> cambia la inclinación de la relación. Probá valores positivos, negativos y cercanos a cero.</li>
+              <li><strong>Ruido:</strong> abre o cierra la dispersión de los puntos alrededor de la tendencia.</li>
+              <li><strong>Cantidad de observaciones:</strong> te deja ver cómo cambia la estabilidad del ajuste cuando hay más o menos datos.</li>
+              <li><strong>Contexto:</strong> cambia el encuadre narrativo del ejemplo, pero la lógica estadística es la misma.</li>
+              <li><strong>Mostrar relación verdadera:</strong> deja visible la regla generadora del experimento.</li>
+              <li><strong>Mostrar ajuste lineal:</strong> muestra la recta estimada a partir de los datos observados.</li>
+              <li><strong>Generar datos:</strong> vuelve a crear la nube con los parámetros actuales.</li>
+              <li><strong>Reproducir:</strong> hace aparecer gradualmente los puntos para ver cómo se forma la nube.</li>
+            </ul>
+            <p>Qué conviene mirar:</p>
+            <ul>
+              <li>si la recta ajustada conserva el signo correcto de la pendiente;</li>
+              <li>cómo cambian <strong>R²</strong>, <strong>correlación</strong> y <strong>RMSE</strong> al aumentar el ruido;</li>
+              <li>qué pasa cuando la relación es fuerte, débil o negativa;</li>
+              <li>por qué una relación real puede existir aunque ningún punto individual coincida exactamente con la recta.</li>
+            </ul>
+          </div>
+
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Guía de exploración del bloque B — Series de tiempo</strong></div>
+            <ul>
+              <li><strong>Nivel:</strong> cambia la altura promedio de la serie.</li>
+              <li><strong>Tendencia:</strong> hace que la serie suba o baje con el tiempo.</li>
+              <li><strong>Amplitud estacional:</strong> fortalece o debilita el patrón repetitivo.</li>
+              <li><strong>Ruido:</strong> vuelve la serie más irregular y dificulta el pronóstico.</li>
+              <li><strong>Largo estacional:</strong> define cada cuántos períodos se repite el ciclo.</li>
+              <li><strong>Períodos observados:</strong> modifica cuánta historia tenés disponible para aprender.</li>
+              <li><strong>Períodos de prueba:</strong> define cuántos datos futuros reservás para evaluar el pronóstico.</li>
+              <li><strong>Método de pronóstico:</strong> permite comparar enfoques sobre exactamente la misma serie.</li>
+              <li><strong>Mostrar valores reales futuros:</strong> deja ver si el pronóstico acompaña o no la realidad en la zona final.</li>
+              <li><strong>Resaltar zona de prueba:</strong> ayuda a distinguir visualmente entre aprendizaje y evaluación.</li>
+            </ul>
+            <p>Qué conviene mirar:</p>
+            <ul>
+              <li>si el método elegido acompaña bien el patrón dominante de la serie;</li>
+              <li>cómo cambian <strong>MAE</strong>, <strong>RMSE</strong>, <strong>MAPE</strong> y <strong>error relativo medio</strong> cuando modificás el proceso;</li>
+              <li>si el método tiende a quedarse corto o largo de manera sistemática;</li>
+              <li>qué método gana cuando domina la tendencia, cuándo domina la estacionalidad y cuándo la serie es más estable.</li>
+            </ul>
+            <p>Una buena secuencia de exploración es esta: primero generá una serie casi estable, luego agregá tendencia, después agregá estacionalidad y finalmente subí el ruido. En cada paso compará varios métodos y fijate cómo cambia el ranking de la tabla.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <h3>Bloque A — Regresión</h3>
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Pendiente verdadera: <span id="slopeLabel">3.0</span></span>
+          <span class="pill">Ruido: <span id="noiseLabel">8.0</span></span>
+          <span class="pill">Pendiente ajustada: <span id="fitSlopeLabel">–</span></span>
+          <span class="pill">Intercepto ajustado: <span id="fitInterceptLabel">–</span></span>
+        </div>
+        <canvas id="plotRegression" aria-label="Gráfico de dispersión y ajuste lineal"></canvas>
+        <div class="insight" style="margin-top:12px;" id="regInsight">
+          Cuando sube el ruido, la nube de puntos se dispersa y la recta ajustada sigue mostrando la tendencia promedio, pero predice con más error.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del bloque de regresión</h3>
+        <div class="controls">
+          <div class="triple">
+            <div>
+              <label class="muted" for="regSeed">Semilla</label>
+              <input id="regSeed" type="number" step="1" value="1234" />
+            </div>
+            <div>
+              <label class="muted" for="regN">Cantidad de observaciones</label>
+              <input id="regN" type="number" min="20" max="400" step="10" value="80" />
+            </div>
+            <div>
+              <label class="muted" for="xScenario">Contexto</label>
+              <select id="xScenario">
+                <option value="precio">Precio y demanda</option>
+                <option value="publicidad">Publicidad y ventas</option>
+                <option value="capacidad">Horas y producción</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="regIntercept">Intercepto</label>
+            <input id="regIntercept" type="range" min="0" max="120" step="1" value="40" />
+            <output id="regInterceptVal">40</output>
+          </div>
+          <div class="row">
+            <label for="regSlope">Pendiente</label>
+            <input id="regSlope" type="range" min="-12" max="12" step="0.5" value="3" />
+            <output id="regSlopeVal">3.0</output>
+          </div>
+          <div class="row">
+            <label for="regNoise">Ruido</label>
+            <input id="regNoise" type="range" min="0" max="30" step="1" value="8" />
+            <output id="regNoiseVal">8</output>
+          </div>
+
+          <div class="cols">
+            <label class="muted" style="display:flex; align-items:center; gap:8px;">
+              <input id="showTrueLine" type="checkbox" checked /> Mostrar relación verdadera
+            </label>
+            <label class="muted" style="display:flex; align-items:center; gap:8px;">
+              <input id="showFitLine" type="checkbox" checked /> Mostrar ajuste lineal
+            </label>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="regGenerateBtn" class="btn" type="button">Generar datos</button>
+            <button id="regReplayBtn" class="btn" type="button">Reproducir</button>
+          </div>
+          <div class="btnrow">
+            <button id="regPresetStrong" class="btn" type="button">Preset relación fuerte</button>
+            <button id="regPresetWeak" class="btn" type="button">Preset relación débil</button>
+            <button id="regPresetNegative" class="btn" type="button">Preset pendiente negativa</button>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Media de Y</div><div class="v" id="regMeanY">–</div></div>
+          <div class="metric"><div class="k">R²</div><div class="v" id="regR2">–</div></div>
+          <div class="metric"><div class="k">Correlación</div><div class="v" id="regCorr">–</div></div>
+          <div class="metric"><div class="k">RMSE del ajuste</div><div class="v" id="regRmse">–</div></div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <h3>Bloque B — Series de tiempo</h3>
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Nivel: <span id="levelLabel">80</span></span>
+          <span class="pill">Tendencia: <span id="trendLabel">1.5</span></span>
+          <span class="pill">Estacionalidad: <span id="seasonLabel">18</span></span>
+          <span class="pill">Método: <span id="methodLabel">Promedio móvil</span></span>
+        </div>
+        <canvas id="plotSeries" aria-label="Serie de tiempo y pronóstico"></canvas>
+        <div class="insight" style="margin-top:12px;" id="seriesInsight">
+          Si hay tendencia y estacionalidad, un promedio global suele quedarse corto. Los mejores métodos son los que logran capturar el patrón dominante del proceso.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del bloque de series de tiempo</h3>
+        <div class="controls">
+          <div class="triple">
+            <div>
+              <label class="muted" for="tsSeed">Semilla</label>
+              <input id="tsSeed" type="number" step="1" value="2026" />
+            </div>
+            <div>
+              <label class="muted" for="tsLength">Períodos observados</label>
+              <input id="tsLength" type="number" min="24" max="120" step="6" value="48" />
+            </div>
+            <div>
+              <label class="muted" for="tsHoldout">Períodos de prueba</label>
+              <input id="tsHoldout" type="number" min="4" max="24" step="1" value="8" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="tsLevel">Nivel</label>
+            <input id="tsLevel" type="range" min="20" max="180" step="1" value="80" />
+            <output id="tsLevelVal">80</output>
+          </div>
+          <div class="row">
+            <label for="tsTrend">Tendencia</label>
+            <input id="tsTrend" type="range" min="-4" max="6" step="0.1" value="1.5" />
+            <output id="tsTrendVal">1.5</output>
+          </div>
+          <div class="row">
+            <label for="tsSeasonAmp">Amplitud estacional</label>
+            <input id="tsSeasonAmp" type="range" min="0" max="40" step="1" value="18" />
+            <output id="tsSeasonAmpVal">18</output>
+          </div>
+          <div class="row">
+            <label for="tsNoise">Ruido</label>
+            <input id="tsNoise" type="range" min="0" max="20" step="1" value="6" />
+            <output id="tsNoiseVal">6</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="tsSeasonLen">Largo estacional</label>
+              <select id="tsSeasonLen">
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="12" selected>12</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="forecastMethod">Método de pronóstico</label>
+              <select id="forecastMethod">
+                <option value="naive">Ingenuo</option>
+                <option value="moving" selected>Promedio móvil</option>
+                <option value="drift">Con tendencia</option>
+                <option value="seasonal">Estacional ingenuo</option>
+                <option value="ses">Suavizado exponencial</option>
+                <option value="holt">Holt (doble exponencial)</option>
+                <option value="arima">ARIMA simplificado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cols">
+            <label class="muted" style="display:flex; align-items:center; gap:8px;">
+              <input id="showTrueFuture" type="checkbox" checked /> Mostrar valores reales futuros
+            </label>
+            <label class="muted" style="display:flex; align-items:center; gap:8px;">
+              <input id="showTrainZone" type="checkbox" checked /> Resaltar zona de prueba
+            </label>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="tsGenerateBtn" class="btn" type="button">Generar serie</button>
+            <button id="tsReplayBtn" class="btn" type="button">Reproducir</button>
+          </div>
+          <div class="btnrow">
+            <button id="tsPresetFlat" class="btn" type="button">Preset estable</button>
+            <button id="tsPresetTrend" class="btn" type="button">Preset con tendencia</button>
+            <button id="tsPresetSeason" class="btn" type="button">Preset estacional</button>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Media observada</div><div class="v" id="tsMean">–</div></div>
+          <div class="metric"><div class="k">Desvío estándar</div><div class="v" id="tsStd">–</div></div>
+          <div class="metric"><div class="k">MAE en prueba</div><div class="v" id="tsMae">–</div></div>
+          <div class="metric"><div class="k">RMSE en prueba</div><div class="v" id="tsRmse">–</div></div>
+          <div class="metric"><div class="k">MAPE en prueba</div><div class="v" id="tsMape">–</div></div>
+          <div class="metric"><div class="k">Error relativo medio</div><div class="v" id="tsMre">–</div></div>
+        </div>
+        <div class="panel" style="margin-top:10px;">
+          <div class="mono"><strong>Comparación de métodos sobre esta misma serie</strong></div>
+          <table id="methodComparisonTable" aria-label="Comparación de métodos de pronóstico">
+            <thead>
+              <tr><th>Método</th><th>MAE</th><th>RMSE</th><th>MAPE</th><th>Error relativo medio</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="table-note">MAPE y error relativo medio se muestran en porcentaje. Un MAPE más bajo implica, en promedio, un error porcentual menor.</div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo leer esta página</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Qué observar en regresión</strong></div>
+            <ul>
+              <li>Si la nube de puntos sigue una dirección clara, la recta captura una tendencia útil.</li>
+              <li>Más ruido implica más dispersión y menor capacidad predictiva.</li>
+              <li>Una pendiente positiva o negativa cambia el sentido de la relación.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Qué observar en series de tiempo</strong></div>
+            <ul>
+              <li>El nivel marca la altura general de la serie.</li>
+              <li>La tendencia empuja la serie hacia arriba o hacia abajo.</li>
+              <li>La estacionalidad repite un patrón; el ruido lo vuelve imperfecto.</li>
+              <li>Compará métodos: no alcanza con “que la línea se vea linda”; conviene mirar métricas de error.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Aplicación a operaciones</strong></div>
+            <ul>
+              <li>Regresión: precio-demanda, horas-personal, publicidad-ventas.</li>
+              <li>Series de tiempo: demanda semanal, pedidos mensuales, ocupación de capacidad.</li>
+              <li>Elegir mal el enfoque puede llevar a malos pronósticos y malas decisiones.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Preguntas y respuestas</h3>
+        <div class="qa">
+          <details>
+            <summary>¿Cuándo conviene pensar en regresión y cuándo en series de tiempo?</summary>
+            <p>Conviene pensar en regresión cuando querés explicar una variable a partir de otra, como ventas según precio. Conviene pensar en series de tiempo cuando la propia secuencia temporal tiene patrón, como demanda semanal con tendencia y estacionalidad.</p>
+          </details>
+          <details>
+            <summary>¿Una recta de regresión intenta pasar por todos los puntos?</summary>
+            <p>No. Intenta capturar la tendencia promedio. En presencia de ruido, siempre habrá puntos por arriba y por abajo de la recta.</p>
+          </details>
+          <details>
+            <summary>¿Por qué un método ingenuo puede fallar en una serie temporal?</summary>
+            <p>Porque copiar el último valor puede ser insuficiente si la serie tiene una tendencia marcada o una estacionalidad clara. En esos casos conviene un método que use más estructura.</p>
+          </details>
+          <details>
+            <summary>¿Cómo comparo métodos de pronóstico sobre la misma serie?</summary>
+            <p>Conviene compararlos sobre la misma zona de prueba, usando métricas comunes. En esta página podés mirar MAE y RMSE como errores absolutos, y también MAPE y error relativo medio para interpretar el error en términos porcentuales.</p>
+          </details>
+          <details>
+            <summary>¿Qué me dicen el MAPE y el error relativo medio?</summary>
+            <p>El MAPE resume el tamaño promedio del error porcentual sin importar el signo. El error relativo medio conserva el signo y ayuda a ver si el método tiende a sobrepronosticar o subpronosticar de manera sistemática.</p>
+          </details>
+          <details>
+            <summary>¿Más ruido implica peor pronóstico?</summary>
+            <p>En general sí. Más ruido hace más difícil distinguir la señal principal, tanto en una relación entre variables como en una serie temporal.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(function(){
+  const $ = (s)=>document.querySelector(s);
+  const fmt = (v,d=2)=> Number.isFinite(v) ? Number(v).toFixed(d) : '–';
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function mulberry32(seed){ let t = seed>>>0; return function(){
+    t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r);
+    return ((r ^ (r>>>14))>>>0) / 4294967296;
+  }}
+  function randn(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+  function mean(arr){ return arr.reduce((a,b)=>a+b,0)/Math.max(1,arr.length); }
+  function variance(arr){ const m=mean(arr); return mean(arr.map(x=>(x-m)*(x-m))); }
+  function std(arr){ return Math.sqrt(variance(arr)); }
+  function covariance(x,y){ const mx=mean(x), my=mean(y); let s=0; for(let i=0;i<x.length;i++) s += (x[i]-mx)*(y[i]-my); return s/Math.max(1,x.length); }
+  function correlation(x,y){ const sx=std(x), sy=std(y); if(sx<1e-12 || sy<1e-12) return 0; return covariance(x,y)/(sx*sy); }
+
+  function resizeCanvasToDisplaySize(canvas, ctx){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width));
+    const cssH = Math.max(1, Math.round(rect.height));
+    const wantW = Math.round(cssW*dpr), wantH = Math.round(cssH*dpr);
+    if (canvas.width !== wantW || canvas.height !== wantH){ canvas.width = wantW; canvas.height = wantH; }
+    ctx.setTransform(1,0,0,1,0,0);
+  }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function dot(ctx,x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+  function niceTicks(min,max,count=6){
+    const span=max-min; if(!(span>0)) return {start:min, step:1, count:1};
+    const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+    const nice = norm<1.5?1: norm<3?2: norm<7?5:10;
+    const step=nice*mag; const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+    const n=Math.max(1, Math.round((end-start)/step)+1); return {start, step, count:n};
+  }
+
+  // ---------- Estado ----------
+  const reg = {
+    intercept:40, slope:3, noise:8, n:80, seed:1234,
+    scenario:'precio', showTrue:true, showFit:true,
+    data:[], fit:{a:0,b:0,r2:0,rmse:0,corr:0}, visibleCount:null
+  };
+  const ts = {
+    level:80, trend:1.5, seasonAmp:18, noise:6, seasonLen:12, length:48, holdout:8, seed:2026,
+    method:'moving', showTrueFuture:true, showTrainZone:true,
+    series:[], forecast:[], visibleCount:null, mae:0, rmse:0, mape:0, mre:0, comparison:[]
+  };
+
+  // ---------- DOM regresión ----------
+  const regCanvas = $('#plotRegression'), regCtx = regCanvas.getContext('2d');
+  const regSeed = $('#regSeed'), regN = $('#regN'), xScenario = $('#xScenario');
+  const regIntercept = $('#regIntercept'), regSlope = $('#regSlope'), regNoise = $('#regNoise');
+  const regInterceptVal = $('#regInterceptVal'), regSlopeVal = $('#regSlopeVal'), regNoiseVal = $('#regNoiseVal');
+  const showTrueLine = $('#showTrueLine'), showFitLine = $('#showFitLine');
+  const regGenerateBtn = $('#regGenerateBtn'), regReplayBtn = $('#regReplayBtn');
+  const regPresetStrong = $('#regPresetStrong'), regPresetWeak = $('#regPresetWeak'), regPresetNegative = $('#regPresetNegative');
+  const slopeLabel = $('#slopeLabel'), noiseLabel = $('#noiseLabel'), fitSlopeLabel = $('#fitSlopeLabel'), fitInterceptLabel = $('#fitInterceptLabel');
+  const regMeanY = $('#regMeanY'), regR2 = $('#regR2'), regCorr = $('#regCorr'), regRmse = $('#regRmse'), regInsight = $('#regInsight');
+
+  // ---------- DOM series ----------
+  const tsCanvas = $('#plotSeries'), tsCtx = tsCanvas.getContext('2d');
+  const tsSeed = $('#tsSeed'), tsLength = $('#tsLength'), tsHoldout = $('#tsHoldout');
+  const tsLevel = $('#tsLevel'), tsTrend = $('#tsTrend'), tsSeasonAmp = $('#tsSeasonAmp'), tsNoise = $('#tsNoise');
+  const tsLevelVal = $('#tsLevelVal'), tsTrendVal = $('#tsTrendVal'), tsSeasonAmpVal = $('#tsSeasonAmpVal'), tsNoiseVal = $('#tsNoiseVal');
+  const tsSeasonLen = $('#tsSeasonLen'), forecastMethod = $('#forecastMethod');
+  const showTrueFuture = $('#showTrueFuture'), showTrainZone = $('#showTrainZone');
+  const tsGenerateBtn = $('#tsGenerateBtn'), tsReplayBtn = $('#tsReplayBtn');
+  const tsPresetFlat = $('#tsPresetFlat'), tsPresetTrend = $('#tsPresetTrend'), tsPresetSeason = $('#tsPresetSeason');
+  const levelLabel = $('#levelLabel'), trendLabel = $('#trendLabel'), seasonLabel = $('#seasonLabel'), methodLabel = $('#methodLabel');
+  const tsMean = $('#tsMean'), tsStd = $('#tsStd'), tsMae = $('#tsMae'), tsRmse = $('#tsRmse'), tsMape = $('#tsMape'), tsMre = $('#tsMre'), seriesInsight = $('#seriesInsight');
+  const methodComparisonTableBody = $('#methodComparisonTable tbody');
+
+  // ---------- Generación regresión ----------
+  function scenarioConfig(name){
+    if(name==='precio') return {xMin:10, xMax:100, xName:'Precio', yName:'Demanda'};
+    if(name==='publicidad') return {xMin:0, xMax:50, xName:'Publicidad', yName:'Ventas'};
+    return {xMin:10, xMax:100, xName:'Horas-personal', yName:'Producción'};
+  }
+
+  function generateRegression(){
+    reg.intercept = +regIntercept.value;
+    reg.slope = +regSlope.value;
+    reg.noise = +regNoise.value;
+    reg.n = Math.max(20, +regN.value|0);
+    reg.seed = +regSeed.value|0;
+    reg.scenario = xScenario.value;
+    reg.showTrue = showTrueLine.checked;
+    reg.showFit = showFitLine.checked;
+    const cfg = scenarioConfig(reg.scenario);
+    const rng = mulberry32(reg.seed);
+    reg.data = [];
+    for(let i=0;i<reg.n;i++){
+      const x = cfg.xMin + rng()*(cfg.xMax-cfg.xMin);
+      const yTrue = reg.intercept + reg.slope*x;
+      const y = yTrue + randn(rng)*reg.noise;
+      reg.data.push({x,y,yTrue});
+    }
+    fitRegression();
+    reg.visibleCount = reg.data.length;
+  }
+
+  function fitRegression(){
+    const xs = reg.data.map(d=>d.x), ys = reg.data.map(d=>d.y);
+    const mx = mean(xs), my = mean(ys);
+    let sxx = 0, sxy = 0;
+    for(let i=0;i<xs.length;i++){
+      sxx += (xs[i]-mx)*(xs[i]-mx);
+      sxy += (xs[i]-mx)*(ys[i]-my);
+    }
+    const b = sxx > 1e-12 ? sxy/sxx : 0;
+    const a = my - b*mx;
+    const preds = xs.map(x => a + b*x);
+    const sse = ys.reduce((acc,y,i)=> acc + (y-preds[i])*(y-preds[i]), 0);
+    const sst = ys.reduce((acc,y)=> acc + (y-my)*(y-my), 0);
+    reg.fit = {
+      a,b,
+      r2: sst>1e-12 ? 1 - sse/sst : 0,
+      rmse: Math.sqrt(sse/Math.max(1, ys.length)),
+      corr: correlation(xs, ys)
+    };
+  }
+
+  // ---------- Generación series ----------
+  function generateSeries(){
+    ts.level = +tsLevel.value;
+    ts.trend = +tsTrend.value;
+    ts.seasonAmp = +tsSeasonAmp.value;
+    ts.noise = +tsNoise.value;
+    ts.length = Math.max(24, +tsLength.value|0);
+    ts.holdout = Math.min(Math.max(4, +tsHoldout.value|0), ts.length-4);
+    ts.seed = +tsSeed.value|0;
+    ts.seasonLen = +tsSeasonLen.value|0;
+    ts.method = forecastMethod.value;
+    ts.showTrueFuture = showTrueFuture.checked;
+    ts.showTrainZone = showTrainZone.checked;
+
+    const rng = mulberry32(ts.seed);
+    ts.series = [];
+    for(let t=0;t<ts.length;t++){
+      const season = ts.seasonAmp * Math.sin((2*Math.PI*t)/ts.seasonLen);
+      const y = ts.level + ts.trend*t + season + randn(rng)*ts.noise;
+      ts.series.push(y);
+    }
+    computeForecast();
+    ts.visibleCount = ts.series.length;
+  }
+
+
+  function movingAverage(arr, w){
+    const n = arr.length; if(n===0) return 0;
+    const start = Math.max(0, n-w); return mean(arr.slice(start));
+  }
+
+  function sesFit(train, alpha=0.30){
+    let level = train[0] ?? 0;
+    for(let t=1;t<train.length;t++) level = alpha*train[t] + (1-alpha)*level;
+    return {level, alpha};
+  }
+
+  function holtFit(train, alpha=0.35, beta=0.20){
+    if(train.length===0) return {level:0, trend:0, alpha, beta};
+    if(train.length===1) return {level:train[0], trend:0, alpha, beta};
+    let level = train[0];
+    let trend = train[1] - train[0];
+    for(let t=1;t<train.length;t++){
+      const prevLevel = level;
+      level = alpha*train[t] + (1-alpha)*(level + trend);
+      trend = beta*(level - prevLevel) + (1-beta)*trend;
+    }
+    return {level, trend, alpha, beta};
+  }
+
+  function arimaSimpleFit(train){
+    const diffs = [];
+    for(let i=1;i<train.length;i++) diffs.push(train[i]-train[i-1]);
+    const phi = diffs.length>1 ? clamp(correlation(diffs.slice(0,-1), diffs.slice(1)), -0.9, 0.9) : 0;
+    const mu = diffs.length ? mean(diffs) : 0;
+    const lastDiff = diffs.length ? diffs[diffs.length-1] : 0;
+    return {phi, mu, lastDiff, lastValue: train[train.length-1] ?? 0};
+  }
+
+  function forecastWithMethod(train, h, method, seasonLen){
+    const f = [];
+    if(train.length===0) return Array.from({length:h}, ()=>0);
+
+    if(method==='naive'){
+      return Array.from({length:h}, ()=> train[train.length-1]);
+    }
+    if(method==='moving'){
+      const value = movingAverage(train, Math.min(seasonLen, Math.max(3, train.length)));
+      return Array.from({length:h}, ()=> value);
+    }
+    if(method==='drift'){
+      const slope = train.length>1 ? (train[train.length-1]-train[0])/(train.length-1) : 0;
+      for(let i=1;i<=h;i++) f.push(train[train.length-1] + slope*i);
+      return f;
+    }
+    if(method==='seasonal'){
+      for(let i=1;i<=h;i++){
+        const idx = train.length - seasonLen + ((i-1)%seasonLen);
+        f.push(idx>=0 ? train[idx] : train[train.length-1]);
+      }
+      return f;
+    }
+    if(method==='ses'){
+      const fit = sesFit(train, 0.30);
+      return Array.from({length:h}, ()=> fit.level);
+    }
+    if(method==='holt'){
+      const fit = holtFit(train, 0.35, 0.20);
+      for(let i=1;i<=h;i++) f.push(fit.level + i*fit.trend);
+      return f;
+    }
+    if(method==='arima'){
+      const fit = arimaSimpleFit(train);
+      let prev = fit.lastValue;
+      let diffPrev = fit.lastDiff;
+      for(let i=1;i<=h;i++){
+        const diffHat = fit.mu + fit.phi*(diffPrev - fit.mu);
+        const next = prev + diffHat;
+        f.push(next);
+        prev = next;
+        diffPrev = diffHat;
+      }
+      return f;
+    }
+    return Array.from({length:h}, ()=> train[train.length-1]);
+  }
+
+  function calcForecastMetrics(test, forecast){
+    const eps = 1e-9;
+    const errs = test.map((y,i)=> y - forecast[i]);
+    const mae = mean(errs.map(e=>Math.abs(e)));
+    const rmse = Math.sqrt(mean(errs.map(e=>e*e)));
+    const mape = mean(test.map((y,i)=> Math.abs((y-forecast[i])/(Math.abs(y)>eps ? y : eps))))*100;
+    const mre = mean(test.map((y,i)=> ((forecast[i]-y)/(Math.abs(y)>eps ? y : eps))))*100;
+    return {mae, rmse, mape, mre};
+  }
+
+  function computeForecast(){
+    const n = ts.series.length;
+    const h = ts.holdout;
+    const train = ts.series.slice(0, n-h);
+    const test = ts.series.slice(n-h);
+
+    ts.forecast = forecastWithMethod(train, h, ts.method, ts.seasonLen);
+    Object.assign(ts, calcForecastMetrics(test, ts.forecast));
+
+    const methods = ['naive','moving','drift','seasonal','ses','holt','arima'];
+    ts.comparison = methods.map(method => {
+      const forecast = forecastWithMethod(train, h, method, ts.seasonLen);
+      const metrics = calcForecastMetrics(test, forecast);
+      return {method, ...metrics};
+    }).sort((a,b)=> a.mape - b.mape);
+  }
+  // ---------- Dibujo regresión ----------
+  function drawRegression(){
+    resizeCanvasToDisplaySize(regCanvas, regCtx);
+    const W = regCanvas.width, H = regCanvas.height;
+    regCtx.clearRect(0,0,W,H);
+    const m = {l:64,r:18,t:20,b:46};
+    const plotW = W-m.l-m.r, plotH = H-m.t-m.b;
+    regCtx.fillStyle = '#0c1226'; roundRect(regCtx,m.l,m.t,plotW,plotH,12); regCtx.fill();
+
+    const shown = reg.data.slice(0, reg.visibleCount ?? reg.data.length);
+    const cfg = scenarioConfig(reg.scenario);
+    const xs = shown.map(d=>d.x), ys = shown.map(d=>d.y), yt = shown.map(d=>d.yTrue);
+    const xMin = cfg.xMin, xMax = cfg.xMax;
+    const yMin = Math.min(...ys, ...yt, reg.fit.a + reg.fit.b*xMin, reg.fit.a + reg.fit.b*xMax) - 10;
+    const yMax = Math.max(...ys, ...yt, reg.fit.a + reg.fit.b*xMin, reg.fit.a + reg.fit.b*xMax) + 10;
+
+    const x2px = x => m.l + (x-xMin)/(xMax-xMin)*plotW;
+    const y2px = y => m.t + (1 - (y-yMin)/(yMax-yMin))*plotH;
+
+    regCtx.strokeStyle='rgba(255,255,255,0.06)'; regCtx.lineWidth=1;
+    const xt = niceTicks(xMin,xMax,6), yticks = niceTicks(yMin,yMax,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(regCtx,x2px(x),m.t,x2px(x),m.t+plotH); }
+    for(let i=0;i<yticks.count;i++){ const y=yticks.start+i*yticks.step; line(regCtx,m.l,y2px(y),m.l+plotW,y2px(y)); }
+
+    regCtx.strokeStyle='rgba(255,255,255,0.18)'; regCtx.lineWidth=1.2;
+    line(regCtx,m.l,m.t+plotH,m.l+plotW,m.t+plotH); line(regCtx,m.l,m.t,m.l,m.t+plotH);
+
+    if(reg.showTrue){
+      regCtx.strokeStyle=getVar('--s1'); regCtx.lineWidth=2.2;
+      regCtx.beginPath();
+      regCtx.moveTo(x2px(xMin), y2px(reg.intercept + reg.slope*xMin));
+      regCtx.lineTo(x2px(xMax), y2px(reg.intercept + reg.slope*xMax));
+      regCtx.stroke();
+    }
+    if(reg.showFit){
+      regCtx.strokeStyle=getVar('--s3'); regCtx.lineWidth=2.2;
+      regCtx.beginPath();
+      regCtx.moveTo(x2px(xMin), y2px(reg.fit.a + reg.fit.b*xMin));
+      regCtx.lineTo(x2px(xMax), y2px(reg.fit.a + reg.fit.b*xMax));
+      regCtx.stroke();
+    }
+
+    regCtx.fillStyle=getVar('--s0');
+    for(const d of shown){ dot(regCtx, x2px(d.x), y2px(d.y), 4); }
+
+    regCtx.fillStyle='rgba(231,236,243,0.92)'; regCtx.font='12px system-ui,sans-serif';
+    regCtx.textAlign='center'; regCtx.textBaseline='top';
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; regCtx.fillText(fmt(x,0), x2px(x), m.t+plotH+6); }
+    regCtx.fillText(cfg.xName, m.l + plotW/2, H-20);
+    regCtx.save(); regCtx.translate(18, m.t + plotH/2); regCtx.rotate(-Math.PI/2); regCtx.fillText(cfg.yName, 0, 0); regCtx.restore();
+    regCtx.textAlign='right'; regCtx.textBaseline='middle';
+    for(let i=0;i<yticks.count;i++){ const y=yticks.start+i*yticks.step; regCtx.fillText(fmt(y,0), m.l-8, y2px(y)); }
+  }
+
+  // ---------- Dibujo series ----------
+  function drawSeries(){
+    resizeCanvasToDisplaySize(tsCanvas, tsCtx);
+    const W = tsCanvas.width, H = tsCanvas.height;
+    tsCtx.clearRect(0,0,W,H);
+    const m = {l:64,r:18,t:20,b:46};
+    const plotW = W-m.l-m.r, plotH = H-m.t-m.b;
+    tsCtx.fillStyle='#0c1226'; roundRect(tsCtx,m.l,m.t,plotW,plotH,12); tsCtx.fill();
+
+    const visibleCount = ts.visibleCount ?? ts.series.length;
+    const seriesShown = ts.series.slice(0, visibleCount);
+    const trainEnd = Math.max(0, ts.series.length - ts.holdout);
+    const combined = ts.series.concat(ts.forecast);
+    const yMin = Math.min(...combined) - 10, yMax = Math.max(...combined) + 10;
+    const xMin = 1, xMax = ts.series.length;
+    const x2px = x => m.l + (x-xMin)/(xMax-xMin)*plotW;
+    const y2px = y => m.t + (1 - (y-yMin)/(yMax-yMin))*plotH;
+
+    tsCtx.strokeStyle='rgba(255,255,255,0.06)'; tsCtx.lineWidth=1;
+    const xt = niceTicks(xMin,xMax,8), yticks = niceTicks(yMin,yMax,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(tsCtx,x2px(x),m.t,x2px(x),m.t+plotH); }
+    for(let i=0;i<yticks.count;i++){ const y=yticks.start+i*yticks.step; line(tsCtx,m.l,y2px(y),m.l+plotW,y2px(y)); }
+
+    if(ts.showTrainZone){
+      const xA = x2px(trainEnd+1), xB = x2px(ts.series.length);
+      tsCtx.fillStyle='rgba(239,71,111,.12)';
+      tsCtx.fillRect(xA, m.t, Math.max(0, xB-xA), plotH);
+    }
+
+    tsCtx.strokeStyle='rgba(255,255,255,0.18)'; tsCtx.lineWidth=1.2;
+    line(tsCtx,m.l,m.t+plotH,m.l+plotW,m.t+plotH); line(tsCtx,m.l,m.t,m.l,m.t+plotH);
+
+    // Serie observada
+    tsCtx.strokeStyle=getVar('--s0'); tsCtx.lineWidth=2.2; tsCtx.beginPath();
+    seriesShown.forEach((y,i)=>{ const X=x2px(i+1), Y=y2px(y); if(i===0) tsCtx.moveTo(X,Y); else tsCtx.lineTo(X,Y); });
+    tsCtx.stroke();
+    tsCtx.fillStyle=getVar('--s0');
+    seriesShown.forEach((y,i)=>{ dot(tsCtx, x2px(i+1), y2px(y), 3.2); });
+
+    // Pronóstico desde trainEnd+1
+    const fx0 = trainEnd;
+    tsCtx.strokeStyle=getVar('--s3'); tsCtx.lineWidth=2.2; tsCtx.beginPath();
+    tsCtx.moveTo(x2px(fx0), y2px(ts.series[fx0-1]));
+    ts.forecast.forEach((y,i)=>{ tsCtx.lineTo(x2px(trainEnd + i + 1), y2px(y)); });
+    tsCtx.stroke();
+
+    // Valores reales futuros
+    if(ts.showTrueFuture){
+      tsCtx.strokeStyle=getVar('--s2'); tsCtx.lineWidth=2; tsCtx.beginPath();
+      tsCtx.moveTo(x2px(trainEnd), y2px(ts.series[trainEnd-1]));
+      for(let i=trainEnd;i<ts.series.length;i++) tsCtx.lineTo(x2px(i+1), y2px(ts.series[i]));
+      tsCtx.stroke();
+      tsCtx.fillStyle=getVar('--s2');
+      for(let i=trainEnd;i<ts.series.length;i++) dot(tsCtx, x2px(i+1), y2px(ts.series[i]), 3.2);
+    }
+
+    tsCtx.fillStyle='rgba(231,236,243,0.92)'; tsCtx.font='12px system-ui,sans-serif';
+    tsCtx.textAlign='center'; tsCtx.textBaseline='top';
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; tsCtx.fillText(fmt(x,0), x2px(x), m.t+plotH+6); }
+    tsCtx.fillText('Período', m.l + plotW/2, H-20);
+    tsCtx.save(); tsCtx.translate(18, m.t + plotH/2); tsCtx.rotate(-Math.PI/2); tsCtx.fillText('Valor', 0, 0); tsCtx.restore();
+    tsCtx.textAlign='right'; tsCtx.textBaseline='middle';
+    for(let i=0;i<yticks.count;i++){ const y=yticks.start+i*yticks.step; tsCtx.fillText(fmt(y,0), m.l-8, y2px(y)); }
+  }
+
+  // ---------- UI ----------
+  function refreshRegression(){
+    regInterceptVal.textContent = fmt(+regIntercept.value,0);
+    regSlopeVal.textContent = fmt(+regSlope.value,1);
+    regNoiseVal.textContent = fmt(+regNoise.value,0);
+    slopeLabel.textContent = fmt(reg.slope,1);
+    noiseLabel.textContent = fmt(reg.noise,1);
+    fitSlopeLabel.textContent = fmt(reg.fit.b,2);
+    fitInterceptLabel.textContent = fmt(reg.fit.a,1);
+    regMeanY.textContent = fmt(mean(reg.data.map(d=>d.y)),1);
+    regR2.textContent = fmt(reg.fit.r2,2);
+    regCorr.textContent = fmt(reg.fit.corr,2);
+    regRmse.textContent = fmt(reg.fit.rmse,1);
+    if(Math.abs(reg.fit.corr) > 0.8){
+      regInsight.textContent = 'La relación es bastante nítida: la variable explicativa ayuda mucho a anticipar el comportamiento promedio de la variable respuesta.';
+    } else if(Math.abs(reg.fit.corr) > 0.4){
+      regInsight.textContent = 'Hay relación, pero el ruido ya introduce bastante incertidumbre. La recta resume una tendencia útil, aunque no perfecta.';
+    } else {
+      regInsight.textContent = 'La nube está muy dispersa: la relación lineal es débil y predecir solo con esta variable resulta bastante incierto.';
+    }
+    drawRegression();
+  }
+
+  function methodName(m){
+    return m==='naive' ? 'Ingenuo'
+      : m==='moving' ? 'Promedio móvil'
+      : m==='drift' ? 'Con tendencia'
+      : m==='seasonal' ? 'Estacional ingenuo'
+      : m==='ses' ? 'Suavizado exponencial'
+      : m==='holt' ? 'Holt (doble exponencial)'
+      : 'ARIMA simplificado';
+  }
+
+
+  function refreshSeries(){
+    tsLevelVal.textContent = fmt(+tsLevel.value,0);
+    tsTrendVal.textContent = fmt(+tsTrend.value,1);
+    tsSeasonAmpVal.textContent = fmt(+tsSeasonAmp.value,0);
+    tsNoiseVal.textContent = fmt(+tsNoise.value,0);
+    levelLabel.textContent = fmt(ts.level,0);
+    trendLabel.textContent = fmt(ts.trend,1);
+    seasonLabel.textContent = fmt(ts.seasonAmp,0);
+    methodLabel.textContent = methodName(ts.method);
+    tsMean.textContent = fmt(mean(ts.series),1);
+    tsStd.textContent = fmt(std(ts.series),1);
+    tsMae.textContent = fmt(ts.mae,1);
+    tsRmse.textContent = fmt(ts.rmse,1);
+    tsMape.textContent = fmt(ts.mape,1) + '%';
+    tsMre.textContent = fmt(ts.mre,1) + '%';
+
+    methodComparisonTableBody.innerHTML = ts.comparison.map((row, idx) => `
+      <tr>
+        <td>${idx===0 ? '★ ' : ''}${methodName(row.method)}</td>
+        <td>${fmt(row.mae,1)}</td>
+        <td>${fmt(row.rmse,1)}</td>
+        <td>${fmt(row.mape,1)}%</td>
+        <td>${fmt(row.mre,1)}%</td>
+      </tr>
+    `).join('');
+
+    const best = ts.comparison[0];
+    if(best){
+      if(best.method==='seasonal' && ts.seasonAmp > 8){
+        seriesInsight.textContent = `En esta serie domina un patrón repetitivo. Por eso ${methodName(best.method).toLowerCase()} queda entre los mejores según el MAPE.`;
+      } else if((best.method==='drift' || best.method==='holt' || best.method==='arima') && Math.abs(ts.trend) > 0.8){
+        seriesInsight.textContent = `La serie tiene tendencia apreciable y conviene un método que la incorpore. En esta corrida, el mejor MAPE lo obtuvo ${methodName(best.method).toLowerCase()}.`;
+      } else if(best.method==='moving' || best.method==='ses'){
+        seriesInsight.textContent = `Como la serie es relativamente estable o con ruido moderado, un método suavizador funciona bien. En esta corrida, destacó ${methodName(best.method).toLowerCase()}.`;
+      } else {
+        seriesInsight.textContent = `No existe un único método siempre mejor: en esta serie, el mejor desempeño relativo lo tuvo ${methodName(best.method).toLowerCase()}, pero eso puede cambiar cuando cambia el patrón del proceso.`;
+      }
+    } else {
+      seriesInsight.textContent = 'No existe un único método siempre mejor: depende de si el proceso tiene nivel estable, tendencia, estacionalidad o mucho ruido.';
+    }
+    drawSeries();
+  }
+  function replayRegression(){
+    reg.visibleCount = 0; drawRegression();
+    const total = reg.data.length;
+    const step = Math.max(1, Math.ceil(total/25));
+    const tick = ()=>{
+      reg.visibleCount = Math.min(total, reg.visibleCount + step);
+      drawRegression();
+      if(reg.visibleCount < total) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function replaySeries(){
+    ts.visibleCount = 0; drawSeries();
+    const total = ts.series.length;
+    const step = Math.max(1, Math.ceil(total/30));
+    const tick = ()=>{
+      ts.visibleCount = Math.min(total, ts.visibleCount + step);
+      drawSeries();
+      if(ts.visibleCount < total) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- Eventos ----------
+  regIntercept.addEventListener('input', ()=>{ generateRegression(); refreshRegression(); });
+  regSlope.addEventListener('input', ()=>{ generateRegression(); refreshRegression(); });
+  regNoise.addEventListener('input', ()=>{ generateRegression(); refreshRegression(); });
+  regSeed.addEventListener('change', ()=>{ generateRegression(); refreshRegression(); });
+  regN.addEventListener('change', ()=>{ generateRegression(); refreshRegression(); });
+  xScenario.addEventListener('change', ()=>{ generateRegression(); refreshRegression(); });
+  showTrueLine.addEventListener('change', ()=>{ reg.showTrue = showTrueLine.checked; drawRegression(); });
+  showFitLine.addEventListener('change', ()=>{ reg.showFit = showFitLine.checked; drawRegression(); });
+  regGenerateBtn.addEventListener('click', ()=>{ generateRegression(); refreshRegression(); });
+  regReplayBtn.addEventListener('click', replayRegression);
+  regPresetStrong.addEventListener('click', ()=>{ regIntercept.value=40; regSlope.value=4.5; regNoise.value=4; regN.value=80; generateRegression(); refreshRegression(); });
+  regPresetWeak.addEventListener('click', ()=>{ regIntercept.value=40; regSlope.value=2; regNoise.value=18; regN.value=80; generateRegression(); refreshRegression(); });
+  regPresetNegative.addEventListener('click', ()=>{ regIntercept.value=120; regSlope.value=-1.2; regNoise.value=8; regN.value=80; generateRegression(); refreshRegression(); });
+
+  tsLevel.addEventListener('input', ()=>{ generateSeries(); refreshSeries(); });
+  tsTrend.addEventListener('input', ()=>{ generateSeries(); refreshSeries(); });
+  tsSeasonAmp.addEventListener('input', ()=>{ generateSeries(); refreshSeries(); });
+  tsNoise.addEventListener('input', ()=>{ generateSeries(); refreshSeries(); });
+  tsSeed.addEventListener('change', ()=>{ generateSeries(); refreshSeries(); });
+  tsLength.addEventListener('change', ()=>{ generateSeries(); refreshSeries(); });
+  tsHoldout.addEventListener('change', ()=>{ generateSeries(); refreshSeries(); });
+  tsSeasonLen.addEventListener('change', ()=>{ generateSeries(); refreshSeries(); });
+  forecastMethod.addEventListener('change', ()=>{ generateSeries(); refreshSeries(); });
+  showTrueFuture.addEventListener('change', ()=>{ ts.showTrueFuture = showTrueFuture.checked; drawSeries(); });
+  showTrainZone.addEventListener('change', ()=>{ ts.showTrainZone = showTrainZone.checked; drawSeries(); });
+  tsGenerateBtn.addEventListener('click', ()=>{ generateSeries(); refreshSeries(); });
+  tsReplayBtn.addEventListener('click', replaySeries);
+  tsPresetFlat.addEventListener('click', ()=>{ tsLevel.value=90; tsTrend.value=0.1; tsSeasonAmp.value=4; tsNoise.value=4; forecastMethod.value='ses'; generateSeries(); refreshSeries(); });
+  tsPresetTrend.addEventListener('click', ()=>{ tsLevel.value=60; tsTrend.value=2.2; tsSeasonAmp.value=3; tsNoise.value=5; forecastMethod.value='holt'; generateSeries(); refreshSeries(); });
+  tsPresetSeason.addEventListener('click', ()=>{ tsLevel.value=80; tsTrend.value=0.4; tsSeasonAmp.value=20; tsNoise.value=5; forecastMethod.value='seasonal'; generateSeries(); refreshSeries(); });
+
+  const ro1 = new ResizeObserver(()=> drawRegression()); ro1.observe(regCanvas);
+  const ro2 = new ResizeObserver(()=> drawSeries()); ro2.observe(tsCanvas);
+
+  function init(){
+    generateRegression(); refreshRegression();
+    generateSeries(); refreshSeries();
+  }
+  init();
+})();
+</script>
+</body>
+</html>

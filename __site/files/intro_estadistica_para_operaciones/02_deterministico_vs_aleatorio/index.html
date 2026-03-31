@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Determinístico vs aleatorio — mismo sistema, resultados distintos</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f;
+      --stage1:#8ec5ff; --stage2:#78a6ff; --stage3:#21c07a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotSeries{height:360px}
+    #plotHist{height:260px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols,.triple{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .scenario-grid{display:grid; gap:12px; grid-template-columns:repeat(3,1fr)}
+    @media (max-width: 950px){ .scenario-grid{grid-template-columns:1fr} }
+    .scenario-card{background:#0f1428; border:1px solid var(--border); border-radius:16px; padding:14px}
+    .scenario-header{display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px}
+    .tag{display:inline-flex; align-items:center; gap:8px; font-weight:600}
+    .status{font-size:12px; color:var(--muted)}
+    .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+    .metric{border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;}
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .factory{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:10px}
+    .stage{border:1px solid #141a33; border-radius:12px; padding:10px; background:#0d1328; min-height:120px; display:grid; gap:8px;}
+    .stage h4{margin:0; font-size:14px}
+    .queuebar{height:14px; border-radius:999px; overflow:hidden; background:#091121; border:1px solid #1a2445}
+    .queuefill{height:100%; border-radius:999px}
+    .small{font-size:12px; color:var(--muted)}
+    .big{font-size:18px; font-weight:700}
+
+    .insight{border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    .nowrap{white-space:nowrap}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Determinístico vs aleatorio</h1>
+      <div class="muted">Mismo promedio, resultados distintos: una comparación experimental entre un sistema perfectamente predecible y uno que fluctúa.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Determinístico</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Aleatorio leve</span>
+        <span class="pill"><span class="box" style="background:var(--s2)"></span> Aleatorio fuerte</span>
+      </div>
+    </header>
+
+    <section class="grid">
+
+      <div class="card span-12">
+        <h2>Marco conceptual: qué significa que un sistema sea determinístico o aleatorio</h2>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px; margin-top:8px;">
+          <div class="panel" style="grid-column:span 8;">
+            <p>En gestión de operaciones muchas veces se diseña un proceso como si fuera perfectamente predecible: se supone una <strong>demanda esperada</strong>, una <strong>capacidad disponible</strong> y un flujo que debería cumplirse según plan. Ese razonamiento es útil para empezar, pero describe un <strong>sistema de diseño</strong>, no necesariamente el sistema real.</p>
+            <p>Un sistema es <strong>determinístico</strong> cuando, dadas las mismas condiciones de entrada, produce siempre el mismo resultado. En forma intuitiva: <strong>mismo input, mismo output</strong>. Si llegan 10 pedidos por período y la estación puede procesar 10, entonces el resultado queda completamente fijado. No hay sorpresa, no hay dispersión entre corridas, no hay diferencias entre repetir una vez o repetir cien veces.</p>
+            <p>Un sistema es <strong>aleatorio</strong> cuando existe variación en alguna parte del proceso. Puede variar la demanda, la capacidad efectiva, el tiempo de atención, el abastecimiento o incluso la calidad. En ese caso, aunque el contexto general sea el mismo, el resultado concreto de cada corrida puede cambiar. No significa caos total: puede existir un patrón bastante estable en promedio, pero <strong>cada realización particular</strong> puede verse distinta.</p>
+            <p>En esta página la operación es una estación de trabajo sencilla. En cada período llegan pedidos y la estación procesa hasta donde le alcanza la capacidad efectiva. Si sobra trabajo, queda pendiente como <strong>backlog</strong>. La lógica básica del sistema puede resumirse así:</p>
+            <p class="mono">Backlog nuevo = max(0, backlog anterior + llegadas − capacidad efectiva)</p>
+            <p>La fórmula no es el centro del aprendizaje, pero ayuda a ver algo importante: incluso con el mismo promedio de llegadas y de capacidad, pequeñas fluctuaciones pueden hacer que aparezca trabajo acumulado. Y una vez que ese atraso aparece, no siempre es fácil eliminarlo enseguida.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea para llevarse</strong></div>
+            <p>El promedio resume, pero no cuenta toda la historia. Dos sistemas con la misma demanda media y la misma capacidad media pueden generar experiencias operativas muy distintas si en uno hay variación y en el otro no.</p>
+            <div class="mono" style="margin-top:10px;"><strong>En símbolos, muy simple</strong></div>
+            <p>Determinístico: <span class="mono">y = f(x)</span></p>
+            <p>Aleatorio: <span class="mono">Y</span> puede tomar distintos valores aun bajo el mismo contexto general.</p>
+            <p>Para mirar muchas corridas, suele interesar:</p>
+            <p class="mono">promedio = (y₁ + y₂ + ... + y<sub>R</sub>) / R</p>
+            <p class="mono">rango = máximo − mínimo</p>
+            <p>El promedio muestra el comportamiento típico. El rango y la dispersión muestran cuánto puede apartarse una corrida de otra.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-6">
+        <h3>Por qué esto importa en operaciones</h3>
+        <ul>
+          <li><strong>Planeamiento:</strong> si trabajás solo con valores medios, podés creer que el sistema “cierra” cuando en realidad algunas corridas terminan con atraso.</li>
+          <li><strong>Capacidad:</strong> cuando la capacidad media queda muy justa respecto de la demanda media, la variación pesa mucho más.</li>
+          <li><strong>Colas y esperas:</strong> una caída momentánea de capacidad o un pico transitorio de llegadas puede generar acumulación que luego tarda en disiparse.</li>
+          <li><strong>Gestión del riesgo:</strong> no alcanza con preguntar “¿qué pasa en promedio?”. También conviene preguntar “¿qué tan distinto puede salir una corrida de otra?”.</li>
+          <li><strong>Simulación:</strong> repetir muchas corridas permite ver no solo un resultado puntual, sino también su estabilidad o inestabilidad.</li>
+        </ul>
+        <p class="small" style="margin-top:10px;">En otras palabras: lo determinístico sirve para pensar el diseño. Lo aleatorio ayuda a entender el comportamiento real.</p>
+      </div>
+
+      <div class="card span-6">
+        <h3>Cómo usar la interactividad de esta página</h3>
+        <ul>
+          <li><strong>Períodos por corrida:</strong> cambia la longitud de cada experimento. Con más períodos, tenés más tiempo para que se acumulen o se recuperen atrasos.</li>
+          <li><strong>Corridas:</strong> define cuántas repeticiones independientes se hacen por escenario. Cuantas más corridas, mejor se ve la diferencia entre un caso repetible y uno disperso.</li>
+          <li><strong>Demanda media</strong> y <strong>Capacidad media:</strong> controlan el equilibrio general del sistema. Si quedan muy parecidas, la variabilidad se nota más.</li>
+          <li><strong>Aleatoriedad leve</strong> y <strong>fuerte:</strong> regulan cuánto fluctúan los valores alrededor de su promedio en los escenarios aleatorios.</li>
+          <li><strong>Dónde hay variación:</strong> permite decidir si la incertidumbre viene de la demanda, de la capacidad o de ambas.</li>
+          <li><strong>Serie mostrada:</strong> cambia qué variable se grafica en el panel principal: backlog, salida, llegadas o capacidad.</li>
+          <li><strong>Corrida visible:</strong> selecciona qué repetición mirar en detalle, sin cambiar el experimento total.</li>
+          <li><strong>Simular:</strong> genera todas las corridas con la configuración elegida.</li>
+          <li><strong>Reproducir:</strong> muestra cómo evoluciona en el tiempo la corrida visible, período a período.</li>
+          <li><strong>Ir al final:</strong> salta directamente al último período, útil para comparar resultados acumulados.</li>
+          <li><strong>Histograma del backlog final:</strong> muestra si todas las corridas terminan igual o si hay dispersión entre repeticiones.</li>
+        </ul>
+        <div class="insight" style="margin-top:10px;">
+          <strong>Sugerencia de exploración.</strong> Probá primero un caso “justo”, con demanda media y capacidad media iguales. Después repetí sin cambiar promedios, pero aumentando la aleatoriedad. Finalmente mirá el histograma y preguntate: ¿el promedio sigue parecido, pero el peor caso empeora mucho?
+        </div>
+      </div>
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante distinga entre un sistema <strong>determinístico</strong>, donde repetir el experimento da siempre el mismo resultado, y un sistema <strong>aleatorio</strong>, donde los resultados cambian aunque el promedio esperado sea similar.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>Si una operación tiene la misma demanda media y la misma capacidad media, ¿por qué algunos días termina con atraso y otros no?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>En un sistema determinístico, mismo contexto implica mismo resultado. En uno aleatorio, el patrón general puede mantenerse, pero <strong>cada corrida concreta</strong> puede ser distinta.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <label class="pill" for="metricSelect">Serie mostrada</label>
+          <select id="metricSelect" style="max-width:320px;">
+            <option value="backlog">Backlog acumulado</option>
+            <option value="processed">Salida por período</option>
+            <option value="arrivals">Llegadas por período</option>
+            <option value="capacity">Capacidad efectiva por período</option>
+          </select>
+          <span class="pill">Corrida visible: <span id="runLabel">1</span></span>
+          <span class="pill">Período visible: <span id="stepLabel">final</span></span>
+        </div>
+        <canvas id="plotSeries" aria-label="Serie temporal de la corrida seleccionada"></canvas>
+        <div class="insight" style="margin-top:12px;" id="dynamicInsight">
+          Simulá varias corridas para comparar qué tan repetible es el resultado en cada escenario.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del experimento</h3>
+        <div class="controls">
+          <div class="row">
+            <label for="periods">Períodos por corrida</label>
+            <input id="periods" type="range" min="15" max="120" step="5" value="40" />
+            <output id="periodsVal">40</output>
+          </div>
+          <div class="row">
+            <label for="runs">Corridas</label>
+            <input id="runs" type="range" min="5" max="120" step="1" value="30" />
+            <output id="runsVal">30</output>
+          </div>
+          <div class="row">
+            <label for="meanDemand">Demanda media</label>
+            <input id="meanDemand" type="range" min="4" max="20" step="1" value="10" />
+            <output id="meanDemandVal">10</output>
+          </div>
+          <div class="row">
+            <label for="meanCapacity">Capacidad media</label>
+            <input id="meanCapacity" type="range" min="4" max="20" step="1" value="10" />
+            <output id="meanCapacityVal">10</output>
+          </div>
+          <div class="row">
+            <label for="varLow">Aleatoriedad leve</label>
+            <input id="varLow" type="range" min="0.05" max="0.30" step="0.01" value="0.12" />
+            <output id="varLowVal">12%</output>
+          </div>
+          <div class="row">
+            <label for="varHigh">Aleatoriedad fuerte</label>
+            <input id="varHigh" type="range" min="0.10" max="0.60" step="0.01" value="0.35" />
+            <output id="varHighVal">35%</output>
+          </div>
+          <div class="row">
+            <label for="selectedRun">Corrida visible</label>
+            <input id="selectedRun" type="range" min="1" max="30" step="1" value="1" />
+            <output id="selectedRunVal">1</output>
+          </div>
+
+          <div class="triple">
+            <div>
+              <label class="muted" for="sourceType">Dónde hay variación</label>
+              <select id="sourceType">
+                <option value="both" selected>Demanda y capacidad</option>
+                <option value="demand">Solo demanda</option>
+                <option value="capacity">Solo capacidad</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+            <div>
+              <label class="muted" for="replaySpeed">Velocidad replay</label>
+              <select id="replaySpeed">
+                <option value="700">Lenta</option>
+                <option value="360" selected>Media</option>
+                <option value="160">Rápida</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="simulateBtn" class="btn" type="button">Simular</button>
+            <button id="replayBtn" class="btn" type="button">Reproducir</button>
+            <button id="finalBtn" class="btn" type="button">Ir al final</button>
+          </div>
+          <div class="btnrow">
+            <button id="presetExact" class="btn" type="button">Preset justo</button>
+            <button id="presetSlack" class="btn" type="button">Preset holgado</button>
+            <button id="presetStress" class="btn" type="button">Preset tensionado</button>
+          </div>
+        </div>
+
+        <details style="margin-top:12px;">
+          <summary class="muted">Qué se está simulando acá</summary>
+          <div class="small" style="margin-top:8px;">
+            En cada período llegan pedidos a una estación de trabajo. La estación procesa hasta donde le alcanza su capacidad efectiva. Lo que no entra queda como <strong>backlog</strong>. En el escenario determinístico, llegadas y capacidad son siempre iguales a su media. En los otros escenarios, fluctúan alrededor del mismo promedio.
+          </div>
+        </details>
+      </div>
+
+      <div class="card span-7">
+        <h3>Distribución del backlog final entre corridas</h3>
+        <div class="muted" style="margin-bottom:10px;">Acá se ve si, al repetir el experimento, siempre terminás igual o no.</div>
+        <canvas id="plotHist" aria-label="Histograma del backlog final"></canvas>
+      </div>
+
+      <div class="card span-5">
+        <h3>Lectura rápida</h3>
+        <div class="panel" id="quickRead">
+          <ul>
+            <li>Si el escenario es <strong>determinístico</strong>, las corridas quedan superpuestas: no hay sorpresa entre una repetición y otra.</li>
+            <li>Si el escenario es <strong>aleatorio</strong>, aparecen diferencias entre corridas aunque no cambies los promedios.</li>
+            <li>La dispersión entre corridas muestra cuánto cambia el resultado final del sistema.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Fotografía de la corrida seleccionada</h3>
+        <div class="muted" style="margin-bottom:10px;">Las tarjetas muestran el estado del sistema en la corrida elegida y en el período visible.</div>
+        <div class="scenario-grid" id="scenarioGrid"></div>
+      </div>
+
+      <div class="card span-6">
+        <h3>Qué observar</h3>
+        <ul>
+          <li>Corré varias veces el experimento sin cambiar ningún parámetro.</li>
+          <li>Compará si el caso determinístico vuelve exactamente al mismo resultado.</li>
+          <li>Fijate cuánto se abren el mínimo y el máximo en los casos aleatorios.</li>
+          <li>Probá igualar demanda media y capacidad media: ahí la variación suele volverse mucho más visible.</li>
+        </ul>
+      </div>
+
+      <div class="card span-6">
+        <h3>Aplicación a operaciones y mini actividad</h3>
+        <ul>
+          <li><strong>Planeamiento:</strong> una hoja de cálculo determinística puede subestimar atrasos reales.</li>
+          <li><strong>Colas:</strong> aunque el promedio “cierre”, una corrida particular puede acumular trabajo.</li>
+          <li><strong>Pronósticos:</strong> el valor medio no resume toda la historia.</li>
+          <li><strong>Desafío:</strong> buscá una configuración donde el promedio del backlog sea parecido al caso determinístico, pero el peor caso sea mucho mayor.</li>
+        </ul>
+      </div>
+
+      <div class="card span-12">
+        <h3>Preguntas y respuestas</h3>
+        <details>
+          <summary>¿Determinístico significa que el sistema funciona “mejor”?</summary>
+          <div class="small" style="margin-top:8px;">No necesariamente. Significa que el resultado queda completamente definido por los datos de entrada. Puede ser bueno o malo, pero no cambia entre repeticiones si no cambian los datos.</div>
+        </details>
+        <details style="margin-top:10px;">
+          <summary>¿Aleatorio significa desorden total o falta de patrón?</summary>
+          <div class="small" style="margin-top:8px;">Tampoco. Puede haber un patrón estable en promedio, pero cada realización concreta cambia. Justamente por eso se estudian distribuciones, frecuencias y simulación.</div>
+        </details>
+        <details style="margin-top:10px;">
+          <summary>¿Por qué dos corridas aleatorias con el mismo promedio pueden terminar distinto?</summary>
+          <div class="small" style="margin-top:8px;">Porque el orden y el tamaño de las fluctuaciones importan. Un pico temprano de demanda o una caída momentánea de capacidad pueden generar atraso que luego cuesta recuperar.</div>
+        </details>
+        <details style="margin-top:10px;">
+          <summary>¿Qué me aporta ver muchas corridas en lugar de una sola?</summary>
+          <div class="small" style="margin-top:8px;">Te permite distinguir entre un resultado puntual y el comportamiento del sistema. Una sola corrida puede ser engañosa; muchas corridas muestran rango, dispersión y riesgo.</div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+<script>
+  const $ = (s)=>document.querySelector(s);
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  const scenarioDefs = [
+    {key:'det',  name:'Determinístico',    color:getVar('--s0'), variance:()=>0},
+    {key:'low',  name:'Aleatorio leve',    color:getVar('--s1'), variance:()=>+$('#varLow').value},
+    {key:'high', name:'Aleatorio fuerte',  color:getVar('--s2'), variance:()=>+$('#varHigh').value},
+  ];
+
+  const state = {
+    data: null,
+    currentStep: null,
+    replayTimer: null
+  };
+
+  const plotSeries = $('#plotSeries'), ctxS = plotSeries.getContext('2d');
+  const plotHist = $('#plotHist'), ctxH = plotHist.getContext('2d');
+
+  function mulberry32(seed){ let t = seed>>>0; return function(){ t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r); return ((r ^ (r>>>14))>>>0) / 4294967296; }; }
+  function sampleAround(mean, relVar, rng){
+    if (relVar <= 0) return mean;
+    const half = mean * relVar;
+    const value = mean + (rng()*2 - 1)*half;
+    return Math.max(0, Math.round(value));
+  }
+
+  function readControls(){
+    return {
+      periods: +$('#periods').value,
+      runs: +$('#runs').value,
+      meanDemand: +$('#meanDemand').value,
+      meanCapacity: +$('#meanCapacity').value,
+      varLow: +$('#varLow').value,
+      varHigh: +$('#varHigh').value,
+      selectedRun: +$('#selectedRun').value,
+      sourceType: $('#sourceType').value,
+      seed: +$('#seed').value || 0,
+      metric: $('#metricSelect').value
+    };
+  }
+
+  function syncOutputs(){
+    $('#periodsVal').textContent = $('#periods').value;
+    $('#runsVal').textContent = $('#runs').value;
+    $('#meanDemandVal').textContent = $('#meanDemand').value;
+    $('#meanCapacityVal').textContent = $('#meanCapacity').value;
+    $('#varLowVal').textContent = Math.round(+$('#varLow').value*100) + '%';
+    $('#varHighVal').textContent = Math.round(+$('#varHigh').value*100) + '%';
+    $('#selectedRunVal').textContent = $('#selectedRun').value;
+    $('#runLabel').textContent = $('#selectedRun').value;
+  }
+
+  function setRunSliderMax(){
+    const runs = +$('#runs').value;
+    $('#selectedRun').max = runs;
+    if (+$('#selectedRun').value > runs) $('#selectedRun').value = runs;
+    syncOutputs();
+  }
+
+  function simulate(){
+    stopReplay();
+    const cfg = readControls();
+    const scenarios = {};
+
+    scenarioDefs.forEach((sc, idx)=>{
+      const runs = [];
+      for(let r=0; r<cfg.runs; r++){
+        const rng = mulberry32((cfg.seed + 1009*idx + 9176*r + 17) >>> 0);
+        let backlog = 0, cumProcessed = 0;
+        const series = {arrivals:[], capacity:[], processed:[], backlog:[], cumProcessed:[]};
+        for(let t=0; t<cfg.periods; t++){
+          const relVar = sc.variance();
+          const demandRnd = (cfg.sourceType === 'both' || cfg.sourceType === 'demand') ? sampleAround(cfg.meanDemand, relVar, rng) : cfg.meanDemand;
+          const capRnd = (cfg.sourceType === 'both' || cfg.sourceType === 'capacity') ? sampleAround(cfg.meanCapacity, relVar, rng) : cfg.meanCapacity;
+          const arrivals = sc.key === 'det' ? cfg.meanDemand : demandRnd;
+          const capacity = sc.key === 'det' ? cfg.meanCapacity : capRnd;
+          const available = backlog + arrivals;
+          const processed = Math.min(available, capacity);
+          backlog = available - processed;
+          cumProcessed += processed;
+          series.arrivals.push(arrivals);
+          series.capacity.push(capacity);
+          series.processed.push(processed);
+          series.backlog.push(backlog);
+          series.cumProcessed.push(cumProcessed);
+        }
+        runs.push({series, finalBacklog: backlog, totalProcessed: cumProcessed});
+      }
+      scenarios[sc.key] = {
+        name: sc.name,
+        color: sc.color,
+        runs,
+        summary: summarizeRuns(runs)
+      };
+    });
+
+    state.data = {cfg, scenarios};
+    state.currentStep = cfg.periods;
+    renderAll();
+  }
+
+  function summarizeRuns(runs){
+    const finals = runs.map(r=>r.finalBacklog);
+    const totals = runs.map(r=>r.totalProcessed);
+    const mean = (arr)=> arr.reduce((a,b)=>a+b,0)/Math.max(1, arr.length);
+    return {
+      meanFinal: mean(finals),
+      minFinal: Math.min(...finals),
+      maxFinal: Math.max(...finals),
+      meanTotal: mean(totals),
+      minTotal: Math.min(...totals),
+      maxTotal: Math.max(...totals),
+      identical: finals.every(v=>v===finals[0]) && totals.every(v=>v===totals[0])
+    };
+  }
+
+  function renderAll(){
+    if(!state.data) return;
+    syncOutputs();
+    $('#stepLabel').textContent = state.currentStep >= state.data.cfg.periods ? 'final' : state.currentStep;
+    drawSeries();
+    drawHistogram();
+    renderScenarioCards();
+    updateInsight();
+  }
+
+  function selectedRunIndex(){
+    if(!state.data) return 0;
+    const wanted = Math.max(1, Math.min(state.data.cfg.runs, +$('#selectedRun').value));
+    return wanted - 1;
+  }
+
+  function drawSeries(){
+    resizeCanvasToDisplaySize(plotSeries, ctxS);
+    const W = plotSeries.clientWidth, H = plotSeries.clientHeight;
+    ctxS.clearRect(0,0,W,H);
+    const m = {l:56, r:16, t:18, b:38};
+    const x0 = m.l, x1 = W-m.r, y0 = H-m.b, y1 = m.t;
+    fillPlot(ctxS, x0, y1, x1-x0, y0-y1);
+
+    const metric = $('#metricSelect').value;
+    const stepLimit = Math.max(1, state.currentStep);
+    const runIdx = selectedRunIndex();
+    const seriesByScenario = scenarioDefs.map(sc => state.data.scenarios[sc.key].runs[runIdx].series[metric].slice(0, stepLimit));
+    let ymax = 1;
+    seriesByScenario.forEach(arr=>arr.forEach(v=>{ if(v > ymax) ymax = v; }));
+    ymax *= 1.12;
+    drawGrid(ctxS, x0, y1, x1, y0, 6, 6);
+
+    scenarioDefs.forEach(sc=>{
+      const arr = state.data.scenarios[sc.key].runs[runIdx].series[metric].slice(0, stepLimit);
+      ctxS.strokeStyle = sc.color;
+      ctxS.lineWidth = 2.4;
+      ctxS.beginPath();
+      arr.forEach((v,i)=>{
+        const X = x0 + (i/(Math.max(1,state.data.cfg.periods-1)))*(x1-x0);
+        const Y = y0 - (v/Math.max(1,ymax))*(y0-y1);
+        if(i===0) ctxS.moveTo(X,Y); else ctxS.lineTo(X,Y);
+      });
+      ctxS.stroke();
+      if(arr.length){
+        const i = arr.length-1;
+        const X = x0 + (i/(Math.max(1,state.data.cfg.periods-1)))*(x1-x0);
+        const Y = y0 - (arr[i]/Math.max(1,ymax))*(y0-y1);
+        ctxS.fillStyle = sc.color;
+        dot(ctxS, X, Y, 3.4);
+      }
+    });
+
+    drawAxes(ctxS, x0, y1, x1, y0);
+    drawYTicks(ctxS, x0, y0, y1, ymax, 6);
+    drawXTicks(ctxS, x0, x1, y0, state.data.cfg.periods, 6);
+    ctxS.fillStyle = 'rgba(231,236,243,0.9)';
+    ctxS.font = '12px system-ui, sans-serif';
+    ctxS.textAlign = 'left'; ctxS.fillText(metricLabel(metric), x0, y1-6);
+  }
+
+  function drawHistogram(){
+    resizeCanvasToDisplaySize(plotHist, ctxH);
+    const W = plotHist.clientWidth, H = plotHist.clientHeight;
+    ctxH.clearRect(0,0,W,H);
+    const m = {l:56, r:16, t:18, b:38};
+    const x0 = m.l, x1 = W-m.r, y0 = H-m.b, y1 = m.t;
+    fillPlot(ctxH, x0, y1, x1-x0, y0-y1);
+    const arrays = scenarioDefs.map(sc => state.data.scenarios[sc.key].runs.map(r=>r.finalBacklog));
+    const all = arrays.flat();
+    const maxVal = Math.max(1, ...all);
+    const bins = Math.min(12, Math.max(6, Math.round(Math.sqrt(all.length))));
+    const binW = maxVal === 0 ? 1 : maxVal / bins;
+    const counts = arrays.map(arr => {
+      const c = Array(bins).fill(0);
+      arr.forEach(v=>{
+        const idx = Math.min(bins-1, Math.floor(v / binW));
+        c[idx] += 1;
+      });
+      return c;
+    });
+    let ymax = 1;
+    counts.forEach(c=>c.forEach(v=>{ if(v>ymax) ymax=v; }));
+    ymax *= 1.15;
+
+    drawGrid(ctxH, x0, y1, x1, y0, bins, 5);
+    const groupW = (x1-x0)/bins;
+    const barW = Math.min(24, groupW/4);
+    counts.forEach((c, sIdx)=>{
+      ctxH.fillStyle = withAlpha(scenarioDefs[sIdx].color, 0.75);
+      c.forEach((v,b)=>{
+        const X = x0 + b*groupW + (sIdx+0.5)*barW;
+        const Y = y0 - (v/Math.max(1,ymax))*(y0-y1);
+        ctxH.fillRect(X, Y, barW*0.9, y0-Y);
+      });
+    });
+
+    drawAxes(ctxH, x0, y1, x1, y0);
+    ctxH.fillStyle = 'rgba(231,236,243,0.9)';
+    ctxH.font = '12px system-ui, sans-serif';
+    ctxH.textAlign = 'right'; ctxH.textBaseline = 'middle';
+    for(let k=0;k<=5;k++){
+      const val = Math.round(k*ymax/5);
+      const y = y0 - k*(y0-y1)/5;
+      ctxH.fillText(String(val), x0-6, y);
+    }
+    ctxH.textAlign = 'center'; ctxH.textBaseline = 'top';
+    for(let b=0;b<bins;b++){
+      const center = x0 + b*groupW + groupW/2;
+      const label = Math.round(b*binW) + '–' + Math.round((b+1)*binW);
+      ctxH.fillText(label, center, y0+6);
+    }
+  }
+
+  function renderScenarioCards(){
+    const grid = $('#scenarioGrid');
+    grid.innerHTML = '';
+    const runIdx = selectedRunIndex();
+    const t = Math.max(1, state.currentStep) - 1;
+
+    scenarioDefs.forEach((sc, idx)=>{
+      const scenario = state.data.scenarios[sc.key];
+      const run = scenario.runs[runIdx];
+      const backlogNow = run.series.backlog[Math.max(0,t)] ?? 0;
+      const arrivalsNow = run.series.arrivals[Math.max(0,t)] ?? 0;
+      const capacityNow = run.series.capacity[Math.max(0,t)] ?? 0;
+      const processedNow = run.series.processed[Math.max(0,t)] ?? 0;
+      const cumNow = run.series.cumProcessed[Math.max(0,t)] ?? 0;
+      const maxBack = Math.max(1, ...run.series.backlog, ...scenario.runs.map(r=>Math.max(...r.series.backlog)));
+
+      const card = document.createElement('div');
+      card.className = 'scenario-card';
+      card.innerHTML = `
+        <div class="scenario-header">
+          <div class="tag"><span class="box" style="background:${sc.color}"></span>${scenario.name}</div>
+          <div class="status">${scenario.summary.identical ? 'todas las corridas coinciden' : 'las corridas cambian entre sí'}</div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Backlog final promedio</div><div class="v">${fmt1(scenario.summary.meanFinal)}</div></div>
+          <div class="metric"><div class="k">Rango backlog final</div><div class="v">${scenario.summary.minFinal}–${scenario.summary.maxFinal}</div></div>
+          <div class="metric"><div class="k">Salida total promedio</div><div class="v">${fmt1(scenario.summary.meanTotal)}</div></div>
+          <div class="metric"><div class="k">Corrida visible</div><div class="v">${runIdx+1}</div></div>
+        </div>
+        <div class="factory">
+          <div class="stage">
+            <h4>Llegadas del período</h4>
+            <div class="big">${arrivalsNow}</div>
+            <div class="small">Pedidos que intentan entrar al sistema.</div>
+          </div>
+          <div class="stage">
+            <h4>Capacidad efectiva</h4>
+            <div class="big">${capacityNow}</div>
+            <div class="small">Trabajo que podría procesar este período.</div>
+          </div>
+          <div class="stage">
+            <h4>Salida del período</h4>
+            <div class="big">${processedNow}</div>
+            <div class="small">Lo efectivamente procesado en este paso.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="small">Backlog visible</div>
+          <div class="queuebar"><div class="queuefill" style="width:${Math.min(100, backlogNow/maxBack*100)}%; background:${sc.color};"></div></div>
+          <div class="small" style="margin-top:6px;">Backlog acumulado: <strong>${backlogNow}</strong> &nbsp; | &nbsp; Salida acumulada: <strong>${cumNow}</strong></div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function updateInsight(){
+    const det = state.data.scenarios.det.summary;
+    const low = state.data.scenarios.low.summary;
+    const high = state.data.scenarios.high.summary;
+    const backlogMsg = high.maxFinal > det.maxFinal ? 'En el escenario aleatorio fuerte aparecieron cierres mucho peores que en el determinístico.' : 'La variabilidad todavía no generó cierres mucho peores que el caso determinístico.';
+    const repeatMsg = det.identical ? 'El caso determinístico repite exactamente el mismo resultado en cada corrida.' : 'El caso determinístico no quedó idéntico, lo cual señalaría un error en el experimento.';
+    const spreadLow = low.maxFinal - low.minFinal;
+    const spreadHigh = high.maxFinal - high.minFinal;
+    $('#dynamicInsight').innerHTML = `<strong>Lectura automática.</strong> ${repeatMsg} En cambio, el escenario aleatorio leve terminó con un rango de backlog final de <strong>${spreadLow}</strong>, y el aleatorio fuerte con un rango de <strong>${spreadHigh}</strong>. ${backlogMsg}`;
+  }
+
+  function startReplay(){
+    if(!state.data) simulate();
+    stopReplay();
+    state.currentStep = 1;
+    renderAll();
+    const delay = +$('#replaySpeed').value;
+    state.replayTimer = setInterval(()=>{
+      state.currentStep += 1;
+      if(state.currentStep > state.data.cfg.periods){
+        stopReplay();
+        state.currentStep = state.data.cfg.periods;
+      }
+      renderAll();
+    }, delay);
+  }
+
+  function stopReplay(){
+    if(state.replayTimer){ clearInterval(state.replayTimer); state.replayTimer = null; }
+  }
+
+  function goFinal(){
+    stopReplay();
+    if(!state.data) simulate();
+    state.currentStep = state.data.cfg.periods;
+    renderAll();
+  }
+
+  function metricLabel(key){
+    return ({backlog:'Backlog', processed:'Salida por período', arrivals:'Llegadas por período', capacity:'Capacidad efectiva'})[key] || key;
+  }
+
+  function fmt1(v){ return Number(v).toFixed(1); }
+  function withAlpha(hex, a){
+    if(hex.startsWith('rgba')) return hex;
+    if(!hex.startsWith('#')) return hex;
+    const h = hex.slice(1);
+    const full = h.length===3 ? h.split('').map(x=>x+x).join('') : h;
+    const r = parseInt(full.slice(0,2),16), g = parseInt(full.slice(2,4),16), b = parseInt(full.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function resizeCanvasToDisplaySize(canvas, ctx){
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(1, Math.round(canvas.clientWidth));
+    const cssH = Math.max(1, Math.round(canvas.clientHeight));
+    if(canvas.width !== cssW*dpr || canvas.height !== cssH*dpr){
+      canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+    }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function fillPlot(ctx, x,y,w,h){ ctx.fillStyle='#0c1226'; roundRect(ctx,x,y,w,h,10); ctx.fill(); }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function dot(ctx,x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+  function drawGrid(ctx, x0, y1, x1, y0, nx, ny){
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let i=0;i<=nx;i++){ const x = x0 + i*(x1-x0)/nx; line(ctx,x,y1,x,y0); }
+    for(let j=0;j<=ny;j++){ const y = y0 - j*(y0-y1)/ny; line(ctx,x0,y,x1,y); }
+  }
+  function drawAxes(ctx, x0, y1, x1, y0){ ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.2; line(ctx,x0,y1,x0,y0); line(ctx,x0,y1,x1,y1); }
+  function drawYTicks(ctx, x0, y0, y1, ymax, n){
+    ctx.fillStyle='rgba(231,236,243,0.9)'; ctx.font='12px system-ui,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(let k=0;k<=n;k++){
+      const val = Math.round(k*ymax/n);
+      const y = y0 - k*(y0-y1)/n;
+      ctx.fillText(String(val), x0-6, y);
+    }
+  }
+  function drawXTicks(ctx, x0, x1, y0, periods, n){
+    ctx.fillStyle='rgba(231,236,243,0.9)'; ctx.font='12px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+    for(let k=0;k<=n;k++){
+      const val = Math.round(k*(periods-1)/n)+1;
+      const x = x0 + k*(x1-x0)/n;
+      ctx.fillText(String(val), x, y0+6);
+    }
+  }
+
+  const roS = new ResizeObserver(()=>{ if(state.data) drawSeries(); });
+  const roH = new ResizeObserver(()=>{ if(state.data) drawHistogram(); });
+
+  function bindEvents(){
+    ['periods','runs','meanDemand','meanCapacity','varLow','varHigh','selectedRun'].forEach(id=> $("#"+id).addEventListener('input', ()=>{
+      if(id === 'runs') setRunSliderMax();
+      syncOutputs();
+      if(state.data && (id === 'selectedRun')) renderAll();
+    }));
+    $('#metricSelect').addEventListener('change', ()=>{ if(state.data) drawSeries(); });
+    $('#simulateBtn').addEventListener('click', simulate);
+    $('#replayBtn').addEventListener('click', startReplay);
+    $('#finalBtn').addEventListener('click', goFinal);
+
+    $('#presetExact').addEventListener('click', ()=>{
+      $('#meanDemand').value = 10; $('#meanCapacity').value = 10; $('#varLow').value = 0.12; $('#varHigh').value = 0.35; $('#periods').value = 40; $('#runs').value = 30;
+      setRunSliderMax(); syncOutputs(); simulate();
+    });
+    $('#presetSlack').addEventListener('click', ()=>{
+      $('#meanDemand').value = 9; $('#meanCapacity').value = 12; $('#varLow').value = 0.10; $('#varHigh').value = 0.22; $('#periods').value = 40; $('#runs').value = 30;
+      setRunSliderMax(); syncOutputs(); simulate();
+    });
+    $('#presetStress').addEventListener('click', ()=>{
+      $('#meanDemand').value = 11; $('#meanCapacity').value = 10; $('#varLow').value = 0.15; $('#varHigh').value = 0.45; $('#periods').value = 50; $('#runs').value = 40;
+      setRunSliderMax(); syncOutputs(); simulate();
+    });
+  }
+
+  function init(){
+    syncOutputs();
+    setRunSliderMax();
+    bindEvents();
+    roS.observe(plotSeries);
+    roH.observe(plotHist);
+    simulate();
+  }
+  init();
+</script>
+</body>
+</html>

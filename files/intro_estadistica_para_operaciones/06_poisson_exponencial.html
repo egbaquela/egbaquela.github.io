@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poisson y exponencial</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f; --s3:#21c07a;
+      --stage1:#8ec5ff; --stage2:#78a6ff; --stage3:#21c07a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotMain{height:380px}
+    #plotTheory{height:300px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols,.triple{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+    .metric{border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;}
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .insight{border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .sample-strip{display:grid; grid-template-columns:repeat(20, minmax(0,1fr)); gap:6px; margin-top:8px}
+    .sample-chip{height:24px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:1px solid #1b2340; background:#0b1230}
+    .qa{display:grid; gap:10px}
+    .hidden{display:none !important}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Poisson y exponencial</h1>
+      <div class="muted">Contá eventos por intervalo y medí tiempos entre eventos. Ajustá la tasa media, simulá un proceso de llegadas y observá cómo la distribución de Poisson y la exponencial describen dos miradas del mismo fenómeno.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Conteos observados por intervalo</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Modelo teórico</span>
+        <span class="pill"><span class="box" style="background:var(--s3)"></span> Llegadas en la línea de tiempo</span>
+        <span class="pill"><span class="box" style="background:rgba(239,71,111,.55)"></span> Umbral / evento resaltado</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante entienda que la <strong>Poisson</strong> modela cuántos eventos ocurren en un intervalo y la <strong>exponencial</strong> modela cuánto tiempo transcurre entre eventos, y que ambas aparecen naturalmente cuando analizamos llegadas aleatorias en colas y operaciones.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>Si en promedio llegan 4 clientes por hora, ¿cómo describís cuántos llegan en una hora? ¿Y cómo describís el tiempo que pasa hasta el próximo cliente?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>Es el <strong>mismo proceso</strong> visto de dos maneras: una por <strong>conteos</strong> (Poisson) y otra por <strong>esperas entre eventos</strong> (exponencial). Cambiar la tasa media cambia ambas descripciones al mismo tiempo.</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="card span-12">
+        <h3>Marco teórico breve: dos formas de mirar el mismo proceso</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>1. ¿Qué describe la distribución de Poisson?</strong></div>
+            <p>La distribución de <strong>Poisson</strong> se usa cuando queremos modelar <strong>cuántos eventos</strong> ocurren en un intervalo fijo de tiempo o espacio. Por ejemplo: cuántos clientes llegan en una hora, cuántas llamadas entran en diez minutos o cuántas fallas aparecen en un turno.</p>
+            <p>Si la tasa media de llegadas es <strong>λ</strong> eventos por unidad de tiempo y observamos un intervalo de longitud <strong>Δt</strong>, entonces la cantidad esperada de eventos en ese intervalo es:</p>
+            <p class="mono"><strong>μ = λΔt</strong></p>
+            <p>Ese valor <strong>μ</strong> es el centro de la Poisson. Si aumentás la tasa <strong>λ</strong>, esperás más eventos por unidad de tiempo. Si mantenés fija la tasa pero hacés más largo el intervalo <strong>Δt</strong>, también esperás más eventos, porque estás dejando pasar más tiempo para que ocurran llegadas.</p>
+            <p>En términos operativos, Poisson sirve para hablar de <strong>carga de trabajo</strong>: cuántas cosas llegan a una caja, a un servidor, a una máquina o a un centro de atención durante un período.</p>
+          </div>
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>2. ¿Qué describe la distribución exponencial?</strong></div>
+            <p>La distribución <strong>exponencial</strong> describe <strong>cuánto tiempo transcurre entre dos eventos consecutivos</strong>. Si las llegadas ocurren con una tasa media constante <strong>λ</strong>, entonces el tiempo hasta la próxima llegada tiene media:</p>
+            <p class="mono"><strong>E[T] = 1/λ</strong></p>
+            <p>Eso significa que, cuando <strong>λ</strong> sube, el tiempo esperado entre eventos baja. En palabras simples: <strong>si llegan más eventos por unidad de tiempo, la espera entre uno y otro se acorta</strong>.</p>
+            <p>La exponencial suele verse “alta” cerca de cero y con una cola hacia la derecha. La interpretación es intuitiva: los tiempos cortos entre eventos son relativamente frecuentes, mientras que los tiempos muy largos pueden ocurrir, pero cada vez son menos probables.</p>
+            <p>En operaciones, esto es útil para pensar <strong>tiempos entre clientes</strong>, <strong>tiempos entre llamadas</strong> o <strong>tiempos entre fallas</strong>.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>3. La conexión entre ambas</strong></div>
+            <p>Poisson y exponencial no son temas separados. Son <strong>dos miradas del mismo mecanismo de llegadas aleatorias</strong>:</p>
+            <ul>
+              <li><strong>Poisson:</strong> cuenta cuántos eventos hay en un intervalo.</li>
+              <li><strong>Exponencial:</strong> mide cuánto tardamos en ver el próximo evento.</li>
+            </ul>
+            <p>Por eso, cuando cambiás <strong>λ</strong>, cambian al mismo tiempo los conteos y las esperas.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>4. Qué conviene interpretar acá</strong></div>
+            <p>No hace falta memorizar fórmulas complicadas para empezar. Lo importante es captar estas ideas:</p>
+            <ul>
+              <li>más <strong>λ</strong> implica más llegadas;</li>
+              <li>más <strong>λ</strong> implica menos espera entre llegadas;</li>
+              <li>más <strong>Δt</strong> implica más eventos esperados por intervalo;</li>
+              <li>una muestra concreta puede no coincidir exactamente con la teoría, pero debería acercarse cuando observamos más datos.</li>
+            </ul>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>5. Relación con teoría de colas</strong></div>
+            <p>En muchos modelos introductorios de colas, las llegadas se representan con este esquema: <strong>conteos Poisson + tiempos entre llegadas exponenciales</strong>. Eso permite estudiar congestión, tiempos de espera, utilización y capacidad.</p>
+            <p>Esta web no resuelve todavía toda una cola. Lo que hace es construir la base probabilística para entender de dónde salen esos modelos.</p>
+          </div>
+        </div>
+
+        <div class="insight" style="margin-top:12px;">
+          <strong>Idea síntesis.</strong> Si querés saber <strong>cuántos</strong> eventos ocurren en un intervalo, pensá en Poisson. Si querés saber <strong>cuánto falta</strong> hasta el próximo evento, pensá en exponencial.
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo usar la interactividad</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Qué tocar</strong></div>
+            <ul>
+              <li><strong>Tasa λ:</strong> aumenta o reduce la intensidad de llegadas. Subirla debería hacer que los eventos aparezcan más juntos.</li>
+              <li><strong>Longitud Δt:</strong> cambia el tamaño del intervalo con el que agrupás llegadas. Aunque el proceso subyacente sea el mismo, contar en intervalos más largos suele dar valores más altos por intervalo.</li>
+              <li><strong>Cantidad de intervalos:</strong> modifica el horizonte total observado.</li>
+              <li><strong>Valor k:</strong> selecciona un conteo puntual para comparar la probabilidad teórica <strong>P(N = k)</strong> con la proporción observada.</li>
+              <li><strong>Umbral t:</strong> fija un tiempo para comparar la probabilidad teórica <strong>P(T \le t)</strong> con la proporción observada en la muestra.</li>
+              <li><strong>Semilla:</strong> cambia la realización aleatoria sin cambiar los parámetros generales.</li>
+            </ul>
+          </div>
+
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Qué hace cada botón</strong></div>
+            <ul>
+              <li><strong>Simular proceso:</strong> genera una nueva realización completa con los parámetros elegidos.</li>
+              <li><strong>Nueva muestra:</strong> vuelve a simular cambiando la semilla para ver otra trayectoria posible.</li>
+              <li><strong>Reproducir:</strong> muestra la secuencia de llegadas de manera progresiva, útil para ver cómo se va formando la muestra.</li>
+              <li><strong>Presets:</strong> cargan configuraciones típicas para comparar escenarios de baja, media o alta intensidad de llegadas.</li>
+            </ul>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Cómo leer el gráfico principal</strong></div>
+            <p>Arriba ves la <strong>línea de tiempo</strong> con las llegadas. Abajo ves los <strong>conteos por intervalo</strong>. La idea es relacionar ambas cosas: si en una franja temporal los eventos aparecen muy juntos, ese intervalo debería mostrar una barra más alta.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Cómo leer el gráfico teórico</strong></div>
+            <p>A la izquierda se compara la muestra con la <strong>Poisson</strong>. A la derecha se compara la muestra con la <strong>exponencial</strong>. Mirá si la teoría acompaña razonablemente la forma de los datos y recordá que pequeñas diferencias son normales.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Qué conviene probar</strong></div>
+            <ul>
+              <li>Fijá <strong>Δt</strong> y subí <strong>λ</strong>.</li>
+              <li>Fijá <strong>λ</strong> y agrandá <strong>Δt</strong>.</li>
+              <li>Usá pocas observaciones y luego muchas.</li>
+              <li>Compará la teoría con distintas semillas para ver qué cambia y qué se mantiene.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Tasa λ: <span id="lambdaLabel">4.0</span> eventos / unidad</span>
+          <span class="pill">Longitud del intervalo Δt: <span id="deltaLabel">1.0</span></span>
+          <span class="pill">μ = λΔt: <span id="muLabel">4.0</span></span>
+          <span class="pill">Horizonte total: <span id="horizonLabel">40.0</span></span>
+        </div>
+        <canvas id="plotMain" aria-label="Línea de tiempo de llegadas y conteos por intervalo"></canvas>
+        <div class="insight" style="margin-top:12px;" id="dynamicInsight">
+          Cuando aumentás λ, los eventos aparecen más juntos en la línea de tiempo, suben los conteos por intervalo y se acortan los tiempos entre llegadas.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del experimento</h3>
+        <div class="controls">
+          <div class="triple">
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+            <div>
+              <label class="muted" for="speed">Velocidad replay</label>
+              <select id="speed">
+                <option value="380">Lenta</option>
+                <option value="180" selected>Media</option>
+                <option value="80">Rápida</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="intervalsVisible">Intervalos visibles</label>
+              <select id="intervalsVisible">
+                <option value="8">8</option>
+                <option value="12" selected>12</option>
+                <option value="16">16</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="lambda">Tasa λ</label>
+            <input id="lambda" type="range" min="0.3" max="10" step="0.1" value="4" />
+            <output id="lambdaVal">4.0</output>
+          </div>
+          <div class="row">
+            <label for="delta">Longitud Δt</label>
+            <input id="delta" type="range" min="0.25" max="4" step="0.05" value="1" />
+            <output id="deltaVal">1.0</output>
+          </div>
+          <div class="row">
+            <label for="intervalCount">Cantidad de intervalos</label>
+            <input id="intervalCount" type="range" min="12" max="120" step="1" value="40" />
+            <output id="intervalCountVal">40</output>
+          </div>
+          <div class="row">
+            <label for="selectedK">Valor k</label>
+            <input id="selectedK" type="range" min="0" max="12" step="1" value="4" />
+            <output id="selectedKVal">4</output>
+          </div>
+          <div class="row">
+            <label for="thresholdT">Umbral t</label>
+            <input id="thresholdT" type="range" min="0.1" max="6" step="0.1" value="0.5" />
+            <output id="thresholdTVal">0.5</output>
+          </div>
+
+          <div class="cols">
+            <label class="muted" style="display:flex; align-items:center; gap:8px;">
+              <input id="showTheory" type="checkbox" checked /> Mostrar teoría superpuesta
+            </label>
+            <label class="muted" style="display:flex; align-items:center; gap:8px;">
+              <input id="showThreshold" type="checkbox" checked /> Resaltar umbral t
+            </label>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="simulateBtn" class="btn" type="button">Simular proceso</button>
+            <button id="resampleBtn" class="btn" type="button">Nueva muestra</button>
+            <button id="replayBtn" class="btn" type="button">Reproducir</button>
+          </div>
+          <div class="btnrow">
+            <button id="presetCall" class="btn" type="button">Preset call center</button>
+            <button id="presetSlow" class="btn" type="button">Preset demanda lenta</button>
+            <button id="presetFast" class="btn" type="button">Preset alta llegada</button>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Media teórica Poisson</div><div class="v" id="theoryCountMean">–</div></div>
+          <div class="metric"><div class="k">Media observada de conteos</div><div class="v" id="sampleCountMean">–</div></div>
+          <div class="metric"><div class="k">Media teórica exponencial</div><div class="v" id="theoryGapMean">–</div></div>
+          <div class="metric"><div class="k">Media observada entre llegadas</div><div class="v" id="sampleGapMean">–</div></div>
+          <div class="metric"><div class="k">P(N = k) teórica</div><div class="v" id="pkTheory">–</div></div>
+          <div class="metric"><div class="k">Prop. observada N = k</div><div class="v" id="pkSample">–</div></div>
+          <div class="metric"><div class="k">P(T ≤ t) teórica</div><div class="v" id="ptTheory">–</div></div>
+          <div class="metric"><div class="k">Prop. observada T ≤ t</div><div class="v" id="ptSample">–</div></div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Izquierda: Poisson (conteos)</span>
+          <span class="pill">Derecha: Exponencial (tiempos entre eventos)</span>
+          <span class="pill">k seleccionado = <span id="kText">4</span></span>
+          <span class="pill">t umbral = <span id="tText">0.5</span></span>
+        </div>
+        <canvas id="plotTheory" aria-label="Poisson y exponencial comparadas con la muestra"></canvas>
+      </div>
+
+      <div class="card span-5">
+        <div class="panel mono">
+          <strong>Lectura guiada</strong>
+          <ul>
+            <li>La <strong>Poisson</strong> trabaja con conteos enteros: 0, 1, 2, 3… eventos por intervalo.</li>
+            <li>La <strong>exponencial</strong> trabaja con tiempos continuos: cuánto tarda en ocurrir el próximo evento.</li>
+            <li>Si λ sube, esperás <strong>más eventos por intervalo</strong> y <strong>menos tiempo entre eventos</strong>.</li>
+            <li>Ambas distribuciones aparecen mucho en modelos de colas, demanda, fallas y arribo de clientes.</li>
+          </ul>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Muestra actual</strong></div>
+          <div class="sample-strip" id="sampleStrip"></div>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Aplicación a operaciones</strong></div>
+          <p>En una cola simple, Poisson ayuda a modelar <strong>cuántos clientes llegan por hora</strong> y la exponencial ayuda a pensar <strong>cuánto falta para la próxima llegada</strong>. Estas ideas son la base de muchos modelos de espera y capacidad.</p>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Qué observar</strong></div>
+            <ul>
+              <li>Cómo cambian los conteos por intervalo cuando ajustás λ o Δt.</li>
+              <li>Cómo se acortan o alargan los tiempos entre eventos.</li>
+              <li>Qué tan cerca queda la muestra de las probabilidades teóricas.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Mini actividad</strong></div>
+            <ul>
+              <li>Probá λ = 2 y λ = 8 con el mismo Δt. Compará qué cambia en ambos gráficos.</li>
+              <li>Fijá λ y duplicá Δt. ¿Qué le pasa a la media de la Poisson?</li>
+              <li>Buscá un caso donde el porcentaje observado quede lejos del teórico y explicá por qué.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea para recordar</strong></div>
+            <p><strong>Poisson cuenta; exponencial espera.</strong> Son dos lenguajes para describir el mismo mecanismo de llegadas aleatorias.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Preguntas y respuestas</h3>
+        <div class="qa">
+          <details>
+            <summary>¿Por qué la media de la Poisson es λΔt y no solo λ?</summary>
+            <p>Porque λ es una tasa por unidad de tiempo. Si mirás un intervalo más largo, esperás más eventos. Por eso la cantidad esperada en un intervalo de longitud Δt es λΔt.</p>
+          </details>
+          <details>
+            <summary>¿Por qué la exponencial parece “pegar fuerte” cerca de 0?</summary>
+            <p>Porque, cuando la tasa de llegadas es constante, los tiempos cortos entre eventos son relativamente comunes y los tiempos largos son cada vez menos probables.</p>
+          </details>
+          <details>
+            <summary>¿Puede una muestra alejarse bastante de la teoría?</summary>
+            <p>Sí. Sobre todo si usás pocos intervalos o pocos eventos. La teoría describe el comportamiento esperado; la muestra concreta puede desviarse por azar.</p>
+          </details>
+          <details>
+            <summary>¿Qué relación tiene esto con teoría de colas?</summary>
+            <p>Muchísima. En muchos modelos introductorios, las llegadas se representan con un proceso tipo Poisson y los tiempos entre llegadas con una exponencial. Eso permite estudiar espera, utilización y congestión.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+  const $ = (s)=>document.querySelector(s);
+  const getVar = (name)=>getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const fmt = (v,d=2)=> Number.isFinite(v) ? (+v).toFixed(d) : '–';
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const factorialMemo = [1];
+  const factorial = (n)=>{
+    for(let i=factorialMemo.length;i<=n;i++) factorialMemo[i] = factorialMemo[i-1]*i;
+    return factorialMemo[n];
+  };
+  function poissonPMF(k, mu){
+    if(k<0) return 0;
+    return Math.exp(-mu) * Math.pow(mu, k) / factorial(k);
+  }
+  function expoPDF(x, lambda){ return x < 0 ? 0 : lambda * Math.exp(-lambda*x); }
+  function expoCDF(x, lambda){ return x < 0 ? 0 : 1 - Math.exp(-lambda*x); }
+  function mulberry32(seed){ let t = seed>>>0; return function(){ t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r); return ((r ^ (r>>>14))>>>0) / 4294967296; }; }
+  function expSample(rng, lambda){
+    let u = rng();
+    while(u <= 1e-12) u = rng();
+    return -Math.log(u)/lambda;
+  }
+  function mean(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : NaN; }
+  function sd(arr){
+    if(arr.length<2) return 0;
+    const m = mean(arr);
+    return Math.sqrt(arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1));
+  }
+  function resizeCanvasToDisplaySize(canvas, ctx){
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(1, Math.round(canvas.clientWidth));
+    const cssH = Math.max(1, Math.round(canvas.clientHeight));
+    if(canvas.width !== cssW*dpr || canvas.height !== cssH*dpr){
+      canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+    }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function niceTicks(min,max,count=6){
+    const span=max-min; if(span<=0 || !isFinite(span)) return {start:min, step:1, count:1};
+    const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+    const nice = norm<1.5?1: norm<3?2: norm<7?5:10;
+    const step=nice*mag; const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+    const n=Math.max(1, Math.round((end-start)/step)+1); return {start, step, count:n};
+  }
+
+  const els = {
+    lambda: $('#lambda'), delta: $('#delta'), intervalCount: $('#intervalCount'), selectedK: $('#selectedK'), thresholdT: $('#thresholdT'),
+    lambdaVal: $('#lambdaVal'), deltaVal: $('#deltaVal'), intervalCountVal: $('#intervalCountVal'), selectedKVal: $('#selectedKVal'), thresholdTVal: $('#thresholdTVal'),
+    lambdaLabel: $('#lambdaLabel'), deltaLabel: $('#deltaLabel'), muLabel: $('#muLabel'), horizonLabel: $('#horizonLabel'),
+    theoryCountMean: $('#theoryCountMean'), sampleCountMean: $('#sampleCountMean'), theoryGapMean: $('#theoryGapMean'), sampleGapMean: $('#sampleGapMean'),
+    pkTheory: $('#pkTheory'), pkSample: $('#pkSample'), ptTheory: $('#ptTheory'), ptSample: $('#ptSample'),
+    showTheory: $('#showTheory'), showThreshold: $('#showThreshold'),
+    seed: $('#seed'), speed: $('#speed'), intervalsVisible: $('#intervalsVisible'),
+    plotMain: $('#plotMain'), plotTheory: $('#plotTheory'),
+    dynamicInsight: $('#dynamicInsight'), sampleStrip: $('#sampleStrip'),
+    kText: $('#kText'), tText: $('#tText'),
+    simulateBtn: $('#simulateBtn'), resampleBtn: $('#resampleBtn'), replayBtn: $('#replayBtn'),
+    presetCall: $('#presetCall'), presetSlow: $('#presetSlow'), presetFast: $('#presetFast')
+  };
+  const ctxMain = els.plotMain.getContext('2d');
+  const ctxTheory = els.plotTheory.getContext('2d');
+
+  const state = {
+    lambda: 4,
+    delta: 1,
+    intervalCount: 40,
+    selectedK: 4,
+    thresholdT: 0.5,
+    seed: 1234,
+    showTheory: true,
+    showThreshold: true,
+    intervalsVisible: 12,
+    replayMs: 180,
+    arrivals: [],
+    gaps: [],
+    counts: [],
+    horizon: 40,
+    replayIndex: null,
+    replayHandle: null,
+    displayArrivals: [],
+    displayCounts: []
+  };
+
+  function syncStateFromInputs(){
+    state.lambda = +els.lambda.value;
+    state.delta = +els.delta.value;
+    state.intervalCount = +els.intervalCount.value;
+    state.selectedK = +els.selectedK.value;
+    state.thresholdT = +els.thresholdT.value;
+    state.seed = +els.seed.value || 0;
+    state.showTheory = els.showTheory.checked;
+    state.showThreshold = els.showThreshold.checked;
+    state.intervalsVisible = +els.intervalsVisible.value;
+    state.replayMs = +els.speed.value;
+    state.horizon = state.delta * state.intervalCount;
+  }
+
+  function updateLabels(){
+    els.lambdaVal.textContent = fmt(state.lambda,1);
+    els.deltaVal.textContent = fmt(state.delta,2);
+    els.intervalCountVal.textContent = state.intervalCount;
+    els.selectedKVal.textContent = state.selectedK;
+    els.thresholdTVal.textContent = fmt(state.thresholdT,1);
+
+    els.lambdaLabel.textContent = fmt(state.lambda,1);
+    els.deltaLabel.textContent = fmt(state.delta,2);
+    els.muLabel.textContent = fmt(state.lambda * state.delta,2);
+    els.horizonLabel.textContent = fmt(state.horizon,1);
+    els.kText.textContent = state.selectedK;
+    els.tText.textContent = fmt(state.thresholdT,1);
+  }
+
+  function generateProcess(){
+    syncStateFromInputs();
+    const rng = mulberry32(state.seed);
+    const arrivals = [];
+    const gaps = [];
+    let t = 0;
+    while(true){
+      const gap = expSample(rng, state.lambda);
+      if(t + gap > state.horizon) break;
+      t += gap;
+      gaps.push(gap);
+      arrivals.push(t);
+    }
+    const counts = Array(state.intervalCount).fill(0);
+    for(const a of arrivals){
+      const idx = Math.min(state.intervalCount-1, Math.floor(a / state.delta));
+      counts[idx] += 1;
+    }
+    state.arrivals = arrivals;
+    state.gaps = gaps;
+    state.counts = counts;
+    state.displayArrivals = arrivals.slice();
+    state.displayCounts = counts.slice();
+    state.replayIndex = null;
+    if(state.replayHandle) cancelAnimationFrame(state.replayHandle);
+    updateLabels();
+    refreshAll();
+  }
+
+  function computeMetrics(){
+    const mu = state.lambda * state.delta;
+    const countMean = mean(state.counts);
+    const gapMean = mean(state.gaps);
+    const pKTheory = poissonPMF(state.selectedK, mu);
+    const pKSample = state.counts.length ? state.counts.filter(x=>x===state.selectedK).length/state.counts.length : 0;
+    const pTTheory = expoCDF(state.thresholdT, state.lambda);
+    const pTSample = state.gaps.length ? state.gaps.filter(x=>x<=state.thresholdT).length/state.gaps.length : 0;
+
+    els.theoryCountMean.textContent = fmt(mu,2);
+    els.sampleCountMean.textContent = fmt(countMean,2);
+    els.theoryGapMean.textContent = fmt(1/state.lambda,2);
+    els.sampleGapMean.textContent = fmt(gapMean,2);
+    els.pkTheory.textContent = fmt(100*pKTheory,1) + '%';
+    els.pkSample.textContent = fmt(100*pKSample,1) + '%';
+    els.ptTheory.textContent = fmt(100*pTTheory,1) + '%';
+    els.ptSample.textContent = fmt(100*pTSample,1) + '%';
+
+    const muVal = state.lambda * state.delta;
+    if(state.lambda < 1.2){
+      els.dynamicInsight.textContent = 'Con una tasa baja, los eventos quedan bastante separados: suelen aparecer muchos intervalos vacíos y los tiempos entre llegadas son largos.';
+    } else if(state.lambda > 6){
+      els.dynamicInsight.textContent = 'Con una tasa alta, los eventos llegan muy seguidos: suben los conteos por intervalo y la distribución de tiempos entre llegadas se concentra cerca de 0.';
+    } else if(muVal > 5){
+      els.dynamicInsight.textContent = 'Aunque λ no sea enorme, si el intervalo Δt es largo la Poisson también puede mostrar conteos altos, porque estás acumulando llegadas durante más tiempo.';
+    } else {
+      els.dynamicInsight.textContent = 'La línea de tiempo, los conteos por intervalo y los tiempos entre llegadas están contando la misma historia desde ángulos distintos.';
+    }
+  }
+
+  function updateSampleStrip(){
+    els.sampleStrip.innerHTML = '';
+    const firstCounts = state.counts.slice(0,10).map(v => `N=${v}`);
+    const firstGaps = state.gaps.slice(0,10).map(v => `T=${fmt(v,2)}`);
+    const labels = [...firstCounts, ...firstGaps];
+    labels.slice(0,20).forEach((txt, i)=>{
+      const chip = document.createElement('div');
+      chip.className = 'sample-chip';
+      chip.textContent = txt;
+      chip.style.color = i < firstCounts.length ? getVar('--s0') : getVar('--s1');
+      els.sampleStrip.appendChild(chip);
+    });
+  }
+
+  function refreshAll(){
+    computeMetrics();
+    updateSampleStrip();
+    drawMain();
+    drawTheory();
+  }
+
+  function drawMain(){
+    resizeCanvasToDisplaySize(els.plotMain, ctxMain);
+    const ctx = ctxMain, W = els.plotMain.clientWidth, H = els.plotMain.clientHeight;
+    ctx.clearRect(0,0,W,H);
+    const m = {l:56, r:18, t:16, b:34};
+    const innerW = W - m.l - m.r;
+    const innerH = H - m.t - m.b;
+    const topH = innerH * 0.45;
+    const bottomH = innerH * 0.42;
+    const gap = innerH * 0.13;
+
+    ctx.fillStyle = '#0c1226';
+    roundRect(ctx, m.l, m.t, innerW, innerH, 10); ctx.fill();
+
+    const visibleIntervals = Math.min(state.intervalCount, state.intervalsVisible);
+    const visibleHorizon = visibleIntervals * state.delta;
+    const x0 = m.l, x1 = m.l + innerW;
+    const yTop0 = m.t + 12, yTop1 = yTop0 + topH - 16;
+    const yBottom0 = yTop1 + gap, yBottom1 = yBottom0 + bottomH - 4;
+    const xAtTime = (t)=> x0 + (t/visibleHorizon) * innerW;
+
+    // Timeline
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1.2;
+    line(ctx, x0, (yTop0+yTop1)/2, x1, (yTop0+yTop1)/2);
+
+    ctx.font = '12px system-ui,sans-serif';
+    ctx.fillStyle = 'rgba(231,236,243,0.9)';
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'center';
+    for(let i=0;i<=visibleIntervals;i++){
+      const xx = xAtTime(i*state.delta);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      line(ctx, xx, yTop0, xx, yTop1);
+      ctx.fillText(fmt(i*state.delta,1), xx, yTop0 - 2);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = getVar('--muted');
+    ctx.fillText('Línea de tiempo de llegadas', x0, yTop0 - 18);
+
+    const arrivals = state.displayArrivals.filter(a => a <= visibleHorizon);
+    for(const a of arrivals){
+      const xx = xAtTime(a);
+      ctx.strokeStyle = getVar('--s3');
+      ctx.lineWidth = 2;
+      line(ctx, xx, yTop0 + 8, xx, yTop1 - 8);
+    }
+
+    // Counts bars
+    const counts = state.displayCounts.slice(0, visibleIntervals);
+    const maxCount = Math.max(1, ...counts, ...state.counts);
+    const barGap = 6;
+    const barW = Math.max(8, (innerW - barGap*(visibleIntervals+1))/visibleIntervals);
+    const xBar = (i)=> x0 + barGap + i*(barW+barGap);
+    const yCount = (v)=> yBottom1 - (v/maxCount)*(yBottom1 - yBottom0 - 16);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = getVar('--muted');
+    ctx.fillText('Conteos observados por intervalo', x0, yBottom0 - 8);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    for(let g=0; g<=4; g++){
+      const yy = yBottom1 - g*(yBottom1-yBottom0)/4;
+      line(ctx, x0, yy, x1, yy);
+    }
+    for(let i=0;i<visibleIntervals;i++){
+      const val = counts[i] ?? 0;
+      const xb = xBar(i);
+      const yt = yCount(val);
+      ctx.fillStyle = (val === state.selectedK) ? 'rgba(239,71,111,.75)' : getVar('--s0');
+      ctx.fillRect(xb, yt, barW, yBottom1 - yt);
+      ctx.fillStyle = 'rgba(231,236,243,0.9)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(String(i+1), xb + barW/2, yBottom1 + 5);
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(String(val), xb + barW/2, yt - 3);
+    }
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for(let g=0; g<=4; g++){
+      const vv = g*maxCount/4;
+      const yy = yBottom1 - g*(yBottom1-yBottom0)/4;
+      ctx.fillText(fmt(vv,0), x0 - 6, yy);
+    }
+  }
+
+  function drawTheory(){
+    resizeCanvasToDisplaySize(els.plotTheory, ctxTheory);
+    const ctx = ctxTheory, W = els.plotTheory.clientWidth, H = els.plotTheory.clientHeight;
+    ctx.clearRect(0,0,W,H);
+    const outer = {l:24, r:24, t:18, b:30};
+    const gap = 18;
+    const plotW = (W - outer.l - outer.r - gap)/2;
+    const plotH = H - outer.t - outer.b;
+    const left = {x: outer.l, y: outer.t, w: plotW, h: plotH};
+    const right = {x: outer.l + plotW + gap, y: outer.t, w: plotW, h: plotH};
+
+    ctx.fillStyle = '#0c1226';
+    roundRect(ctx, left.x, left.y, left.w, left.h, 10); ctx.fill();
+    roundRect(ctx, right.x, right.y, right.w, right.h, 10); ctx.fill();
+
+    // Left plot: Poisson PMF
+    const mu = state.lambda * state.delta;
+    const maxK = Math.max(state.selectedK + 3, Math.ceil(mu + 4*Math.sqrt(mu+1)), 8);
+    const observedCounts = Array(maxK+1).fill(0);
+    state.counts.forEach(v => { if(v <= maxK) observedCounts[v]++; });
+    const observedFreq = observedCounts.map(c => c / state.counts.length);
+    const theoretical = Array.from({length:maxK+1}, (_,k)=>poissonPMF(k, mu));
+    const yMaxLeft = Math.max(0.01, ...observedFreq, ...theoretical) * 1.15;
+    const lx = (k)=> left.x + 36 + (k+0.5) * ((left.w-48)/(maxK+1));
+    const ly = (v)=> left.y + left.h - 26 - (v/yMaxLeft)*(left.h-46);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    for(let g=0; g<=4; g++){
+      const yy = left.y + left.h - 26 - g*(left.h-46)/4;
+      line(ctx, left.x + 36, yy, left.x + left.w - 10, yy);
+    }
+    const barW = Math.max(10, (left.w-58)/(maxK+1)*0.65);
+    for(let k=0;k<=maxK;k++){
+      const x = lx(k) - barW/2;
+      const y = ly(observedFreq[k]);
+      ctx.fillStyle = k === state.selectedK ? 'rgba(239,71,111,.78)' : getVar('--s0');
+      ctx.fillRect(x, y, barW, left.y + left.h - 26 - y);
+      if(state.showTheory){
+        const yt = ly(theoretical[k]);
+        ctx.fillStyle = getVar('--s1');
+        ctx.beginPath(); ctx.arc(lx(k), yt, 4, 0, Math.PI*2); ctx.fill();
+        if(k>0){
+          ctx.strokeStyle = getVar('--s1');
+          ctx.lineWidth = 2;
+          line(ctx, lx(k-1), ly(theoretical[k-1]), lx(k), yt);
+        }
+      }
+      ctx.fillStyle = 'rgba(231,236,243,0.9)';
+      ctx.font = '11px system-ui,sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(String(k), lx(k), left.y + left.h - 22);
+    }
+    ctx.fillStyle = getVar('--muted');
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('Poisson: cantidad de eventos por intervalo', left.x + 12, left.y + 8);
+
+    // Right plot: Exponential histogram + density
+    const gaps = state.gaps.length ? state.gaps : [0];
+    const maxGap = Math.max(state.thresholdT*1.3, ...gaps) * 1.05;
+    const bins = 12;
+    const counts = Array(bins).fill(0);
+    for(const g of gaps){
+      const idx = Math.min(bins-1, Math.floor((g/maxGap)*bins));
+      counts[idx]++;
+    }
+    const binWidth = maxGap / bins;
+    const densityObs = counts.map(c => c / (gaps.length * binWidth));
+    const yMaxRight = Math.max(0.01, ...densityObs, state.lambda) * 1.15;
+    const rx = (x)=> right.x + 38 + (x/maxGap) * (right.w-50);
+    const ry = (v)=> right.y + right.h - 26 - (v/yMaxRight)*(right.h-46);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    for(let g=0; g<=4; g++){
+      const yy = right.y + right.h - 26 - g*(right.h-46)/4;
+      line(ctx, right.x + 38, yy, right.x + right.w - 10, yy);
+    }
+    for(let i=0;i<bins;i++){
+      const x0 = i*binWidth;
+      const x1 = x0 + binWidth;
+      const y = ry(densityObs[i]);
+      ctx.fillStyle = (state.showThreshold && x1 <= state.thresholdT) ? 'rgba(239,71,111,.45)' : getVar('--s0');
+      ctx.fillRect(rx(x0)+1, y, Math.max(8, rx(x1)-rx(x0)-2), right.y + right.h - 26 - y);
+    }
+    if(state.showTheory){
+      ctx.strokeStyle = getVar('--s1');
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(let i=0;i<=180;i++){
+        const x = maxGap*i/180;
+        const y = expoPDF(x, state.lambda);
+        const X = rx(x), Y = ry(y);
+        if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+      }
+      ctx.stroke();
+    }
+    if(state.showThreshold){
+      const xt = rx(state.thresholdT);
+      ctx.strokeStyle = 'rgba(239,71,111,.95)';
+      ctx.setLineDash([6,5]);
+      line(ctx, xt, right.y + 12, xt, right.y + right.h - 26);
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = getVar('--muted');
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('Exponencial: tiempo entre llegadas', right.x + 12, right.y + 8);
+  }
+
+  function startReplay(){
+    if(state.replayHandle) cancelAnimationFrame(state.replayHandle);
+    state.displayArrivals = [];
+    state.displayCounts = Array(state.intervalCount).fill(0);
+    state.replayIndex = 0;
+    let lastTs = 0;
+
+    function step(ts){
+      if(!lastTs) lastTs = ts;
+      if(ts - lastTs >= state.replayMs){
+        lastTs = ts;
+        if(state.replayIndex < state.arrivals.length){
+          const a = state.arrivals[state.replayIndex];
+          state.displayArrivals.push(a);
+          const idx = Math.min(state.intervalCount-1, Math.floor(a / state.delta));
+          state.displayCounts[idx] += 1;
+          state.replayIndex += 1;
+          drawMain();
+        } else {
+          state.replayHandle = null;
+          return;
+        }
+      }
+      state.replayHandle = requestAnimationFrame(step);
+    }
+    state.replayHandle = requestAnimationFrame(step);
+  }
+
+  function applyPreset(kind){
+    if(kind==='call'){
+      els.lambda.value = 4; els.delta.value = 1; els.intervalCount.value = 40; els.selectedK.value = 4; els.thresholdT.value = 0.4;
+    } else if(kind==='slow'){
+      els.lambda.value = 0.8; els.delta.value = 1.5; els.intervalCount.value = 32; els.selectedK.value = 0; els.thresholdT.value = 1.2;
+    } else {
+      els.lambda.value = 7.5; els.delta.value = 0.75; els.intervalCount.value = 44; els.selectedK.value = 6; els.thresholdT.value = 0.2;
+    }
+    generateProcess();
+  }
+
+  ['input','change'].forEach(ev => {
+    els.lambda.addEventListener(ev, generateProcess);
+    els.delta.addEventListener(ev, generateProcess);
+    els.intervalCount.addEventListener(ev, generateProcess);
+    els.selectedK.addEventListener(ev, ()=>{ syncStateFromInputs(); updateLabels(); refreshAll(); });
+    els.thresholdT.addEventListener(ev, ()=>{ syncStateFromInputs(); updateLabels(); refreshAll(); });
+  });
+  els.showTheory.addEventListener('change', ()=>{ syncStateFromInputs(); refreshAll(); });
+  els.showThreshold.addEventListener('change', ()=>{ syncStateFromInputs(); refreshAll(); });
+  els.seed.addEventListener('change', generateProcess);
+  els.speed.addEventListener('change', ()=>{ syncStateFromInputs(); });
+  els.intervalsVisible.addEventListener('change', ()=>{ syncStateFromInputs(); refreshAll(); });
+  els.simulateBtn.addEventListener('click', generateProcess);
+  els.resampleBtn.addEventListener('click', ()=>{ els.seed.value = (+els.seed.value || 0) + 1; generateProcess(); });
+  els.replayBtn.addEventListener('click', ()=>{ syncStateFromInputs(); startReplay(); });
+  els.presetCall.addEventListener('click', ()=>applyPreset('call'));
+  els.presetSlow.addEventListener('click', ()=>applyPreset('slow'));
+  els.presetFast.addEventListener('click', ()=>applyPreset('fast'));
+
+  const ro1 = new ResizeObserver(()=>drawMain());
+  const ro2 = new ResizeObserver(()=>drawTheory());
+  ro1.observe(els.plotMain);
+  ro2.observe(els.plotTheory);
+
+  generateProcess();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Probabilidad, frecuencias e histogramas — experimentar para entender</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f;
+      --stage1:#8ec5ff; --stage2:#78a6ff; --stage3:#21c07a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotFreq{height:360px}
+    #plotBars{height:300px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols,.triple{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+    .metric{border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;}
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .insight{border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .event-strip{display:grid; grid-template-columns:repeat(20, minmax(0,1fr)); gap:6px; margin-top:8px}
+    .event-chip{height:24px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:1px solid #1b2340; background:#0b1230}
+    .qa{display:grid; gap:10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Probabilidad, frecuencias e histogramas</h1>
+      <div class="muted">Repetí experimentos simples y observá cómo las frecuencias relativas empiezan a estabilizarse cuando aumenta la cantidad de ensayos.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Frecuencia observada</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Probabilidad teórica</span>
+        <span class="pill"><span class="box" style="background:var(--accent)"></span> Experimento seleccionado</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante entienda la <strong>probabilidad</strong> como una referencia teórica y la <strong>frecuencia relativa</strong> como una estimación experimental que tiende a estabilizarse cuando repetimos muchas veces el experimento.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>Si una moneda tiene 50% de probabilidad de salir cara, ¿eso significa que en 10 lanzamientos van a salir exactamente 5 caras?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>La probabilidad no se ve de manera directa. Lo que observamos son <strong>resultados concretos</strong>. Al repetir muchas veces el experimento, las frecuencias relativas empiezan a acercarse a un patrón estable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Marco teórico: qué estamos mirando cuando hablamos de probabilidad</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 5;">
+            <div class="mono"><strong>1. Experimento, resultado y evento</strong></div>
+            <p>Un <strong>experimento aleatorio</strong> es una acción que puede repetirse bajo condiciones parecidas, pero cuyo resultado puntual no se conoce con certeza de antemano. Lanzar una moneda, tirar un dado o extraer una bolilla de una urna son ejemplos clásicos.</p>
+            <p>Cada posible resultado individual forma parte del <strong>espacio de resultados</strong>. Por ejemplo, en una moneda los resultados posibles son <em>cara</em> y <em>ceca</em>. En un dado, los resultados posibles son 1, 2, 3, 4, 5 y 6. En una urna, los resultados pueden ser rojo, azul o verde.</p>
+            <p>Un <strong>evento</strong> es algo que nos interesa seguir. Puede ser “sale cara”, “sale un 6” o “sale una bolilla roja”. En esta web, el menú <strong>Resultado a seguir</strong> te deja elegir justamente qué evento querés monitorear.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>2. Probabilidad como modelo teórico</strong></div>
+            <p>La <strong>probabilidad</strong> expresa qué tan esperable es un resultado antes de observar una larga secuencia de datos. Es una referencia teórica, un modelo.</p>
+            <p>En casos equiprobables, una manera intuitiva de pensarlo es:</p>
+            <div class="mono" style="margin:8px 0;">P(A) = casos favorables / casos posibles</div>
+            <p>Así, si un dado es equilibrado, la probabilidad de obtener un 6 es:</p>
+            <div class="mono" style="margin:8px 0;">P(6) = 1 / 6 ≈ 0,167</div>
+            <p>Pero en muchos problemas reales no partimos de casos perfectamente equiprobables: a veces hay <strong>sesgo</strong>. Por eso esta página también permite alterar la moneda o la composición de la urna.</p>
+          </div>
+          <div class="panel" style="grid-column:span 3;">
+            <div class="mono"><strong>3. Frecuencia absoluta y relativa</strong></div>
+            <p>Cuando repetimos el experimento, contamos cuántas veces ocurrió cada resultado. Ese conteo es la <strong>frecuencia absoluta</strong>.</p>
+            <p>Si llamamos <span class="mono">n(A)</span> a la cantidad de veces que ocurrió el evento <span class="mono">A</span> y <span class="mono">N</span> al total de ensayos, la <strong>frecuencia relativa</strong> es:</p>
+            <div class="mono" style="margin:8px 0;">f(A) = n(A) / N</div>
+            <p>La frecuencia relativa se interpreta como la proporción observada del evento en los datos.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>4. Qué significa que la frecuencia “converja”</strong></div>
+            <p>En pocas observaciones, la frecuencia relativa puede moverse mucho. Eso no es un error: es parte natural de la aleatoriedad. Con más repeticiones, esas oscilaciones suelen volverse menos bruscas y la frecuencia empieza a estabilizarse alrededor de la probabilidad teórica.</p>
+            <p>No hace falta que coincida exactamente. La idea importante es otra: <strong>con muchos datos, el patrón global suele verse mejor que con pocos</strong>.</p>
+            <p>Esta intuición está detrás de una idea central de la estadística: para estudiar fenómenos inciertos necesitamos observar repetición, no un único caso aislado.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>5. Rachas, desvíos y sesgo</strong></div>
+            <p>Un error frecuente es pensar que una racha “rara” contradice la probabilidad. No es así. Que aparezcan varias caras seguidas o varios rojos consecutivos puede ocurrir aun en experimentos equilibrados.</p>
+            <p>Lo importante es distinguir entre:</p>
+            <ul>
+              <li><strong>fluctuaciones normales</strong> de una muestra chica;</li>
+              <li><strong>evidencia de sesgo</strong>, cuando una diferencia persiste incluso con muchos ensayos.</li>
+            </ul>
+            <p>Por eso conviene mirar no solo el último resultado, sino también la trayectoria de la frecuencia y la comparación con la referencia teórica.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>6. Cómo leer las barras y el “histograma” discreto</strong></div>
+            <p>Cuando la variable toma pocos valores posibles, como en una moneda, un dado o una urna con colores, es natural resumir los datos con <strong>barras por categoría</strong>.</p>
+            <p>En esta página, cada barra observada muestra qué proporción de veces apareció cada resultado en la muestra visible. La barra teórica muestra cuál sería la referencia esperada según el modelo configurado.</p>
+            <p>En variables discretas, este tipo de gráfico cumple el papel de un histograma simplificado: ayuda a ver cómo se reparte la masa de probabilidad o la masa de observaciones entre distintos resultados.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo usar la interactividad de esta página</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>1. Elegí el experimento y el resultado a seguir</strong></div>
+            <p>Con <strong>Experimento</strong> podés pasar de <em>Moneda</em> a <em>Dado</em> o <em>Urna</em>. En <strong>Resultado a seguir</strong> elegís qué evento querés monitorear en la curva principal: por ejemplo, cara, el 6 o rojo.</p>
+            <p>La curva grande muestra cómo cambia la <strong>frecuencia relativa acumulada</strong> de ese resultado a medida que aumentan los ensayos visibles.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>2. Tocá los parámetros del experimento</strong></div>
+            <p>En moneda, el control <strong>Prob. de cara</strong> permite sesgar el experimento. En urna, los controles de <strong>bolillas rojas, azules y verdes</strong> cambian la composición del sistema. En el dado, las caras quedan equiprobables: sirve como caso de referencia estable.</p>
+            <p>El control <strong>Semilla</strong> cambia la realización concreta del experimento. Si mantenés la misma configuración y cambiás solo la semilla, cambia la secuencia puntual, pero no la lógica general del modelo.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>3. Diferenciá ensayos totales de ensayos visibles</strong></div>
+            <p><strong>Ensayos totales</strong> define cuántas repeticiones genera la simulación. <strong>Ensayos visibles</strong> te deja decidir hasta qué parte de esa secuencia querés mirar.</p>
+            <p>Esto es útil para comparar una muestra chica contra una muestra grande sin cambiar el experimento completo. Es una muy buena forma de mostrar por qué con 20 observaciones puede parecer una cosa y con 500 puede verse otra.</p>
+          </div>
+
+          <div class="panel" style="grid-column:span 3;">
+            <div class="mono"><strong>4. Usá los botones de simulación</strong></div>
+            <ul>
+              <li><strong>Simular:</strong> genera una nueva secuencia completa con los parámetros elegidos.</li>
+              <li><strong>Reproducir:</strong> hace crecer la muestra visible paso a paso.</li>
+              <li><strong>Ir al final:</strong> salta directamente al total de ensayos simulados.</li>
+            </ul>
+            <p>Durante la reproducción, conviene mirar cómo la curva primero oscila bastante y luego suele estabilizarse más.</p>
+          </div>
+          <div class="panel" style="grid-column:span 5;">
+            <div class="mono"><strong>5. Qué mirar en cada zona del tablero</strong></div>
+            <ul>
+              <li>En la <strong>curva principal</strong>, compará la frecuencia observada con la línea de probabilidad teórica.</li>
+              <li>En las <strong>barras</strong>, mirá si los resultados observados están repartidos de manera parecida o no al modelo esperado.</li>
+              <li>En las <strong>métricas</strong>, observá la probabilidad teórica, la frecuencia observada, el conteo y la diferencia absoluta.</li>
+              <li>En la <strong>tabla</strong>, compará todas las categorías al mismo tiempo, no solo la seleccionada.</li>
+              <li>En la tira de <strong>últimos resultados</strong>, buscá rachas cortas y recordá que una racha no prueba por sí sola que haya sesgo.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>6. Experimentos sugeridos</strong></div>
+            <ul>
+              <li>Dejá una <strong>moneda equilibrada</strong> y compará 20, 100 y 500 ensayos visibles.</li>
+              <li>Armá una <strong>urna desigual</strong> y tratá de detectar el sesgo solo a partir de la curva y la tabla.</li>
+              <li>Probá <strong>cambiar la semilla</strong> sin tocar probabilidades: vas a ver trayectorias distintas con una misma lógica subyacente.</li>
+              <li>Si usás <strong>urna sin reposición</strong>, observá que el proceso deja de repetir exactamente el mismo contexto en cada extracción, porque la composición va cambiando.</li>
+            </ul>
+            <p>La pregunta de fondo es siempre la misma: <strong>¿qué parte de lo que veo es ruido de corto plazo y qué parte parece un patrón persistente?</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Experimento: <span id="expLabel">Moneda</span></span>
+          <span class="pill">Resultado observado: <span id="outcomeLabel">Cara</span></span>
+          <span class="pill">Ensayos visibles: <span id="visibleLabel">200</span></span>
+        </div>
+        <canvas id="plotFreq" aria-label="Frecuencia relativa del resultado seleccionado"></canvas>
+        <div class="insight" style="margin-top:12px;" id="dynamicInsight">
+          Probá con pocos ensayos y después con muchos. La idea importante no es que la frecuencia coincida enseguida con la probabilidad, sino que la diferencia tienda a achicarse con la repetición.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del experimento</h3>
+        <div class="controls">
+          <div class="triple">
+            <div>
+              <label class="muted" for="expType">Experimento</label>
+              <select id="expType">
+                <option value="coin">Moneda</option>
+                <option value="die">Dado</option>
+                <option value="urn">Urna</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="selectedOutcome">Resultado a seguir</label>
+              <select id="selectedOutcome"></select>
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="trials">Ensayos totales</label>
+            <input id="trials" type="range" min="20" max="1000" step="10" value="200" />
+            <output id="trialsVal">200</output>
+          </div>
+          <div class="row">
+            <label for="visibleTrials">Ensayos visibles</label>
+            <input id="visibleTrials" type="range" min="1" max="200" step="1" value="200" />
+            <output id="visibleTrialsVal">200</output>
+          </div>
+          <div class="row">
+            <label for="coinP">Prob. de cara</label>
+            <input id="coinP" type="range" min="0.05" max="0.95" step="0.01" value="0.50" />
+            <output id="coinPVal">50%</output>
+          </div>
+          <div class="row">
+            <label for="dieP6">Prob. del 6</label>
+            <input id="dieP6" type="range" min="0.17" max="0.60" step="0.01" value="0.17" />
+            <output id="dieP6Val">16.7%</output>
+          </div>
+          <div class="row">
+            <label for="urnRed">Bolillas rojas</label>
+            <input id="urnRed" type="range" min="1" max="20" step="1" value="4" />
+            <output id="urnRedVal">4</output>
+          </div>
+          <div class="row">
+            <label for="urnBlue">Bolillas azules</label>
+            <input id="urnBlue" type="range" min="1" max="20" step="1" value="3" />
+            <output id="urnBlueVal">3</output>
+          </div>
+          <div class="row">
+            <label for="urnGreen">Bolillas verdes</label>
+            <input id="urnGreen" type="range" min="1" max="20" step="1" value="3" />
+            <output id="urnGreenVal">3</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="samplingType">Modo de extracción</label>
+              <select id="samplingType">
+                <option value="replace" selected>Con reposición</option>
+                <option value="noreplace">Sin reposición</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="replaySpeed">Velocidad replay</label>
+              <select id="replaySpeed">
+                <option value="500">Lenta</option>
+                <option value="220" selected>Media</option>
+                <option value="80">Rápida</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="simulateBtn" class="btn" type="button">Simular</button>
+            <button id="replayBtn" class="btn" type="button">Reproducir</button>
+            <button id="finalBtn" class="btn" type="button">Ir al final</button>
+          </div>
+          <div class="btnrow">
+            <button id="presetFair" class="btn" type="button">Preset equilibrado</button>
+            <button id="presetBiased" class="btn" type="button">Preset sesgado</button>
+            <button id="presetUrn" class="btn" type="button">Preset urna desigual</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-6">
+        <h3>Frecuencias observadas y probabilidades teóricas</h3>
+        <canvas id="plotBars" aria-label="Frecuencias por resultado"></canvas>
+        <div class="small muted" style="margin-top:8px;">Para variables discretas, este gráfico de barras cumple el papel de un histograma discreto: muestra cómo se reparten los resultados observados.</div>
+      </div>
+
+      <div class="card span-6">
+        <h3>Métricas del experimento</h3>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="k">Probabilidad teórica</div>
+            <div class="v" id="theoryProb">–</div>
+          </div>
+          <div class="metric">
+            <div class="k">Frecuencia observada</div>
+            <div class="v" id="obsFreq">–</div>
+          </div>
+          <div class="metric">
+            <div class="k">Conteo observado</div>
+            <div class="v" id="obsCount">–</div>
+          </div>
+          <div class="metric">
+            <div class="k">Diferencia absoluta</div>
+            <div class="v" id="absDiff">–</div>
+          </div>
+        </div>
+        <div class="panel mono">
+          <div><strong>Ensayos visibles:</strong> <span id="shownTrials">–</span></div>
+          <div><strong>Tipo de experimento:</strong> <span id="expReadout">–</span></div>
+          <div><strong>Lectura rápida:</strong> <span id="quickRead">–</span></div>
+        </div>
+        <div class="panel" style="margin-top:10px;">
+          <div class="mono"><strong>Últimos resultados observados</strong></div>
+          <div id="eventStrip" class="event-strip"></div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Qué observar</strong></div>
+            <ul>
+              <li>Con pocos ensayos, la frecuencia puede alejarse bastante de la probabilidad.</li>
+              <li>Con muchos ensayos, la curva suele fluctuar menos y acercarse a una zona más estable.</li>
+              <li>Un resultado improbable puede aparecer varias veces seguidas. Eso no invalida la probabilidad.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Aplicación a operaciones</strong></div>
+            <ul>
+              <li>En demanda, fallas o llegadas de clientes, los valores puntuales cambian.</li>
+              <li>Lo importante es reconocer patrones de largo plazo, no exigir exactitud en cada observación.</li>
+              <li>Por eso, para analizar sistemas reales necesitamos datos, frecuencias y distribuciones.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Mini actividad</strong></div>
+            <ul>
+              <li>Probá 20 ensayos y luego 500 con el mismo experimento.</li>
+              <li>Después cambiá la semilla y compará qué se mantiene y qué cambia.</li>
+              <li>Intentá detectar si un experimento está sesgado solo mirando el gráfico y las frecuencias.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Tabla de resultados visibles</h3>
+        <div class="panel">
+          <table>
+            <thead>
+              <tr>
+                <th>Resultado</th>
+                <th>Conteo</th>
+                <th>Frecuencia observada</th>
+                <th>Probabilidad teórica</th>
+                <th>Diferencia</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Preguntas y respuestas</h3>
+        <div class="qa">
+          <details>
+            <summary>¿Si una probabilidad es 50%, el resultado tiene que salir exactamente la mitad de las veces?</summary>
+            <p>No. En pocas observaciones puede alejarse bastante. La idea es que, al aumentar mucho la cantidad de ensayos, la <strong>frecuencia relativa</strong> tienda a acercarse a ese valor.</p>
+          </details>
+          <details>
+            <summary>¿Una racha rara contradice la probabilidad?</summary>
+            <p>No. Las rachas también forman parte del comportamiento aleatorio. La probabilidad describe el patrón global, no garantiza alternancia perfecta ni regularidad en cada tramo corto.</p>
+          </details>
+          <details>
+            <summary>¿Por qué sirve esto en gestión de operaciones?</summary>
+            <p>Porque demanda, llegadas, defectos y tiempos pueden fluctuar. Para decidir mejor necesitamos distinguir entre una variación puntual y un patrón repetido en los datos.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  function mulberry32(seed){ let t = seed>>>0; return function(){ t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r); return ((r ^ (r>>>14))>>>0) / 4294967296; } }
+  const $ = (s)=>document.querySelector(s);
+
+  const state = {
+    expType:'coin', trials:200, visibleTrials:200, seed:1234,
+    coinP:0.50, dieP6:1/6, urnRed:4, urnBlue:3, urnGreen:3,
+    samplingType:'replace', selectedOutcome:'Cara', replayMs:220,
+    samples:[], isReplaying:false, replayTimer:null
+  };
+
+  const outcomeColors = {
+    'Cara':'#8ec5ff','Ceca':'#ffd166',
+    '1':'#8ec5ff','2':'#ffd166','3':'#78a6ff','4':'#21c07a','5':'#ef476f','6':'#caa8ff',
+    'Rojo':'#ef476f','Azul':'#78a6ff','Verde':'#21c07a'
+  };
+
+  const expType = $('#expType'), selectedOutcome = $('#selectedOutcome'), seedInp = $('#seed');
+  const trials = $('#trials'), visibleTrials = $('#visibleTrials');
+  const coinP = $('#coinP'), dieP6 = $('#dieP6'), urnRed = $('#urnRed'), urnBlue = $('#urnBlue'), urnGreen = $('#urnGreen');
+  const samplingType = $('#samplingType'), replaySpeed = $('#replaySpeed');
+
+  const trialsVal = $('#trialsVal'), visibleTrialsVal = $('#visibleTrialsVal');
+  const coinPVal = $('#coinPVal'), dieP6Val = $('#dieP6Val'), urnRedVal = $('#urnRedVal'), urnBlueVal = $('#urnBlueVal'), urnGreenVal = $('#urnGreenVal');
+  const expLabel = $('#expLabel'), outcomeLabel = $('#outcomeLabel'), visibleLabel = $('#visibleLabel');
+
+  const theoryProb = $('#theoryProb'), obsFreq = $('#obsFreq'), obsCount = $('#obsCount'), absDiff = $('#absDiff');
+  const shownTrials = $('#shownTrials'), expReadout = $('#expReadout'), quickRead = $('#quickRead');
+  const dynamicInsight = $('#dynamicInsight'), eventStrip = $('#eventStrip'), resultsTable = $('#resultsTable');
+
+  const plotFreq = $('#plotFreq'), ctxF = plotFreq.getContext('2d');
+  const plotBars = $('#plotBars'), ctxB = plotBars.getContext('2d');
+
+  function resizeCanvasToDisplaySize(canvas, ctx){
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(1, Math.round(canvas.clientWidth));
+    const cssH = Math.max(1, Math.round(canvas.clientHeight));
+    if (canvas.width !== cssW*dpr || canvas.height !== cssH*dpr){ canvas.width = cssW*dpr; canvas.height = cssH*dpr; }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function fmtPct(p){ return (100*p).toFixed(1)+'%'; }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  function getOutcomes(){
+    if (state.expType === 'coin') return ['Cara','Ceca'];
+    if (state.expType === 'die') return ['1','2','3','4','5','6'];
+    return ['Rojo','Azul','Verde'];
+  }
+
+  function getTheoreticalProbs(){
+    if (state.expType === 'coin') return { 'Cara':state.coinP, 'Ceca':1-state.coinP };
+    if (state.expType === 'die'){
+      return { '1':1/6,'2':1/6,'3':1/6,'4':1/6,'5':1/6,'6':1/6 };
+    }
+    const total = state.urnRed + state.urnBlue + state.urnGreen;
+    return { 'Rojo':state.urnRed/total, 'Azul':state.urnBlue/total, 'Verde':state.urnGreen/total };
+  }
+
+  function syncOutcomeOptions(){
+    const outcomes = getOutcomes();
+    const current = outcomes.includes(state.selectedOutcome) ? state.selectedOutcome : outcomes[0];
+    selectedOutcome.innerHTML = outcomes.map(o=>`<option value="${o}">${o}</option>`).join('');
+    state.selectedOutcome = current;
+    selectedOutcome.value = current;
+  }
+
+  function sampleOne(rng, urnBag){
+    if (state.expType === 'coin') return rng() < state.coinP ? 'Cara' : 'Ceca';
+    if (state.expType === 'die'){
+      return String(1 + Math.floor(rng()*6));
+    }
+    if (state.samplingType === 'replace'){
+      const probs = getTheoreticalProbs();
+      const u = rng(); let acc = 0;
+      for (const o of ['Rojo','Azul','Verde']){ acc += probs[o]; if (u <= acc + 1e-12) return o; }
+      return 'Verde';
+    }
+    if (urnBag.length === 0) return null;
+    const idx = Math.floor(rng() * urnBag.length);
+    return urnBag.splice(idx,1)[0];
+  }
+
+  function simulate(){
+    stopReplay();
+    const rng = mulberry32((+state.seed || 0) >>> 0);
+    state.samples = [];
+    let urnBag = [];
+    if (state.expType === 'urn' && state.samplingType === 'noreplace'){
+      for (let i=0;i<state.urnRed;i++) urnBag.push('Rojo');
+      for (let i=0;i<state.urnBlue;i++) urnBag.push('Azul');
+      for (let i=0;i<state.urnGreen;i++) urnBag.push('Verde');
+    }
+    const effectiveTrials = (state.expType === 'urn' && state.samplingType === 'noreplace') ? Math.min(state.trials, urnBag.length) : state.trials;
+    if (effectiveTrials !== state.trials){ state.trials = effectiveTrials; trials.value = String(effectiveTrials); trialsVal.textContent = String(effectiveTrials); }
+    for (let i=0;i<state.trials;i++){
+      const value = sampleOne(rng, urnBag);
+      if (value == null) break;
+      state.samples.push(value);
+    }
+    visibleTrials.max = String(Math.max(1, state.samples.length));
+    state.visibleTrials = Math.min(state.visibleTrials, state.samples.length);
+    if (state.visibleTrials < 1) state.visibleTrials = state.samples.length;
+    visibleTrials.value = String(state.visibleTrials);
+    refresh();
+  }
+
+  function getCounts(n){
+    const counts = Object.fromEntries(getOutcomes().map(o=>[o,0]));
+    for (let i=0;i<n;i++) counts[state.samples[i]] = (counts[state.samples[i]] || 0) + 1;
+    return counts;
+  }
+
+  function getSeries(outcome, n){
+    let count = 0;
+    const arr = [];
+    for (let i=0;i<n;i++){
+      if (state.samples[i] === outcome) count++;
+      arr.push(count/(i+1));
+    }
+    return arr;
+  }
+
+  function drawFrequencyChart(){
+    resizeCanvasToDisplaySize(plotFreq, ctxF);
+    const W = plotFreq.clientWidth, H = plotFreq.clientHeight;
+    ctxF.clearRect(0,0,W,H);
+    const m={l:58,r:18,t:18,b:42};
+    ctxF.fillStyle='#0c1226'; roundRect(ctxF,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxF.fill();
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const n = Math.max(1, state.visibleTrials);
+    const series = getSeries(state.selectedOutcome, n);
+    const theory = getTheoreticalProbs()[state.selectedOutcome] || 0;
+
+    ctxF.strokeStyle='rgba(255,255,255,0.06)'; ctxF.lineWidth=1;
+    for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctxF,x,y1,x,y0); }
+    for (let k=0;k<=5;k++){ const y=y0 - k*(y0-y1)/5; line(ctxF,x0,y,x1,y); }
+
+    const xAt = (i)=> x0 + (i/(Math.max(1,n-1)))*(x1-x0);
+    const yAt = (v)=> y0 - clamp(v,0,1)*(y0-y1);
+
+    ctxF.setLineDash([6,6]);
+    ctxF.strokeStyle='rgba(255,209,102,0.95)';
+    line(ctxF,x0,yAt(theory),x1,yAt(theory));
+    ctxF.setLineDash([]);
+
+    ctxF.strokeStyle='rgba(142,197,255,1)';
+    ctxF.lineWidth=2.2;
+    ctxF.beginPath();
+    series.forEach((v,i)=>{ const x=xAt(i), y=yAt(v); if(i===0) ctxF.moveTo(x,y); else ctxF.lineTo(x,y); });
+    ctxF.stroke();
+
+    ctxF.fillStyle='rgba(142,197,255,1)';
+    const lastX = xAt(series.length-1), lastY = yAt(series[series.length-1]);
+    ctxF.beginPath(); ctxF.arc(lastX,lastY,4,0,Math.PI*2); ctxF.fill();
+
+    ctxF.strokeStyle='rgba(255,255,255,0.18)'; ctxF.lineWidth=1.2;
+    line(ctxF,x0,y1,x0,y0); line(ctxF,x0,y0,x1,y0);
+
+    ctxF.fillStyle='rgba(231,236,243,0.9)'; ctxF.font='12px system-ui,sans-serif';
+    ctxF.textAlign='center'; ctxF.textBaseline='top';
+    const tickCount = Math.min(6, n);
+    for (let k=0;k<tickCount;k++){
+      const idx = Math.round(k*(n-1)/Math.max(1,tickCount-1));
+      ctxF.fillText(String(idx+1), xAt(idx), y0+6);
+    }
+    ctxF.textAlign='right'; ctxF.textBaseline='middle';
+    for (let k=0;k<=5;k++){
+      const v = k/5;
+      ctxF.fillText(fmtPct(v), x0-6, yAt(v));
+    }
+  }
+
+  function drawBars(){
+    resizeCanvasToDisplaySize(plotBars, ctxB);
+    const W = plotBars.clientWidth, H = plotBars.clientHeight;
+    ctxB.clearRect(0,0,W,H);
+    const m={l:58,r:18,t:18,b:42};
+    ctxB.fillStyle='#0c1226'; roundRect(ctxB,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxB.fill();
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const outcomes = getOutcomes();
+    const probs = getTheoreticalProbs();
+    const counts = getCounts(state.visibleTrials);
+    const n = Math.max(1, state.visibleTrials);
+    const freqs = Object.fromEntries(outcomes.map(o=>[o, counts[o]/n]));
+
+    ctxB.strokeStyle='rgba(255,255,255,0.06)'; ctxB.lineWidth=1;
+    for (let k=0;k<=6;k++){ const x=x0 + k*(x1-x0)/6; line(ctxB,x,y1,x,y0); }
+    for (let k=0;k<=5;k++){ const y=y0 - k*(y0-y1)/5; line(ctxB,x0,y,x1,y); }
+
+    const bandW = (x1-x0)/outcomes.length;
+    const barW = Math.min(40, bandW*0.28);
+    const yAt = (v)=> y0 - clamp(v,0,1)*(y0-y1);
+    outcomes.forEach((o,i)=>{
+      const center = x0 + bandW*(i+0.5);
+      const th = probs[o], ob = freqs[o];
+      const color = outcomeColors[o] || '#8ec5ff';
+      ctxB.fillStyle='rgba(255,209,102,0.85)';
+      const yTh = yAt(th); ctxB.fillRect(center-barW-4, yTh, barW, y0-yTh);
+      ctxB.fillStyle=color;
+      const yOb = yAt(ob); ctxB.fillRect(center+4, yOb, barW, y0-yOb);
+    });
+
+    ctxB.strokeStyle='rgba(255,255,255,0.18)'; ctxB.lineWidth=1.2;
+    line(ctxB,x0,y1,x0,y0); line(ctxB,x0,y0,x1,y0);
+
+    ctxB.fillStyle='rgba(231,236,243,0.9)'; ctxB.font='12px system-ui,sans-serif';
+    ctxB.textAlign='center'; ctxB.textBaseline='top';
+    outcomes.forEach((o,i)=>{
+      const center = x0 + bandW*(i+0.5);
+      ctxB.fillText(o, center, y0+6);
+    });
+    ctxB.textAlign='right'; ctxB.textBaseline='middle';
+    for (let k=0;k<=5;k++){
+      const v = k/5;
+      ctxB.fillText(fmtPct(v), x0-6, yAt(v));
+    }
+  }
+
+  function renderTableAndMetrics(){
+    const outcomes = getOutcomes();
+    const probs = getTheoreticalProbs();
+    const counts = getCounts(state.visibleTrials);
+    const n = Math.max(1, state.visibleTrials);
+    const obs = counts[state.selectedOutcome] / n;
+    const th = probs[state.selectedOutcome] || 0;
+    const diff = Math.abs(obs - th);
+
+    theoryProb.textContent = fmtPct(th);
+    obsFreq.textContent = fmtPct(obs);
+    obsCount.textContent = String(counts[state.selectedOutcome]);
+    absDiff.textContent = fmtPct(diff);
+    absDiff.className = diff < 0.03 ? 'v ok' : diff < 0.08 ? 'v warn' : 'v err';
+    theoryProb.className = 'v'; obsFreq.className = 'v'; obsCount.className = 'v';
+
+    shownTrials.textContent = state.visibleTrials;
+    expReadout.textContent = state.expType === 'coin' ? 'Moneda' : state.expType === 'die' ? 'Dado' : `Urna ${state.samplingType === 'replace' ? 'con reposición' : 'sin reposición'}`;
+    quickRead.textContent = diff < 0.03 ? 'La frecuencia ya está bastante cerca del valor teórico.' : diff < 0.08 ? 'Todavía hay diferencia visible, pero ya aparece una tendencia.' : 'La muestra visible aún es chica o presenta fluctuaciones importantes.';
+
+    resultsTable.innerHTML = outcomes.map(o=>{
+      const freq = counts[o]/n;
+      const delta = freq - probs[o];
+      const cls = Math.abs(delta) < 0.03 ? 'ok' : Math.abs(delta) < 0.08 ? 'warn' : 'err';
+      return `<tr>
+        <td>${o}</td>
+        <td>${counts[o]}</td>
+        <td>${fmtPct(freq)}</td>
+        <td>${fmtPct(probs[o])}</td>
+        <td class="${cls}">${delta>=0?'+':''}${fmtPct(delta)}</td>
+      </tr>`;
+    }).join('');
+
+    const recent = state.samples.slice(Math.max(0,state.visibleTrials-20), state.visibleTrials);
+    eventStrip.innerHTML = recent.map(v=>`<div class="event-chip" style="background:${(outcomeColors[v]||'#0b1230')}22; color:${outcomeColors[v]||'#e7ecf3'}; border-color:${outcomeColors[v]||'#1b2340'}">${v}</div>`).join('');
+
+    const totalN = state.visibleTrials;
+    dynamicInsight.textContent = totalN < 50
+      ? 'Con pocos ensayos, las frecuencias suelen moverse mucho. No esperes coincidencia exacta con la probabilidad teórica.'
+      : totalN < 200
+      ? 'Ya empieza a aparecer una tendencia. La frecuencia relativa todavía oscila, pero menos que al principio.'
+      : 'Con muchos ensayos, la frecuencia relativa suele estabilizarse más y acercarse al valor teórico, aunque sin quedar exactamente fija.';
+  }
+
+  function refreshLabels(){
+    trialsVal.textContent = state.trials;
+    visibleTrialsVal.textContent = state.visibleTrials;
+    coinPVal.textContent = fmtPct(state.coinP);
+    dieP6Val.textContent = fmtPct(1/6);
+    urnRedVal.textContent = state.urnRed;
+    urnBlueVal.textContent = state.urnBlue;
+    urnGreenVal.textContent = state.urnGreen;
+    expLabel.textContent = state.expType === 'coin' ? 'Moneda' : state.expType === 'die' ? 'Dado' : 'Urna';
+    outcomeLabel.textContent = state.selectedOutcome;
+    visibleLabel.textContent = state.visibleTrials;
+
+    const coinRow = coinP.closest('.row');
+    const dieRow = dieP6.closest('.row');
+    const urnRows = [urnRed.closest('.row'), urnBlue.closest('.row'), urnGreen.closest('.row')];
+    coinRow.style.display = state.expType === 'coin' ? '' : 'none';
+    dieRow.style.display = state.expType === 'die' ? '' : 'none';
+    urnRows.forEach(r=>r.style.display = state.expType === 'urn' ? '' : 'none');
+    samplingType.parentElement.parentElement.style.display = state.expType === 'urn' ? '' : 'grid';
+    dieP6.disabled = state.expType === 'die';
+    if (state.expType === 'die') dieP6.title = 'En el experimento del dado, todas las caras tienen probabilidad 1/6.';
+    else dieP6.title = '';
+  }
+
+  function refresh(){
+    refreshLabels();
+    drawFrequencyChart();
+    drawBars();
+    renderTableAndMetrics();
+  }
+
+  function stopReplay(){
+    state.isReplaying = false;
+    if (state.replayTimer){ clearInterval(state.replayTimer); state.replayTimer = null; }
+  }
+
+  function startReplay(){
+    stopReplay();
+    state.visibleTrials = 1;
+    visibleTrials.value = '1';
+    refresh();
+    state.isReplaying = true;
+    state.replayTimer = setInterval(()=>{
+      if (state.visibleTrials >= state.samples.length){ stopReplay(); return; }
+      state.visibleTrials += 1;
+      visibleTrials.value = String(state.visibleTrials);
+      refresh();
+    }, state.replayMs);
+  }
+
+  expType.addEventListener('change', ()=>{ state.expType = expType.value; syncOutcomeOptions(); simulate(); });
+  selectedOutcome.addEventListener('change', ()=>{ state.selectedOutcome = selectedOutcome.value; refresh(); });
+  seedInp.addEventListener('change', ()=>{ state.seed = +seedInp.value || 0; });
+  trials.addEventListener('input', ()=>{
+    state.trials = +trials.value;
+    visibleTrials.max = String(state.trials);
+    if (state.visibleTrials > state.trials) state.visibleTrials = state.trials;
+    visibleTrials.value = String(state.visibleTrials);
+    refreshLabels();
+  });
+  visibleTrials.addEventListener('input', ()=>{ state.visibleTrials = +visibleTrials.value; refresh(); });
+  coinP.addEventListener('input', ()=>{ state.coinP = +coinP.value; refreshLabels(); });
+  dieP6.addEventListener('input', ()=>{ state.dieP6 = +dieP6.value; refreshLabels(); });
+  urnRed.addEventListener('input', ()=>{ state.urnRed = +urnRed.value; refreshLabels(); });
+  urnBlue.addEventListener('input', ()=>{ state.urnBlue = +urnBlue.value; refreshLabels(); });
+  urnGreen.addEventListener('input', ()=>{ state.urnGreen = +urnGreen.value; refreshLabels(); });
+  samplingType.addEventListener('change', ()=>{ state.samplingType = samplingType.value; refreshLabels(); });
+  replaySpeed.addEventListener('change', ()=>{ state.replayMs = +replaySpeed.value; });
+
+  $('#simulateBtn').addEventListener('click', ()=>{ simulate(); });
+  $('#replayBtn').addEventListener('click', ()=>{ if (!state.samples.length) simulate(); startReplay(); });
+  $('#finalBtn').addEventListener('click', ()=>{ stopReplay(); state.visibleTrials = state.samples.length; visibleTrials.value = String(state.visibleTrials); refresh(); });
+
+  $('#presetFair').addEventListener('click', ()=>{
+    state.expType='coin'; expType.value='coin'; state.coinP=0.5; coinP.value='0.50'; state.trials=200; trials.value='200'; state.visibleTrials=200; state.seed=1234; seedInp.value='1234';
+    syncOutcomeOptions(); state.selectedOutcome='Cara'; selectedOutcome.value='Cara'; simulate();
+  });
+  $('#presetBiased').addEventListener('click', ()=>{
+    state.expType='die'; expType.value='die'; state.dieP6=0.40; dieP6.value='0.40'; state.trials=300; trials.value='300'; state.visibleTrials=300; state.seed=1234; seedInp.value='1234';
+    syncOutcomeOptions(); state.selectedOutcome='6'; selectedOutcome.value='6'; simulate();
+  });
+  $('#presetUrn').addEventListener('click', ()=>{
+    state.expType='urn'; expType.value='urn'; state.urnRed=8; state.urnBlue=2; state.urnGreen=2; urnRed.value='8'; urnBlue.value='2'; urnGreen.value='2'; state.trials=300; trials.value='300'; state.visibleTrials=300; state.samplingType='replace'; samplingType.value='replace';
+    syncOutcomeOptions(); state.selectedOutcome='Rojo'; selectedOutcome.value='Rojo'; simulate();
+  });
+
+  const ro1 = new ResizeObserver(()=> refresh()); ro1.observe(plotFreq);
+  const ro2 = new ResizeObserver(()=> refresh()); ro2.observe(plotBars);
+
+  function init(){
+    syncOutcomeOptions();
+    state.replayMs = +replaySpeed.value;
+    simulate();
+  }
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Muestra vs población — una ventana imperfecta</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f; --s3:#21c07a;
+      --stage1:#8ec5ff; --stage2:#78a6ff; --stage3:#21c07a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotHist{height:360px}
+    #plotMeans{height:300px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols,.triple{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+    .metric{border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;}
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .insight{border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:6px 8px; border-bottom:1px solid #141a33; text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .sample-strip{display:grid; grid-template-columns:repeat(20, minmax(0,1fr)); gap:6px; margin-top:8px}
+    .sample-chip{height:24px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:1px solid #1b2340; background:#0b1230}
+    .qa{display:grid; gap:10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Muestra vs población</h1>
+      <div class="muted">Tomá muestras de una población más grande, comparalas con el total y observá cómo cambia la estabilidad de los resultados cuando aumentás el tamaño muestral.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Población</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Muestra actual</span>
+        <span class="pill"><span class="box" style="background:var(--accent)"></span> Medias muestrales</span>
+        <span class="pill"><span class="box" style="background:var(--s2)"></span> Media poblacional</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante entienda que una <strong>muestra</strong> es una parte de la <strong>población</strong>, que dos muestras del mismo tamaño pueden dar resultados distintos, y que las muestras más grandes suelen ofrecer estimaciones más estables.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>Si medís los tiempos de atención de solo 8 clientes, ¿podés estar seguro de que ese promedio representa bien a todo el sistema?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>La población completa casi nunca está disponible en la práctica. Por eso trabajamos con muestras. Pero una muestra es una <strong>ventana imperfecta</strong>: puede parecerse mucho o poco a la población real.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Marco teórico: qué significa trabajar con muestras</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>1. Población y muestra</strong></div>
+            <p>En estadística, la <strong>población</strong> es el conjunto total de observaciones que nos interesan. Puede ser, por ejemplo, todos los tiempos de atención de un mes, todas las ventas diarias de un año o todos los pedidos que llegan a un sistema.</p>
+            <p>La <strong>muestra</strong> es solo una parte de esa población. En la práctica casi siempre trabajamos con muestras, porque medir todo suele ser costoso, lento o directamente imposible.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>2. La muestra como estimación</strong></div>
+            <p>Cuando tomamos una muestra, usamos sus datos para <strong>estimar</strong> características de la población. Por ejemplo, si <span class="mono">μ</span> representa la media poblacional y <span class="mono">x̄</span> la media muestral, esperamos que <span class="mono">x̄</span> se parezca a <span class="mono">μ</span>, pero no tiene por qué coincidir exactamente.</p>
+            <p>Dos muestras distintas, tomadas de la misma población, pueden producir medias, desvíos e histogramas diferentes. Esa diferencia no es un error del experimento: es parte natural del muestreo.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>3. Tamaño muestral y estabilidad</strong></div>
+            <p>En general, las <strong>muestras pequeñas</strong> son más inestables: un valor atípico o una pequeña racha puede cambiar mucho el resultado. Las <strong>muestras más grandes</strong> suelen parecerse más a la población y dar estimaciones más estables.</p>
+            <p>Eso no significa que una muestra grande sea perfecta, sino que normalmente ofrece una base más confiable para describir el sistema y tomar decisiones.</p>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px; margin-top:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>4. Repetir muestras: una idea muy importante</strong></div>
+            <p>Si de una misma población extraemos muchas muestras del mismo tamaño y calculamos la media de cada una, obtenemos muchas <strong>medias muestrales</strong>. Ese conjunto permite ver algo central: la media muestral no es un número fijo, sino una cantidad que cambia de muestra a muestra.</p>
+            <p>Cuando el tamaño muestral crece, esas medias suelen quedar más concentradas cerca de la media poblacional. Esta intuición es fundamental para entender después estimación, inferencia y error muestral.</p>
+          </div>
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>5. Aplicación a gestión de operaciones</strong></div>
+            <p>En operaciones casi nunca observamos “todo”. Solemos medir una semana de demanda, algunos tiempos de servicio, una tanda de defectos o un conjunto limitado de pedidos. Por eso, si la muestra es muy chica o poco representativa, podemos sobredimensionar o subdimensionar capacidad, stock o dotación.</p>
+            <p>La idea clave no es “necesito miles de datos siempre”, sino reconocer que <strong>las conclusiones dependen de cuántos datos miro y de qué tan representativos son</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo usar la interactividad</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>1. Elegí el escenario</strong></div>
+            <p>Con <strong>Escenario</strong> podés cambiar el tipo de población oculta:</p>
+            <ul>
+              <li><strong>Tiempo de atención:</strong> una variable más sesgada a la derecha, como suele pasar con tiempos de servicio.</li>
+              <li><strong>Demanda diaria:</strong> una variable más simétrica, con oscilaciones moderadas.</li>
+              <li><strong>Mezcla de clientes:</strong> una población con dos grupos distintos, útil para mostrar distribuciones mezcladas.</li>
+            </ul>
+            <p>Al tocar <strong>Generar población</strong>, se crea una nueva población completa usando la configuración elegida.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>2. Jugá con el tamaño de la muestra</strong></div>
+            <p>El control más importante es <strong>Tamaño muestra</strong>. Probá pasar de 5 o 8 observaciones a 100 o más y compará:</p>
+            <ul>
+              <li>cómo cambia el histograma amarillo;</li>
+              <li>qué tan lejos queda la media muestral de la poblacional;</li>
+              <li>cómo se concentra o se dispersa la nube de medias muestrales.</li>
+            </ul>
+            <p><strong>Tomar una muestra</strong> extrae una muestra nueva. <strong>Repetir muestras</strong> genera muchas muestras del mismo tamaño para estudiar la variación entre ellas.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>3. Qué mirar en cada gráfico</strong></div>
+            <p>En el <strong>histograma superior</strong>, la población azul es la referencia y la muestra amarilla es la “foto parcial” que ve el analista. Si ambas se parecen poco, la muestra puede estar dando una visión incompleta.</p>
+            <p>En el gráfico de <strong>medias muestrales</strong>, cada punto es el promedio de una muestra distinta. La línea roja marca la media de la población. Si los puntos quedan muy dispersos, la estimación es menos estable.</p>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px; margin-top:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>4. Controles que vale la pena probar</strong></div>
+            <ul>
+              <li><strong>Tamaño población:</strong> cambia el universo total disponible.</li>
+              <li><strong>Repeticiones:</strong> define cuántas muestras querés generar para ver la dispersión de medias.</li>
+              <li><strong>Barras histograma:</strong> modifica el nivel de detalle visual del histograma.</li>
+              <li><strong>Extracción con o sin reposición:</strong> permite discutir dos formas distintas de muestrear.</li>
+              <li><strong>Visualización:</strong> te deja ver población y muestra juntas o solo la muestra.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>5. Sugerencias de exploración</strong></div>
+            <ul>
+              <li>Compará una muestra de <strong>8</strong> observaciones con una de <strong>120</strong>.</li>
+              <li>Dejá fija la población y tocá <strong>Tomar una muestra</strong> varias veces: eso muestra que una sola muestra puede engañar.</li>
+              <li>Usá <strong>Reproducir</strong> para ver cómo van apareciendo las distintas muestras una a una.</li>
+              <li>Probá el preset <strong>mezcla</strong>: ahí se ve muy bien que una muestra chica puede capturar un grupo y perder casi por completo el otro.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Escenario: <span id="scenarioLabel">Tiempo de atención</span></span>
+          <span class="pill">Población: <span id="populationLabel">2000</span></span>
+          <span class="pill">Muestra actual: <span id="sampleLabel">30</span></span>
+          <span class="pill">Repeticiones: <span id="repLabel">50</span></span>
+        </div>
+        <canvas id="plotHist" aria-label="Comparación entre población y muestra"></canvas>
+        <div class="insight" style="margin-top:12px;" id="dynamicInsight">
+          Mirá cómo cambia el histograma amarillo cuando volvés a tomar otra muestra. La población azul se mantiene fija, pero la muestra puede cambiar bastante si es pequeña.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del experimento</h3>
+        <div class="controls">
+          <div class="triple">
+            <div>
+              <label class="muted" for="scenario">Escenario</label>
+              <select id="scenario">
+                <option value="service">Tiempo de atención</option>
+                <option value="demand">Demanda diaria</option>
+                <option value="mix">Mezcla de clientes</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+            <div>
+              <label class="muted" for="showPopulation">Visualización</label>
+              <select id="showPopulation">
+                <option value="overlay">Población + muestra</option>
+                <option value="sample">Solo muestra</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="populationSize">Tamaño población</label>
+            <input id="populationSize" type="range" min="300" max="5000" step="100" value="2000" />
+            <output id="populationSizeVal">2000</output>
+          </div>
+          <div class="row">
+            <label for="sampleSize">Tamaño muestra</label>
+            <input id="sampleSize" type="range" min="5" max="300" step="1" value="30" />
+            <output id="sampleSizeVal">30</output>
+          </div>
+          <div class="row">
+            <label for="repetitions">Repeticiones</label>
+            <input id="repetitions" type="range" min="5" max="300" step="5" value="50" />
+            <output id="repetitionsVal">50</output>
+          </div>
+          <div class="row">
+            <label for="bins">Barras histograma</label>
+            <input id="bins" type="range" min="6" max="30" step="1" value="14" />
+            <output id="binsVal">14</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="replaySpeed">Velocidad replay</label>
+              <select id="replaySpeed">
+                <option value="500">Lenta</option>
+                <option value="220" selected>Media</option>
+                <option value="80">Rápida</option>
+              </select>
+            </div>
+            <div>
+              <label class="muted" for="sampleMode">Extracción</label>
+              <select id="sampleMode">
+                <option value="replace">Con reposición</option>
+                <option value="noreplace" selected>Sin reposición</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="regenBtn" class="btn" type="button">Generar población</button>
+            <button id="sampleBtn" class="btn" type="button">Tomar una muestra</button>
+            <button id="repeatBtn" class="btn" type="button">Repetir muestras</button>
+            <button id="replayBtn" class="btn" type="button">Reproducir</button>
+          </div>
+          <div class="btnrow">
+            <button id="presetSmall" class="btn" type="button">Preset muestra chica</button>
+            <button id="presetLarge" class="btn" type="button">Preset muestra grande</button>
+            <button id="presetBimodal" class="btn" type="button">Preset mezcla</button>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Media población</div><div class="v" id="popMean">–</div></div>
+          <div class="metric"><div class="k">Media muestra</div><div class="v" id="sampleMean">–</div></div>
+          <div class="metric"><div class="k">Desvío población</div><div class="v" id="popSd">–</div></div>
+          <div class="metric"><div class="k">Desvío muestra</div><div class="v" id="sampleSd">–</div></div>
+          <div class="metric"><div class="k">Error de la media</div><div class="v" id="meanGap">–</div></div>
+          <div class="metric"><div class="k">Rango muestra</div><div class="v" id="sampleRange">–</div></div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill">Cada punto = media de una muestra</span>
+          <span class="pill">Línea roja = media de la población</span>
+        </div>
+        <canvas id="plotMeans" aria-label="Distribución de medias muestrales"></canvas>
+      </div>
+
+      <div class="card span-5">
+        <div class="panel mono">
+          <strong>Lectura guiada</strong>
+          <ul>
+            <li>La población es el conjunto total de datos posibles del fenómeno que querés estudiar.</li>
+            <li>La muestra es una parte de esa población.</li>
+            <li>Dos muestras distintas pueden dar resultados distintos, aun con el mismo tamaño.</li>
+            <li>Al aumentar el tamaño muestral, las medias suelen quedar más concentradas alrededor de la media poblacional.</li>
+          </ul>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Muestra actual (primeros valores)</strong></div>
+          <div id="sampleStrip" class="sample-strip"></div>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Aplicación a operaciones</strong></div>
+          <p>Cuando medís unos pocos tiempos de atención, unas pocas ventas o una sola semana de pedidos, podés sacar conclusiones apresuradas. Diseñar capacidad o stock con muy pocos datos puede llevar a decisiones erróneas.</p>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Mini actividad</strong></div>
+          <p>Probá una muestra de 8 observaciones y luego una de 120. ¿Cuál se parece más a la población? Después repetí muchas muestras de cada tamaño y compará qué pasa con la nube de medias.</p>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Preguntas y respuestas</h3>
+        <div class="qa">
+          <details>
+            <summary>¿Una muestra grande siempre representa perfecto a la población?</summary>
+            <p>No. Una muestra grande suele ser más estable y representativa que una chica, pero sigue siendo una muestra. Puede haber diferencias con la población real.</p>
+          </details>
+          <details>
+            <summary>¿Dos muestras del mismo tamaño deberían dar exactamente lo mismo?</summary>
+            <p>No. Justamente una de las ideas centrales es que dos muestras distintas pueden producir medias, dispersiones o histogramas diferentes.</p>
+          </details>
+          <details>
+            <summary>¿Por qué casi nunca trabajamos con toda la población?</summary>
+            <p>Porque muchas veces sería costoso, lento o directamente imposible medir todos los casos. Por eso se trabaja con muestras y luego se infiere con cuidado.</p>
+          </details>
+          <details>
+            <summary>¿Qué ventaja tiene repetir muchas muestras simuladas?</summary>
+            <p>Permite ver que la media muestral no es un número fijo: cambia de una muestra a otra. También ayuda a notar que esa variación suele reducirse cuando la muestra es más grande.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const state = {
+    scenario:'service',
+    populationSize:2000,
+    sampleSize:30,
+    repetitions:50,
+    bins:14,
+    seed:1234,
+    sampleMode:'noreplace',
+    showPopulation:'overlay',
+    population:[],
+    currentSample:[],
+    repeatedMeans:[],
+    replayTimer:null,
+    replayIndex:0,
+    sampleHistory:[]
+  };
+
+  const popMeanEl = $('#popMean');
+  const sampleMeanEl = $('#sampleMean');
+  const popSdEl = $('#popSd');
+  const sampleSdEl = $('#sampleSd');
+  const meanGapEl = $('#meanGap');
+  const sampleRangeEl = $('#sampleRange');
+  const sampleStrip = $('#sampleStrip');
+  const dynamicInsight = $('#dynamicInsight');
+
+  const plotHist = $('#plotHist'); const ctxH = plotHist.getContext('2d');
+  const plotMeans = $('#plotMeans'); const ctxM = plotMeans.getContext('2d');
+
+  function mulberry32(seed){ let t = seed >>> 0; return function(){
+    t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1 | t); r ^= r + Math.imul(r ^ (r>>>7), 61 | r);
+    return ((r ^ (r>>>14)) >>> 0) / 4294967296;
+  }}
+  function randn(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  const sd = arr => { if(arr.length<2) return 0; const m=mean(arr); return Math.sqrt(arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1)); };
+  const fmt = (v,d=2) => Number.isFinite(v) ? v.toFixed(d) : '–';
+  const minMax = arr => [Math.min(...arr), Math.max(...arr)];
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function niceTicks(min,max,count=6){
+    const span=max-min; if(span<=0 || !isFinite(span)) return {start:min, step:1, count:1};
+    const raw=span/count; const mag=10**Math.floor(Math.log10(Math.abs(raw))); const norm=raw/mag;
+    const nice=norm<1.5?1:norm<3?2:norm<7?5:10; const step=nice*mag;
+    const start=Math.ceil(min/step)*step; const end=Math.floor(max/step)*step;
+    return {start, step, count:Math.max(1, Math.round((end-start)/step)+1)};
+  }
+  function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function resizeCanvasToDisplaySize(canvas,ctx){
+    const dpr=window.devicePixelRatio||1;
+    const cssW=Math.max(1,Math.round(canvas.clientWidth));
+    const cssH=Math.max(1,Math.round(canvas.clientHeight));
+    if(canvas.width!==cssW*dpr || canvas.height!==cssH*dpr){ canvas.width=cssW*dpr; canvas.height=cssH*dpr; }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function scenarioName(){
+    return state.scenario==='service' ? 'Tiempo de atención' : state.scenario==='demand' ? 'Demanda diaria' : 'Mezcla de clientes';
+  }
+
+  function generatePopulation(){
+    const rng = mulberry32(+state.seed || 0);
+    const N = Math.max(50, +state.populationSize|0);
+    const arr = [];
+    if(state.scenario==='service'){
+      // sesgo a la derecha, como tiempos de atención
+      for(let i=0;i<N;i++){
+        const x = 4 + 1.8*randn(rng) + Math.max(0, 5.5*(-Math.log(1-rng())-1));
+        arr.push(clamp(x, 0.5, 35));
+      }
+    } else if(state.scenario==='demand'){
+      // demanda aproximadamente simétrica con algo de ruido y truncada
+      for(let i=0;i<N;i++){
+        const dayEffect = [ -4, -1, 0, 2, 5, 7, -2 ][i % 7];
+        const x = 80 + dayEffect + 12*randn(rng);
+        arr.push(clamp(Math.round(x), 20, 150));
+      }
+    } else {
+      // mezcla bimodal: clientes rápidos y lentos
+      for(let i=0;i<N;i++){
+        const slow = rng() < 0.35;
+        const mu = slow ? 16 : 7;
+        const sig = slow ? 2.8 : 1.8;
+        const x = mu + sig*randn(rng);
+        arr.push(clamp(x, 1.5, 28));
+      }
+    }
+    state.population = arr;
+    state.currentSample = [];
+    state.repeatedMeans = [];
+    state.sampleHistory = [];
+  }
+
+  function sampleOne(seedOffset=0){
+    const rng = mulberry32((+state.seed || 0) + 9973 + seedOffset);
+    const pop = state.population;
+    const n = Math.min(Math.max(1,+state.sampleSize|0), pop.length);
+    const out = [];
+    if(state.sampleMode==='replace'){
+      for(let i=0;i<n;i++) out.push(pop[Math.floor(rng()*pop.length)]);
+    } else {
+      const idx = Array.from({length:pop.length}, (_,i)=>i);
+      for(let i=idx.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [idx[i],idx[j]]=[idx[j],idx[i]]; }
+      for(let i=0;i<n;i++) out.push(pop[idx[i]]);
+    }
+    state.currentSample = out;
+    return out;
+  }
+
+  function repeatSamples(){
+    const reps = Math.max(1,+state.repetitions|0);
+    const means = [];
+    const history = [];
+    for(let r=0;r<reps;r++){
+      const s = sampleOne(31*r + 17);
+      history.push(s.slice());
+      means.push(mean(s));
+    }
+    state.repeatedMeans = means;
+    state.sampleHistory = history;
+    if(history.length) state.currentSample = history[history.length-1].slice();
+  }
+
+  function histogram(arr, bins, min, max){
+    const counts = Array(bins).fill(0);
+    const width = (max-min)/bins || 1;
+    for(const x of arr){
+      let k = Math.floor((x-min)/width);
+      if(k<0) k=0; if(k>=bins) k=bins-1;
+      counts[k]++;
+    }
+    return counts.map((c,i)=>({
+      x0:min+i*width,
+      x1:min+(i+1)*width,
+      count:c,
+      density:arr.length? c/arr.length : 0
+    }));
+  }
+
+  function drawHist(){
+    resizeCanvasToDisplaySize(plotHist,ctxH);
+    const W=plotHist.clientWidth, H=plotHist.clientHeight;
+    ctxH.clearRect(0,0,W,H);
+    const m={l:54,r:16,t:16,b:40};
+    roundRect(ctxH,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxH.fillStyle='#0c1226'; ctxH.fill();
+
+    const pop = state.population;
+    const samp = state.currentSample;
+    if(!pop.length) return;
+    const [minV,maxV] = minMax(pop);
+    const bins = Math.max(4,+state.bins|0);
+    const hPop = histogram(pop,bins,minV,maxV);
+    const hSamp = histogram(samp,bins,minV,maxV);
+    const ymax = Math.max(0.001, ...hPop.map(d=>d.density), ...hSamp.map(d=>d.density))*1.15;
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const xScale = x => x0 + (x-minV)/(maxV-minV || 1)*(x1-x0);
+    const yScale = y => y0 - (y/ymax)*(y0-y1);
+
+    ctxH.strokeStyle='rgba(255,255,255,0.06)'; ctxH.lineWidth=1;
+    const xt=niceTicks(minV,maxV,6), yt=niceTicks(0,ymax,5);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctxH,xScale(x),y1,xScale(x),y0); }
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; line(ctxH,x0,yScale(y),x1,yScale(y)); }
+
+    const binW = (x1-x0)/bins;
+    if(state.showPopulation==='overlay'){
+      ctxH.fillStyle='rgba(142,197,255,0.38)';
+      hPop.forEach((d,i)=>{
+        const X=x0+i*binW; const Y=yScale(d.density);
+        ctxH.fillRect(X+1,Y,binW-2,y0-Y);
+      });
+    }
+    ctxH.fillStyle='rgba(255,209,102,0.68)';
+    hSamp.forEach((d,i)=>{
+      const X=x0+i*binW+binW*0.17; const Y=yScale(d.density);
+      ctxH.fillRect(X,Y,binW*0.66,Math.max(0,y0-Y));
+    });
+
+    const popM = mean(pop), sampM = mean(samp);
+    ctxH.strokeStyle=css('--s2'); ctxH.lineWidth=2; line(ctxH,xScale(popM),y1,xScale(popM),y0);
+    if(samp.length){ ctxH.strokeStyle=css('--s1'); ctxH.setLineDash([6,5]); line(ctxH,xScale(sampM),y1,xScale(sampM),y0); ctxH.setLineDash([]); }
+
+    ctxH.strokeStyle='rgba(255,255,255,0.18)'; ctxH.lineWidth=1.2; line(ctxH,x0,y1,x0,y0); line(ctxH,x0,y0,x1,y0);
+    ctxH.fillStyle='rgba(231,236,243,0.9)'; ctxH.font='12px system-ui,sans-serif';
+    ctxH.textAlign='center'; ctxH.textBaseline='top';
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctxH.fillText(fmtTick(x), xScale(x), y0+6); }
+    ctxH.textAlign='right'; ctxH.textBaseline='middle';
+    for(let i=0;i<yt.count;i++){ const y=yt.start+i*yt.step; ctxH.fillText(fmtDensity(y), x0-6, yScale(y)); }
+  }
+
+  function drawMeans(){
+    resizeCanvasToDisplaySize(plotMeans,ctxM);
+    const W=plotMeans.clientWidth, H=plotMeans.clientHeight;
+    ctxM.clearRect(0,0,W,H);
+    const m={l:54,r:16,t:16,b:40};
+    roundRect(ctxM,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctxM.fillStyle='#0c1226'; ctxM.fill();
+
+    const means = state.repeatedMeans;
+    const pop = state.population;
+    if(!pop.length) return;
+    const popM = mean(pop);
+    const ref = means.length ? means : [popM];
+    const spread = Math.max(1e-6, sd(pop), sd(ref));
+    const minV = Math.min(...ref, popM) - 0.8*spread;
+    const maxV = Math.max(...ref, popM) + 0.8*spread;
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const xScale = x => x0 + (x-minV)/(maxV-minV || 1)*(x1-x0);
+
+    ctxM.strokeStyle='rgba(255,255,255,0.06)'; ctxM.lineWidth=1;
+    const xt=niceTicks(minV,maxV,6);
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; line(ctxM,xScale(x),y1,xScale(x),y0); }
+    const rows=6;
+    for(let i=0;i<=rows;i++){ const y=y1 + i*(y0-y1)/rows; line(ctxM,x0,y,x1,y); }
+
+    ctxM.strokeStyle=css('--s2'); ctxM.lineWidth=2; line(ctxM,xScale(popM),y1,xScale(popM),y0);
+
+    ctxM.fillStyle='rgba(120,166,255,0.95)';
+    means.forEach((v,i)=>{
+      const col = i % 12;
+      const row = Math.floor(i / 12);
+      const y = y0 - 16 - row*12;
+      const x = xScale(v);
+      ctxM.beginPath(); ctxM.arc(x,y,4,0,Math.PI*2); ctxM.fill();
+    });
+
+    ctxM.strokeStyle='rgba(255,255,255,0.18)'; ctxM.lineWidth=1.2; line(ctxM,x0,y1,x0,y0); line(ctxM,x0,y0,x1,y0);
+    ctxM.fillStyle='rgba(231,236,243,0.9)'; ctxM.font='12px system-ui,sans-serif';
+    ctxM.textAlign='center'; ctxM.textBaseline='top';
+    for(let i=0;i<xt.count;i++){ const x=xt.start+i*xt.step; ctxM.fillText(fmtTick(x), xScale(x), y0+6); }
+  }
+
+  function fmtTick(v){ return Math.abs(v)>=100 ? v.toFixed(0) : Math.abs(v)>=10 ? v.toFixed(1) : v.toFixed(2); }
+  function fmtDensity(v){ return v.toFixed(2); }
+
+  function updateMetrics(){
+    const pop = state.population, samp = state.currentSample;
+    const popM = mean(pop), sampM = mean(samp);
+    const popS = sd(pop), sampS = sd(samp);
+    popMeanEl.textContent = fmt(popM);
+    sampleMeanEl.textContent = samp.length ? fmt(sampM) : '–';
+    popSdEl.textContent = fmt(popS);
+    sampleSdEl.textContent = samp.length ? fmt(sampS) : '–';
+    meanGapEl.textContent = samp.length ? fmt(Math.abs(sampM-popM)) : '–';
+    if(samp.length){ const [mn,mx]=minMax(samp); sampleRangeEl.textContent = `${fmt(mn,1)} – ${fmt(mx,1)}`; }
+    else sampleRangeEl.textContent='–';
+
+    const gap = samp.length ? Math.abs(sampM-popM) : 0;
+    const meansSd = state.repeatedMeans.length ? sd(state.repeatedMeans) : 0;
+    if(state.sampleSize <= 12){
+      dynamicInsight.textContent = 'Con muestras chicas es normal que el histograma amarillo y la media muestral se muevan bastante. Una muestra pequeña puede dar una imagen muy parcial del sistema.';
+    } else if(state.sampleSize >= 100){
+      dynamicInsight.textContent = 'Con muestras más grandes, la forma amarilla suele parecerse más a la azul y las medias muestrales quedan más concentradas alrededor de la media poblacional.';
+    } else if(gap > popS*0.35){
+      dynamicInsight.textContent = 'En esta corrida, la media muestral quedó bastante alejada de la media poblacional. Eso recuerda que una sola muestra puede ser engañosa.';
+    } else if(state.repeatedMeans.length && meansSd < popS*0.15){
+      dynamicInsight.textContent = 'Las medias de las muestras repetidas están relativamente concentradas. Eso indica que, con este tamaño muestral, la estimación de la media ya es bastante estable.';
+    } else {
+      dynamicInsight.textContent = 'La población se mantiene fija, pero las muestras cambian. Probá repetir muchas veces con distintos tamaños para ver cuándo las estimaciones empiezan a estabilizarse.';
+    }
+  }
+
+  function updateSampleStrip(){
+    sampleStrip.innerHTML='';
+    const vals = state.currentSample.slice(0,20);
+    vals.forEach(v => {
+      const d=document.createElement('div');
+      d.className='sample-chip';
+      d.textContent = fmtTick(v);
+      d.style.background = 'linear-gradient(180deg, rgba(255,209,102,0.22), rgba(255,209,102,0.08))';
+      d.style.borderColor = '#6a5330';
+      sampleStrip.appendChild(d);
+    });
+    while(sampleStrip.children.length<20){
+      const d=document.createElement('div'); d.className='sample-chip'; d.textContent='·'; d.style.opacity='0.35'; sampleStrip.appendChild(d);
+    }
+  }
+
+  function syncLabels(){
+    $('#scenarioLabel').textContent = scenarioName();
+    $('#populationLabel').textContent = state.populationSize;
+    $('#sampleLabel').textContent = state.currentSample.length || state.sampleSize;
+    $('#repLabel').textContent = state.repetitions;
+    $('#populationSizeVal').textContent = state.populationSize;
+    $('#sampleSizeVal').textContent = state.sampleSize;
+    $('#repetitionsVal').textContent = state.repetitions;
+    $('#binsVal').textContent = state.bins;
+  }
+
+  function refresh(){
+    syncLabels();
+    updateMetrics();
+    updateSampleStrip();
+    drawHist();
+    drawMeans();
+  }
+
+  function stopReplay(){
+    if(state.replayTimer){ clearInterval(state.replayTimer); state.replayTimer=null; }
+  }
+
+  function runReplay(){
+    stopReplay();
+    repeatSamples();
+    const history = state.sampleHistory.slice();
+    const means = [];
+    state.currentSample = history[0] ? history[0].slice() : [];
+    state.repeatedMeans = [];
+    refresh();
+    let i=0;
+    const speed = +$('#replaySpeed').value || 220;
+    state.replayTimer = setInterval(() => {
+      if(i >= history.length){ stopReplay(); return; }
+      state.currentSample = history[i].slice();
+      means.push(mean(history[i]));
+      state.repeatedMeans = means.slice();
+      refresh();
+      i++;
+    }, speed);
+  }
+
+  function attachEvents(){
+    $('#scenario').addEventListener('change', e => { state.scenario=e.target.value; generatePopulation(); sampleOne(); repeatSamples(); refresh(); });
+    $('#seed').addEventListener('change', e => { state.seed=+e.target.value|0; generatePopulation(); sampleOne(); repeatSamples(); refresh(); });
+    $('#showPopulation').addEventListener('change', e => { state.showPopulation=e.target.value; refresh(); });
+    $('#populationSize').addEventListener('input', e => { state.populationSize=+e.target.value|0; syncLabels(); });
+    $('#populationSize').addEventListener('change', e => { state.populationSize=+e.target.value|0; generatePopulation(); sampleOne(); repeatSamples(); refresh(); });
+    $('#sampleSize').addEventListener('input', e => { state.sampleSize=+e.target.value|0; syncLabels(); });
+    $('#sampleSize').addEventListener('change', e => { state.sampleSize=+e.target.value|0; sampleOne(); repeatSamples(); refresh(); });
+    $('#repetitions').addEventListener('input', e => { state.repetitions=+e.target.value|0; syncLabels(); });
+    $('#repetitions').addEventListener('change', e => { state.repetitions=+e.target.value|0; repeatSamples(); refresh(); });
+    $('#bins').addEventListener('input', e => { state.bins=+e.target.value|0; refresh(); });
+    $('#sampleMode').addEventListener('change', e => { state.sampleMode=e.target.value; sampleOne(); repeatSamples(); refresh(); });
+
+    $('#regenBtn').addEventListener('click', () => { generatePopulation(); sampleOne(); repeatSamples(); refresh(); });
+    $('#sampleBtn').addEventListener('click', () => { sampleOne(Date.now()%100000); refresh(); });
+    $('#repeatBtn').addEventListener('click', () => { repeatSamples(); refresh(); });
+    $('#replayBtn').addEventListener('click', () => { runReplay(); });
+
+    $('#presetSmall').addEventListener('click', () => {
+      state.scenario='service'; state.populationSize=2000; state.sampleSize=8; state.repetitions=60; state.bins=14; state.sampleMode='noreplace';
+      applyStateToControls(); generatePopulation(); sampleOne(); repeatSamples(); refresh();
+    });
+    $('#presetLarge').addEventListener('click', () => {
+      state.scenario='demand'; state.populationSize=2500; state.sampleSize=120; state.repetitions=100; state.bins=16; state.sampleMode='noreplace';
+      applyStateToControls(); generatePopulation(); sampleOne(); repeatSamples(); refresh();
+    });
+    $('#presetBimodal').addEventListener('click', () => {
+      state.scenario='mix'; state.populationSize=1800; state.sampleSize=25; state.repetitions=80; state.bins=18; state.sampleMode='replace';
+      applyStateToControls(); generatePopulation(); sampleOne(); repeatSamples(); refresh();
+    });
+
+    const ro1 = new ResizeObserver(()=>drawHist()); ro1.observe(plotHist);
+    const ro2 = new ResizeObserver(()=>drawMeans()); ro2.observe(plotMeans);
+  }
+
+  function applyStateToControls(){
+    $('#scenario').value = state.scenario;
+    $('#seed').value = state.seed;
+    $('#showPopulation').value = state.showPopulation;
+    $('#populationSize').value = state.populationSize;
+    $('#sampleSize').value = state.sampleSize;
+    $('#repetitions').value = state.repetitions;
+    $('#bins').value = state.bins;
+    $('#sampleMode').value = state.sampleMode;
+    syncLabels();
+  }
+
+  function init(){
+    applyStateToControls();
+    generatePopulation();
+    sampleOne();
+    repeatSamples();
+    refresh();
+    attachEvents();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
