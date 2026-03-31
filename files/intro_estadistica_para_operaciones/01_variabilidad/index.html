@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Operaciones reales vs. operaciones de diseño — variabilidad en un flujo de 3 etapas</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1428; --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646;
+      --ok:#21c07a; --warn:#ffb454; --err:#ef476f; --accent:#78a6ff;
+      --s0:#8ec5ff; --s1:#ffd166; --s2:#ef476f;
+      --stage1:#8ec5ff; --stage2:#78a6ff; --stage3:#21c07a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 20% -10%, #162045 0%, var(--bg) 50%);
+      font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    }
+    .container{max-width:1320px; margin:0 auto; padding:28px 16px 60px;}
+    header{display:grid; gap:8px; margin-bottom:14px}
+    h1{margin:0; font-size:clamp(24px, 2vw + 16px, 36px)}
+    h2,h3{margin:0 0 10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid; gap:16px; grid-template-columns:repeat(12,1fr)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2)
+    }
+    .span-12{grid-column:1 / -1}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    .span-6{grid-column:span 6}
+    @media (max-width: 1024px){ .span-8,.span-7,.span-6,.span-5,.span-4{grid-column:1 / -1} }
+
+    .panel{background:#0f1428; border:1px solid var(--border); border-radius:14px; padding:12px}
+    .mono{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    canvas{width:100%; display:block; background:#0c1226; border:1px solid var(--border); border-radius:14px}
+    #plotHistory{height:360px}
+
+    .chips,.legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:3px 10px;
+      border:1px solid var(--border); border-radius:999px; background:#0e1a3c;
+      font-size:12px; color:var(--muted)
+    }
+    .box{display:inline-block; width:14px; height:10px; border-radius:3px}
+
+    .controls{display:grid; gap:10px}
+    .row{display:grid; grid-template-columns:minmax(120px,180px) minmax(260px,1fr) minmax(58px,78px); gap:12px; align-items:center}
+    .row input[type="range"]{width:100%}
+    .row output{justify-self:end; font-variant-numeric: tabular-nums}
+    .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .cols{grid-template-columns:1fr} }
+    select,input[type="number"]{
+      background:#0d1631; color:var(--ink); border:1px solid var(--border);
+      border-radius:10px; padding:7px 8px; width:100%;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#0f1734; color:var(--ink); cursor:pointer; user-select:none
+    }
+    .btn:active{transform:translateY(1px)}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+
+    .scenario-grid{display:grid; gap:12px; grid-template-columns:repeat(3,1fr)}
+    @media (max-width: 950px){ .scenario-grid{grid-template-columns:1fr} }
+    .scenario-card{background:#0f1428; border:1px solid var(--border); border-radius:16px; padding:14px}
+    .scenario-header{display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px}
+    .tag{display:inline-flex; align-items:center; gap:8px; font-weight:600}
+    .status{font-size:12px; color:var(--muted)}
+    .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+    .metric{
+      border:1px solid #141a33; border-radius:12px; padding:8px 10px; background:#0d1328;
+    }
+    .metric .k{font-size:12px; color:var(--muted)}
+    .metric .v{font-size:18px; font-weight:700}
+
+    .factory{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:10px}
+    .stage{
+      border:1px solid #141a33; border-radius:12px; padding:10px; background:#0d1328;
+      min-height:132px; display:grid; gap:8px;
+    }
+    .stage h4{margin:0; font-size:14px}
+    .queuebar{height:14px; border-radius:999px; overflow:hidden; background:#091121; border:1px solid #1a2445}
+    .queuefill{height:100%; border-radius:999px}
+    .small{font-size:12px; color:var(--muted)}
+    .big{font-size:18px; font-weight:700}
+
+    .insight{
+      border-left:4px solid var(--accent); background:#0d1631; padding:12px 14px; border-radius:10px;
+    }
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+    details{border:1px solid var(--border); border-radius:12px; background:#0d1328; padding:10px}
+    summary{cursor:pointer}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:4px 0}
+    .nowrap{white-space:nowrap}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Operaciones reales vs. operaciones de diseño</h1>
+      <div class="muted">Mismo promedio, distinto desempeño: una introducción visual a por qué la variabilidad importa en gestión de operaciones.</div>
+      <div class="legend">
+        <span class="pill"><span class="box" style="background:var(--s0)"></span> Escenario determinístico</span>
+        <span class="pill"><span class="box" style="background:var(--s1)"></span> Variabilidad leve</span>
+        <span class="pill"><span class="box" style="background:var(--s2)"></span> Variabilidad alta</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      
+
+      <div class="card span-12">
+        <h3>Marco teórico: por qué aparece variabilidad en operaciones</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 8;">
+            <p>En gestión de operaciones solemos arrancar diseñando un sistema “ordenado”: definimos recursos, tareas, secuencias, capacidades y tiempos esperados. Ese <strong>sistema diseñado</strong> es una representación ideal del proceso. Sin embargo, cuando el sistema se pone en marcha aparece el <strong>sistema real</strong>: clientes que no llegan perfectamente espaciados, operarios que tardan un poco más o un poco menos, máquinas que se detienen, retrabajos, prioridades cambiantes o pedidos que se acumulan en ciertos momentos.</p>
+            <p>Además, muchas veces no vemos directamente el sistema completo, sino solo el <strong>sistema observado</strong>: los datos que logramos registrar. Por ejemplo, podemos observar la cantidad procesada por hora, la cola en una etapa o los pedidos entregados al final del día, pero no siempre todo lo que ocurrió internamente. Por eso, en operaciones conviene distinguir tres niveles:</p>
+            <ul>
+              <li><strong>Sistema diseñado:</strong> cómo debería funcionar según el plan, los tiempos estándar y la capacidad nominal.</li>
+              <li><strong>Sistema real:</strong> cómo efectivamente funciona cuando interactúan personas, equipos, materiales y demanda.</li>
+              <li><strong>Sistema observado:</strong> lo que logramos medir del sistema real mediante indicadores y datos.</li>
+            </ul>
+            <p>El punto central es que <strong>dos sistemas con el mismo promedio pueden comportarse de manera muy distinta</strong>. Si una etapa recibe en promedio 10 unidades por período y también puede procesar en promedio 10, uno podría pensar que el sistema está “bien balanceado”. Pero si algunos períodos llegan 7, otros 13, y además la capacidad efectiva también fluctúa, empiezan a aparecer colas, acumulación interna y pérdida de estabilidad.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea clave</strong></div>
+            <p>En operaciones, el desempeño no depende solo de los promedios. También depende de la <strong>variabilidad</strong> y de <strong>dónde</strong> esa variabilidad impacta en el flujo.</p>
+            <div class="insight" style="margin-top:10px;">
+              <strong>Mensaje para llevarse:</strong> un proceso puede estar bien diseñado “en promedio” y aun así funcionar mal en la práctica.
+            </div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px; margin-top:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>De dónde sale la variabilidad</strong></div>
+            <ul>
+              <li>llegadas de clientes o pedidos;</li>
+              <li>tiempos de servicio o de proceso;</li>
+              <li>microparadas, fallas o retrabajos;</li>
+              <li>diferencias entre operadores, turnos o lotes;</li>
+              <li>cambios de mezcla de productos o prioridades.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Qué consecuencias genera</strong></div>
+            <ul>
+              <li>colas antes de ciertas etapas;</li>
+              <li>tiempos de espera crecientes;</li>
+              <li>trabajo en proceso acumulado (WIP);</li>
+              <li>salidas por período más inestables;</li>
+              <li>dificultad para prometer plazos y cumplirlos.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Conexión con temas del curso</strong></div>
+            <ul>
+              <li><strong>Teoría de colas:</strong> la variabilidad ayuda a explicar la espera.</li>
+              <li><strong>TOC:</strong> una restricción inestable amplifica el problema.</li>
+              <li><strong>Pronósticos:</strong> la demanda rara vez coincide exactamente con el plan.</li>
+              <li><strong>Simulación:</strong> permite experimentar con sistemas inciertos sin frenarlos.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:12px;">
+          <div class="mono"><strong>Una formalización mínima, sin ponerse pesado</strong></div>
+          <p>Si llamamos <strong>Demanda media</strong> a \(\bar{D}\) y <strong>Capacidad media</strong> a \(\bar{C}\), un análisis demasiado simplificado diría que el sistema está cómodo cuando \(\bar{C} &gt; \bar{D}\). Eso sirve como primera aproximación, pero no alcanza. En la práctica importa también cuánto se alejan los valores reales de esos promedios período a período. En otras palabras:</p>
+          <div class="insight" style="margin:10px 0;">
+            <strong>Desempeño del sistema ≠ función solo del promedio</strong><br>
+            <span class="muted">Desempeño del sistema = promedio + variabilidad + interacción entre etapas.</span>
+          </div>
+          <p>En esta web aparece una medida muy usada en operaciones: el <strong>WIP</strong> (<em>Work In Process</em>), es decir, el trabajo acumulado dentro del sistema. Cuando el sistema no puede absorber rápidamente los picos de llegada o las caídas transitorias de capacidad, el WIP crece. Ese crecimiento suele venir acompañado de más espera, más desorden y más dificultad para controlar el flujo.</p>
+          <p>Por eso, la pregunta importante no es solo “¿cuál es el promedio?”, sino también: <strong>¿qué tan estable es el proceso?</strong>, <strong>¿qué tan rápido se recupera de un pico?</strong> y <strong>¿dónde se acumula el trabajo?</strong></p>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h3>Cómo usar la interactividad de esta página</h3>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 5;">
+            <div class="mono"><strong>Qué podés tocar</strong></div>
+            <ul>
+              <li><strong>Períodos:</strong> cambia la longitud de la simulación.</li>
+              <li><strong>Demanda media:</strong> ajusta cuántas unidades llegan, en promedio, en cada período.</li>
+              <li><strong>Capacidad media etapa 1, 2 y 3:</strong> cambia la capacidad promedio de cada etapa del flujo.</li>
+              <li><strong>Variabilidad leve / alta:</strong> define cuánto fluctúan demanda y capacidades alrededor del promedio en esos escenarios.</li>
+              <li><strong>Semilla:</strong> permite repetir exactamente la misma corrida aleatoria.</li>
+              <li><strong>Velocidad replay:</strong> controla la rapidez de la reproducción paso a paso.</li>
+              <li><strong>Métrica graficada:</strong> cambia lo que ves en el gráfico temporal.</li>
+            </ul>
+          </div>
+          <div class="panel" style="grid-column:span 7;">
+            <div class="mono"><strong>Qué hace cada botón</strong></div>
+            <ul>
+              <li><strong>Simular:</strong> recalcula los tres escenarios con los parámetros actuales y muestra el resultado final.</li>
+              <li><strong>Reproducir:</strong> recorre la simulación período por período para que puedas ver cómo se van formando colas y acumulación.</li>
+              <li><strong>Volver al final:</strong> salta otra vez a la foto final de la corrida ya simulada.</li>
+              <li><strong>Preset balanceado:</strong> propone un sistema relativamente razonable para arrancar.</li>
+              <li><strong>Preset cuello de botella:</strong> deja a la etapa 2 más justa que las demás para mostrar acumulación.</li>
+              <li><strong>Preset sobrecarga:</strong> eleva la demanda para mostrar un sistema exigido aun antes de aumentar mucho la variabilidad.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px; margin-top:12px;">
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Sugerencia de recorrido</strong></div>
+            <ol style="margin:8px 0 0 18px; padding:0;">
+              <li>Empezá con el <strong>preset balanceado</strong> y mirá las diferencias entre los tres escenarios.</li>
+              <li>Sin cambiar los promedios, aumentá solo <strong>Variabilidad alta</strong> y observá si suben el WIP y las colas.</li>
+              <li>Pasá a la métrica <strong>Salida por período</strong> y compará estabilidad de throughput.</li>
+              <li>Luego elegí <strong>Cola antes de la etapa 1</strong> para ver si el atraso queda retenido al ingreso del sistema.</li>
+              <li>Probá el <strong>preset cuello de botella</strong> y fijate qué etapa parece gobernar el comportamiento del flujo.</li>
+              <li>Finalmente, usá <strong>Reproducir</strong> para ver no solo cuánto se acumuló, sino <strong>cómo</strong> se acumuló.</li>
+            </ol>
+          </div>
+          <div class="panel" style="grid-column:span 6;">
+            <div class="mono"><strong>Qué conviene mirar mientras explorás</strong></div>
+            <ul>
+              <li>Si la <strong>salida promedio</strong> se mantiene parecida pero el <strong>WIP promedio</strong> aumenta mucho.</li>
+              <li>Si el sistema vuelve rápido a niveles bajos de acumulación o si el atraso “queda pegado”.</li>
+              <li>Si una etapa actúa como restricción y hace crecer las colas aguas arriba.</li>
+              <li>Si la variabilidad afecta más a la <strong>estabilidad</strong> que al promedio de salida.</li>
+              <li>Cómo cambia la lectura del sistema al pasar de una foto final a la reproducción paso a paso.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="insight" style="margin-top:12px;">
+          <strong>Interpretación sugerida:</strong> cuando toques un control, no te quedes solo con “sube” o “baja”. Tratá de explicar <strong>por qué</strong> cambió el flujo: si fue por más demanda, por menor capacidad, por un cuello de botella o por mayor variabilidad con el mismo promedio.
+        </div>
+      </div>
+
+
+      <div class="card span-12">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr); gap:12px;">
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Objetivo didáctico puntual</strong></div>
+            <p>Que el estudiante vea que un sistema de operaciones puede tener <strong>las mismas capacidades medias</strong> y, aun así, comportarse muy distinto cuando aparece variabilidad en la demanda o en la capacidad efectiva.</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Pregunta disparadora</strong></div>
+            <p>Si dos plantas tienen el mismo diseño promedio, ¿por qué una vive con colas, atrasos y trabajo acumulado, mientras la otra parece más estable?</p>
+          </div>
+          <div class="panel" style="grid-column:span 4;">
+            <div class="mono"><strong>Idea central</strong></div>
+            <p>En operaciones no alcanza con conocer el <strong>promedio</strong>. También importa cuánto fluctúan la llegada de trabajo y la capacidad real de las etapas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <div class="chips" style="margin-bottom:10px;">
+          <label class="pill" for="metricSelect">Métrica graficada</label>
+          <select id="metricSelect" style="max-width:280px;">
+            <option value="wip">Trabajo acumulado total (WIP)</option>
+            <option value="out">Salida por período</option>
+            <option value="q1">Cola antes de la etapa 1</option>
+            <option value="cumOut">Salida acumulada</option>
+          </select>
+          <span class="pill">Período visible: <span id="stepLabel">final</span></span>
+        </div>
+        <canvas id="plotHistory" aria-label="Comparación de escenarios en el tiempo"></canvas>
+        <div class="insight" style="margin-top:12px;" id="dynamicInsight">
+          Ejecutá la simulación para generar una lectura automática de los resultados.
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <h3>Configuración del experimento</h3>
+        <div class="controls">
+          <div class="row">
+            <label for="periods">Períodos</label>
+            <input id="periods" type="range" min="20" max="120" step="5" value="60" />
+            <output id="periodsVal">60</output>
+          </div>
+          <div class="row">
+            <label for="meanDemand">Demanda media</label>
+            <input id="meanDemand" type="range" min="4" max="20" step="1" value="10" />
+            <output id="meanDemandVal">10</output>
+          </div>
+          <div class="row">
+            <label for="cap1">Capacidad media etapa 1</label>
+            <input id="cap1" type="range" min="4" max="20" step="1" value="12" />
+            <output id="cap1Val">12</output>
+          </div>
+          <div class="row">
+            <label for="cap2">Capacidad media etapa 2</label>
+            <input id="cap2" type="range" min="4" max="20" step="1" value="10" />
+            <output id="cap2Val">10</output>
+          </div>
+          <div class="row">
+            <label for="cap3">Capacidad media etapa 3</label>
+            <input id="cap3" type="range" min="4" max="20" step="1" value="11" />
+            <output id="cap3Val">11</output>
+          </div>
+          <div class="row">
+            <label for="varLow">Variabilidad leve</label>
+            <input id="varLow" type="range" min="0.05" max="0.30" step="0.01" value="0.12" />
+            <output id="varLowVal">12%</output>
+          </div>
+          <div class="row">
+            <label for="varHigh">Variabilidad alta</label>
+            <input id="varHigh" type="range" min="0.10" max="0.60" step="0.01" value="0.35" />
+            <output id="varHighVal">35%</output>
+          </div>
+
+          <div class="cols">
+            <div>
+              <label class="muted" for="seed">Semilla</label>
+              <input id="seed" type="number" step="1" value="1234" />
+            </div>
+            <div>
+              <label class="muted" for="replaySpeed">Velocidad replay</label>
+              <select id="replaySpeed">
+                <option value="600">Lenta</option>
+                <option value="320" selected>Media</option>
+                <option value="150">Rápida</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btnrow" style="margin-top:6px;">
+            <button id="simulateBtn" class="btn" type="button">Simular</button>
+            <button id="replayBtn" class="btn" type="button">Reproducir</button>
+            <button id="resetBtn" class="btn" type="button">Volver al final</button>
+          </div>
+          <div class="btnrow">
+            <button id="presetBalanced" class="btn" type="button">Preset balanceado</button>
+            <button id="presetBneck" class="btn" type="button">Preset cuello de botella</button>
+            <button id="presetOverload" class="btn" type="button">Preset sobrecarga</button>
+          </div>
+        </div>
+
+        <details style="margin-top:12px;">
+          <summary class="muted">Qué hace exactamente esta simulación</summary>
+          <div class="small" style="margin-top:8px;">
+            En cada período entran unidades a la cola de la <strong>etapa 1</strong>. Luego cada una de las 3 etapas procesa lo que puede según su capacidad efectiva de ese período. En el escenario determinístico, la demanda y las capacidades son siempre iguales a su valor medio. En los otros dos escenarios, esos valores fluctúan alrededor del mismo promedio.
+          </div>
+        </details>
+      </div>
+
+      <div class="card span-12">
+        <h3>Fotografía del sistema</h3>
+        <div class="muted" style="margin-bottom:10px;">Cada tarjeta muestra el estado del flujo en el período seleccionado: colas, salida y carga del sistema.</div>
+        <div class="scenario-grid" id="scenarioGrid"></div>
+      </div>
+
+      <div class="card span-6">
+        <h3>Qué observar</h3>
+        <ul>
+          <li>Compará si los escenarios tienen <strong>salidas promedio parecidas</strong> pero <strong>colas muy diferentes</strong>.</li>
+          <li>Fijate qué pasa con el trabajo acumulado cuando la etapa 2 queda justa respecto de la demanda.</li>
+          <li>Probá mantener los mismos promedios y aumentar solo la variabilidad.</li>
+          <li>Mirá si el sistema “recupera” rápido los picos o si el atraso se queda instalado.</li>
+        </ul>
+      </div>
+
+      <div class="card span-6">
+        <h3>Aplicación a operaciones y mini actividad</h3>
+        <ul>
+          <li><strong>Colas:</strong> ayuda a entender por qué aparecen tiempos de espera aunque el promedio “parezca suficiente”.</li>
+          <li><strong>TOC:</strong> muestra que una restricción inestable puede amplificar la acumulación aguas arriba.</li>
+          <li><strong>Simulación:</strong> permite experimentar sin necesidad de fórmulas al principio.</li>
+          <li><strong>Desafío:</strong> encontrá una configuración donde el throughput medio cambie poco, pero el WIP promedio se dispare.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+<script>
+  const $ = (s)=>document.querySelector(s);
+  const scenarioDefs = [
+    {key:'det',  name:'Determinístico',   varLevel:()=>0,              color:getVar('--s0')},
+    {key:'low',  name:'Variabilidad leve',varLevel:()=>+$('#varLow').value,  color:getVar('--s1')},
+    {key:'high', name:'Variabilidad alta',varLevel:()=>+$('#varHigh').value, color:getVar('--s2')},
+  ];
+
+  const state = {
+    results:null,
+    currentStep:0,
+    replayTimer:null,
+    metric:'wip'
+  };
+
+  const sliders = ['periods','meanDemand','cap1','cap2','cap3','varLow','varHigh'];
+  sliders.forEach(id => {
+    const inp = $('#'+id), out = $('#'+id+'Val');
+    inp.addEventListener('input', ()=>{
+      out.textContent = (id==='varLow' || id==='varHigh') ? `${Math.round(+inp.value*100)}%` : inp.value;
+    });
+  });
+
+  $('#metricSelect').addEventListener('change', ()=>{
+    state.metric = $('#metricSelect').value;
+    drawHistory();
+  });
+
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function mulberry32(seed){ let t = seed >>> 0; return function(){ t += 0x6D2B79F5; let r = Math.imul(t ^ (t>>>15), 1|t); r ^= r + Math.imul(r ^ (r>>>7), 61|r); return ((r ^ (r>>>14))>>>0)/4294967296; } }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+  function randintAround(mean, frac, rng){
+    if (frac<=0) return Math.max(0, Math.round(mean));
+    const delta = mean * frac;
+    const value = mean + (rng()*2 - 1) * delta;
+    return Math.max(0, Math.round(value));
+  }
+
+  function simulateScenario(varLevel, seedOffset){
+    const T = +$('#periods').value;
+    const meanDemand = +$('#meanDemand').value;
+    const caps = [+$('#cap1').value, +$('#cap2').value, +$('#cap3').value];
+    const rng = mulberry32((+$('#seed').value|0) + seedOffset*1009);
+
+    let q1=0,q2=0,q3=0;
+    let cumIn=0, cumOut=0;
+    let sumWip=0, sumOut=0, sumQ1=0;
+    let maxWip=0, maxQ1=0;
+    let periodsWithQueue=0;
+    const hist=[];
+
+    for(let t=1; t<=T; t++){
+      const demand = randintAround(meanDemand, varLevel, rng);
+      const c1 = randintAround(caps[0], varLevel, rng);
+      const c2 = randintAround(caps[1], varLevel, rng);
+      const c3 = randintAround(caps[2], varLevel, rng);
+
+      q1 += demand;
+      const p1 = Math.min(q1, c1); q1 -= p1; q2 += p1;
+      const p2 = Math.min(q2, c2); q2 -= p2; q3 += p2;
+      const p3 = Math.min(q3, c3); q3 -= p3;
+
+      const wip = q1 + q2 + q3;
+      cumIn += demand; cumOut += p3;
+      sumWip += wip; sumOut += p3; sumQ1 += q1;
+      maxWip = Math.max(maxWip, wip); maxQ1 = Math.max(maxQ1, q1);
+      if (wip>0) periodsWithQueue++;
+
+      hist.push({
+        t, demand, caps:[c1,c2,c3], out:p3,
+        q:[q1,q2,q3], wip, q1Only:q1,
+        cumOut, cumIn
+      });
+    }
+
+    return {
+      hist,
+      summary:{
+        avgDemand: cumIn/T,
+        avgOut: sumOut/T,
+        avgWip: sumWip/T,
+        avgQ1: sumQ1/T,
+        endWip: hist.at(-1)?.wip ?? 0,
+        maxWip,
+        maxQ1,
+        periodsWithQueue,
+        queueShare: periodsWithQueue/T,
+        completionRatio: cumOut / Math.max(1, cumIn)
+      }
+    };
+  }
+
+  function simulateAll(){
+    state.results = {};
+    scenarioDefs.forEach((sc, idx)=>{
+      state.results[sc.key] = simulateScenario(sc.varLevel(), idx+1);
+    });
+    state.currentStep = +$('#periods').value;
+    updateInsight();
+    updateScenarioCards();
+    drawHistory();
+  }
+
+  function metricValue(point, metric){
+    if (metric==='wip') return point.wip;
+    if (metric==='out') return point.out;
+    if (metric==='q1') return point.q1Only;
+    if (metric==='cumOut') return point.cumOut;
+    return 0;
+  }
+
+  function metricLabel(metric){
+    return {
+      wip:'Trabajo acumulado total',
+      out:'Salida por período',
+      q1:'Cola antes de etapa 1',
+      cumOut:'Salida acumulada'
+    }[metric] || '';
+  }
+
+  const canvas = $('#plotHistory');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvasToDisplaySize(){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width));
+    const cssH = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(cssW*dpr) || canvas.height !== Math.round(cssH*dpr)){
+      canvas.width = Math.round(cssW*dpr);
+      canvas.height = Math.round(cssH*dpr);
+    }
+    ctx.setTransform(1,0,0,1,0,0);
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath(); ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function drawHistory(){
+    resizeCanvasToDisplaySize();
+    const W = canvas.getBoundingClientRect().width;
+    const H = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,W,H);
+    const m = {l:56,r:16,t:24,b:42};
+    ctx.fillStyle = '#0c1226'; roundRect(ctx,m.l,m.t,W-m.l-m.r,H-m.t-m.b,10); ctx.fill();
+
+    if (!state.results) return;
+
+    const maxT = state.currentStep || +$('#periods').value;
+    const metric = state.metric;
+    let ymax = 1;
+    scenarioDefs.forEach(sc=>{
+      const hist = state.results[sc.key].hist.slice(0,maxT);
+      hist.forEach(p => { ymax = Math.max(ymax, metricValue(p, metric)); });
+    });
+    ymax *= 1.12;
+
+    const x0=m.l, x1=W-m.r, y0=H-m.b, y1=m.t;
+    const xAt = (t)=> x0 + ((t-1)/Math.max(1,(+$('#periods').value-1))) * (x1-x0);
+    const yAt = (v)=> y0 - (v/Math.max(1,ymax)) * (y0-y1);
+
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let k=0;k<=6;k++) line(ctx, x0 + k*(x1-x0)/6, y1, x0 + k*(x1-x0)/6, y0);
+    for(let k=0;k<=6;k++) line(ctx, x0, y0 - k*(y0-y1)/6, x1, y0 - k*(y0-y1)/6);
+
+    // Lines
+    scenarioDefs.forEach(sc=>{
+      const hist = state.results[sc.key].hist.slice(0,maxT);
+      ctx.strokeStyle = sc.color; ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      hist.forEach((p, idx)=>{
+        const X = xAt(p.t), Y = yAt(metricValue(p, metric));
+        if (idx===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+      });
+      ctx.stroke();
+
+      const last = hist.at(-1);
+      if (last){
+        const X = xAt(last.t), Y = yAt(metricValue(last, metric));
+        ctx.fillStyle = sc.color;
+        ctx.beginPath(); ctx.arc(X,Y,3.5,0,Math.PI*2); ctx.fill();
+      }
+    });
+
+    // Axis
+    ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.2;
+    line(ctx,x0,y1,x0,y0); line(ctx,x0,y0,x1,y0);
+
+    ctx.fillStyle='rgba(231,236,243,0.9)';
+    ctx.font='12px system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(let k=0;k<=6;k++){
+      const t = Math.round(1 + k*((+$('#periods').value-1)/6));
+      ctx.fillText(String(t), xAt(t), y0+6);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(let k=0;k<=6;k++){
+      const val = Math.round(k*ymax/6);
+      ctx.fillText(String(val), x0-6, y0 - k*(y0-y1)/6);
+    }
+
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(metricLabel(metric), x0+4, 6);
+  }
+
+  function updateScenarioCards(){
+    if (!state.results) return;
+    const step = clamp(state.currentStep || +$('#periods').value, 1, +$('#periods').value);
+    $('#stepLabel').textContent = (step === +$('#periods').value) ? 'final' : `t = ${step}`;
+    const container = $('#scenarioGrid');
+    container.innerHTML = '';
+
+    scenarioDefs.forEach(sc=>{
+      const res = state.results[sc.key];
+      const point = res.hist[step-1];
+      const s = res.summary;
+
+      const card = document.createElement('div');
+      card.className = 'scenario-card';
+      card.innerHTML = `
+        <div class="scenario-header">
+          <div class="tag"><span class="box" style="background:${sc.color}"></span>${sc.name}</div>
+          <div class="status">Período ${point.t}</div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><div class="k">Salida promedio</div><div class="v">${s.avgOut.toFixed(2)}</div></div>
+          <div class="metric"><div class="k">WIP promedio</div><div class="v">${s.avgWip.toFixed(2)}</div></div>
+          <div class="metric"><div class="k">WIP actual</div><div class="v">${point.wip}</div></div>
+          <div class="metric"><div class="k">Cola etapa 1</div><div class="v">${point.q1Only}</div></div>
+        </div>
+
+        <div class="factory">
+          ${stageHTML('Etapa 1', point.q[0], point.caps[0], 'var(--stage1)', s.maxQ1)}
+          ${stageHTML('Etapa 2', point.q[1], point.caps[1], 'var(--stage2)', s.maxWip)}
+          ${stageHTML('Etapa 3', point.q[2], point.caps[2], 'var(--stage3)', s.maxWip)}
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <div class="small">Demanda del período: <strong>${point.demand}</strong></div>
+          <div class="small">Salida del período: <strong>${point.out}</strong></div>
+          <div class="small">Períodos con trabajo acumulado: <strong>${Math.round(s.queueShare*100)}%</strong></div>
+          <div class="small">Unidades pendientes al final: <strong>${s.endWip}</strong></div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function stageHTML(title, queue, cap, color, maxRef){
+    const pct = Math.round(100 * queue / Math.max(1, maxRef));
+    return `
+      <div class="stage">
+        <h4>${title}</h4>
+        <div>
+          <div class="small">Cola actual</div>
+          <div class="big">${queue}</div>
+        </div>
+        <div>
+          <div class="queuebar"><div class="queuefill" style="width:${clamp(pct,0,100)}%; background:${color};"></div></div>
+        </div>
+        <div class="small">Capacidad efectiva actual: <strong>${cap}</strong></div>
+      </div>
+    `;
+  }
+
+  function updateInsight(){
+    if (!state.results) return;
+    const det = state.results.det.summary;
+    const low = state.results.low.summary;
+    const high = state.results.high.summary;
+
+    const avgOutGap = high.avgOut - det.avgOut;
+    const wipGap = high.avgWip - det.avgWip;
+    const queueShareGap = (high.queueShare - det.queueShare) * 100;
+
+    let emphasis = '';
+    if (Math.abs(avgOutGap) < 0.6 && wipGap > 5){
+      emphasis = 'Acá se ve bien la idea central: el throughput promedio cambia poco, pero la acumulación interna crece bastante cuando aumenta la variabilidad.';
+    } else if (avgOutGap < -0.6) {
+      emphasis = 'En esta configuración, la variabilidad no solo aumenta la acumulación: también termina afectando de forma visible la salida promedio.';
+    } else {
+      emphasis = 'La comparación ya muestra que el comportamiento del sistema no queda explicado solo por los promedios. Conviene mirar también colas, acumulación y estabilidad.';
+    }
+
+    $('#dynamicInsight').innerHTML = `
+      <strong>Lectura automática.</strong> Frente al escenario determinístico, el escenario de variabilidad alta tiene una salida promedio de
+      <strong>${high.avgOut.toFixed(2)}</strong> unidades por período (vs. <strong>${det.avgOut.toFixed(2)}</strong>) y un WIP promedio de
+      <strong>${high.avgWip.toFixed(2)}</strong> (vs. <strong>${det.avgWip.toFixed(2)}</strong>). Eso implica una diferencia de
+      <strong>${wipGap.toFixed(2)}</strong> unidades de trabajo acumulado y de <strong>${queueShareGap.toFixed(1)} puntos porcentuales</strong>
+      en la proporción de períodos con cola. ${emphasis}
+    `;
+  }
+
+  function stopReplay(){
+    if (state.replayTimer){ clearInterval(state.replayTimer); state.replayTimer = null; }
+  }
+
+  function replay(){
+    if (!state.results) simulateAll();
+    stopReplay();
+    state.currentStep = 1;
+    updateScenarioCards();
+    drawHistory();
+    const speed = +$('#replaySpeed').value;
+    const T = +$('#periods').value;
+    state.replayTimer = setInterval(()=>{
+      state.currentStep += 1;
+      updateScenarioCards();
+      drawHistory();
+      if (state.currentStep >= T){
+        stopReplay();
+      }
+    }, speed);
+  }
+
+  function setPreset(kind){
+    if (kind==='balanced'){
+      $('#periods').value = 60; $('#periodsVal').textContent = '60';
+      $('#meanDemand').value = 10; $('#meanDemandVal').textContent = '10';
+      $('#cap1').value = 12; $('#cap1Val').textContent = '12';
+      $('#cap2').value = 10; $('#cap2Val').textContent = '10';
+      $('#cap3').value = 11; $('#cap3Val').textContent = '11';
+      $('#varLow').value = 0.12; $('#varLowVal').textContent = '12%';
+      $('#varHigh').value = 0.35; $('#varHighVal').textContent = '35%';
+    } else if (kind==='bneck'){
+      $('#periods').value = 60; $('#periodsVal').textContent = '60';
+      $('#meanDemand').value = 10; $('#meanDemandVal').textContent = '10';
+      $('#cap1').value = 13; $('#cap1Val').textContent = '13';
+      $('#cap2').value = 9;  $('#cap2Val').textContent = '9';
+      $('#cap3').value = 12; $('#cap3Val').textContent = '12';
+      $('#varLow').value = 0.10; $('#varLowVal').textContent = '10%';
+      $('#varHigh').value = 0.30; $('#varHighVal').textContent = '30%';
+    } else if (kind==='overload'){
+      $('#periods').value = 60; $('#periodsVal').textContent = '60';
+      $('#meanDemand').value = 12; $('#meanDemandVal').textContent = '12';
+      $('#cap1').value = 12; $('#cap1Val').textContent = '12';
+      $('#cap2').value = 10; $('#cap2Val').textContent = '10';
+      $('#cap3').value = 11; $('#cap3Val').textContent = '11';
+      $('#varLow').value = 0.12; $('#varLowVal').textContent = '12%';
+      $('#varHigh').value = 0.35; $('#varHighVal').textContent = '35%';
+    }
+    simulateAll();
+  }
+
+  $('#simulateBtn').addEventListener('click', ()=>{ stopReplay(); simulateAll(); });
+  $('#replayBtn').addEventListener('click', ()=> replay());
+  $('#resetBtn').addEventListener('click', ()=>{
+    stopReplay();
+    if (!state.results) simulateAll();
+    state.currentStep = +$('#periods').value;
+    updateScenarioCards();
+    drawHistory();
+  });
+  $('#presetBalanced').addEventListener('click', ()=>setPreset('balanced'));
+  $('#presetBneck').addEventListener('click', ()=>setPreset('bneck'));
+  $('#presetOverload').addEventListener('click', ()=>setPreset('overload'));
+
+  const ro = new ResizeObserver(()=>drawHistory());
+  ro.observe(canvas);
+
+  function init(){
+    simulateAll();
+    matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener?.('change', ()=>drawHistory());
+  }
+  init();
+</script>
+</body>
+</html>
