@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Botella sonora: pulsos de presión por agua al caer</title>
+  <style>
+    :root {
+      --bg1: #07111f;
+      --bg2: #132238;
+      --card: rgba(255,255,255,0.09);
+      --card2: rgba(255,255,255,0.14);
+      --text: #eef6ff;
+      --muted: #bdd0e7;
+      --accent: #67d5ff;
+      --accent2: #ffcf70;
+      --danger: #ff7c7c;
+      --ok: #86efac;
+      --water: #49aef7;
+      --glass: rgba(210,235,255,0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(103,213,255,0.25), transparent 28%),
+        radial-gradient(circle at 80% 0%, rgba(255,207,112,0.16), transparent 30%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 8px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.7rem, 3vw, 3rem);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 1.06rem;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px 20px 40px;
+      display: grid;
+      grid-template-columns: 1.45fr 0.85fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 940px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 26px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+    }
+
+    .canvas-wrap {
+      padding: 16px;
+    }
+
+    canvas {
+      width: 100%;
+      height: min(66vh, 620px);
+      min-height: 460px;
+      display: block;
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.025)),
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,0.12), transparent 40%);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .side {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.075);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 16px;
+    }
+
+    .card h2, .card h3 {
+      margin: 0 0 10px;
+      line-height: 1.15;
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+    }
+
+    .card h3 {
+      font-size: 1.08rem;
+      color: #f5fbff;
+    }
+
+    .card p {
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 8px 0;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      border-radius: 14px;
+      padding: 10px 14px;
+      color: #06111e;
+      background: linear-gradient(180deg, #d9f5ff, #74d9ff);
+      font-weight: 750;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    button.warn {
+      color: #1b1200;
+      background: linear-gradient(180deg, #ffe8ad, #ffcb62);
+    }
+
+    .control {
+      margin: 10px 0 6px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #e8f5ff;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .readouts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .readout {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.20);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .readout strong {
+      display: block;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+
+    .readout span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent2);
+      padding: 10px 12px;
+      background: rgba(255,207,112,0.10);
+      border-radius: 14px;
+      color: #ffeec7;
+      line-height: 1.45;
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      display: inline-block;
+    }
+
+    .swatch.compress {
+      background: rgba(255,120,120,0.7);
+    }
+
+    .swatch.expand {
+      background: rgba(110,190,255,0.7);
+    }
+
+    .swatch.water {
+      background: rgba(73,174,247,0.8);
+    }
+
+    details {
+      color: var(--muted);
+    }
+
+    summary {
+      cursor: pointer;
+      color: #f5fbff;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    code {
+      background: rgba(0,0,0,0.28);
+      padding: 2px 6px;
+      border-radius: 8px;
+      color: #e8f5ff;
+    }
+
+    .footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 20px 34px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* Ajustes específicos para celulares */
+    @media (max-width: 700px) {
+      body {
+        min-height: 100dvh;
+      }
+
+      header {
+        padding: 18px 14px 4px;
+      }
+
+      h1 {
+        font-size: clamp(1.45rem, 8vw, 2.05rem);
+        line-height: 1.08;
+      }
+
+      .lead {
+        font-size: 0.98rem;
+        line-height: 1.5;
+      }
+
+      main {
+        padding: 12px 10px 24px;
+        gap: 12px;
+      }
+
+      .panel {
+        border-radius: 20px;
+      }
+
+      .canvas-wrap {
+        padding: 10px;
+      }
+
+      canvas {
+        height: 62dvh;
+        min-height: 420px;
+        max-height: 560px;
+        border-radius: 16px;
+      }
+
+      .side {
+        padding: 12px;
+        gap: 10px;
+      }
+
+      .card {
+        border-radius: 16px;
+        padding: 13px;
+      }
+
+      .card h2 {
+        font-size: 1.12rem;
+      }
+
+      .card h3 {
+        font-size: 1rem;
+      }
+
+      .card p {
+        font-size: 0.96rem;
+        line-height: 1.48;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+        min-height: 46px;
+        font-size: 0.98rem;
+        padding: 12px 14px;
+      }
+
+      .readouts {
+        grid-template-columns: 1fr;
+      }
+
+      .readout strong {
+        font-size: 1.18rem;
+      }
+
+      .control label {
+        font-size: 0.94rem;
+      }
+
+      input[type="range"] {
+        min-height: 36px;
+      }
+
+      .legend {
+        font-size: 0.92rem;
+      }
+
+      .footer {
+        padding: 0 14px 24px;
+        font-size: 0.92rem;
+      }
+    }
+
+    @media (max-width: 420px) {
+      canvas {
+        height: 58dvh;
+        min-height: 390px;
+      }
+
+      .lead {
+        font-size: 0.94rem;
+      }
+
+      .card p,
+      .legend,
+      .footer {
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      canvas {
+        height: 78dvh;
+        min-height: 330px;
+      }
+
+      header {
+        padding-top: 12px;
+      }
+
+      .lead {
+        display: none;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Botella sonora: el agua genera pulsos de presión</h1>
+    <p class="lead">
+      Esta demo muestra por que se escucha un sonida mas agudo a medida que una botella se va llenando con agua (u otro líquido). El sonido aparece porque el agua cae, golpea la superficie, mete pequeñas perturbaciones en el aire y la botella responde como un resonador. Al llenarse, queda menos aire, la frecuencia que más se refuerza sube y el sonido se vuelve más agudo.
+    </p>
+  </header>
+
+  <main>
+    <section class="panel canvas-wrap">
+      <canvas id="demo" aria-label="Animación de una botella llenándose con pulsos de presión"></canvas>
+    </section>
+
+    <aside class="panel side">
+      <section class="card">
+        <h2>Controles</h2>
+        <div class="row">
+          <button id="fillBtn">Iniciar llenado</button>
+          <button id="impactBtn" class="secondary">Generar impacto</button>
+          <button id="soundBtn" class="warn">Activar sonido</button>
+        </div>
+
+        <div class="control">
+          <label for="level">
+            <span>Nivel de agua</span>
+            <span id="levelLabel">35%</span>
+          </label>
+          <input id="level" type="range" min="5" max="90" value="35" />
+        </div>
+
+        <div class="control">
+          <label for="rate">
+            <span>Caudal / impactos</span>
+            <span id="rateLabel">5 por segundo</span>
+          </label>
+          <input id="rate" type="range" min="1" max="12" value="5" />
+        </div>
+
+        <div class="control">
+          <label for="gain">
+            <span>Volumen</span>
+            <span id="gainLabel">45%</span>
+          </label>
+          <input id="gain" type="range" min="0" max="100" value="45" />
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Qué está pasando</h2>
+        <div class="readouts">
+          <div class="readout">
+            <strong id="freqRead">270 Hz</strong>
+            <span>tono resonante estimado</span>
+          </div>
+          <div class="readout">
+            <strong id="airRead">65%</strong>
+            <span>aire disponible</span>
+          </div>
+        </div>
+        <p>
+          Cada gota o parte del chorro funciona como un pequeño <strong>golpecito</strong>. Ese golpe no trae una nota
+          musical pura sino que trae una mezcla desordenada de vibraciones. La botella actúa como un filtro, deja sonar más
+          fuerte la frecuencia que mejor coincide con su aire interno.
+        </p>
+        <p class="note">
+          En la animación, los círculos rojos y azules son <strong>pulsos de presión</strong>.
+          Están recortados por la forma de la botella y la presión se mueve dentro del aire que realmente queda.
+        </p>
+      </section>
+
+      <section class="card">
+        <h3>Guía para mirar la animación</h3>
+        <div class="legend">
+          <div class="legend-item"><span class="swatch water"></span> Agua: sube y achica el espacio de aire.</div>
+          <div class="legend-item"><span class="swatch compress"></span> Rojo: aire un poco comprimido.</div>
+          <div class="legend-item"><span class="swatch expand"></span> Azul: aire un poco expandido.</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <details open>
+          <summary>Explicación sencilla</summary>
+          <p>
+            Imaginá que el aire adentro de la botella es como un resorte invisible. Cuando cae agua, pega en la
+            superficie y empuja un poquito ese aire. El aire se comprime y después se expande, como si respirara muy
+            rápido.
+          </p>
+          <p>
+            Cuando hay mucha botella vacía, hay mucho aire y el resorte es “blandito”: suena más grave. Cuando la
+            botella se llena, queda poco aire y el resorte se pone “duro”: vibra más rápido y suena más agudo.
+          </p>
+        </details>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>Modelo físico simplificado</summary>
+          <p>
+            Para una botella con cuello, una aproximación útil es el resonador de Helmholtz:
+            la frecuencia aumenta aproximadamente como <code>1 / √V</code>, donde <code>V</code> es el volumen de aire.
+          </p>
+          <p>
+            En esta demo, los impactos del agua excitan al sistema con pulsos breves. El sonido que se escucha es una
+            mezcla de un golpecito ruidoso más una oscilación amortiguada a la frecuencia resonante actual.
+          </p>
+        </details>
+      </section>
+    </aside>
+  </main>
+
+  <div class="footer">
+    <strong>Aclaración:</strong> esta es una demostración didáctica, no una simulación CFD/acústica completa.
+    En una botella real también pueden aparecer burbujas, turbulencia, vibraciones del vidrio/plástico y ruido del chorro.
+    La idea central que se muestra aquí es que el impacto del agua genera pulsos amplios, y la cavidad de aire selecciona
+    qué frecuencia se amplifica.
+  </div>
+
+  <script>
+    const canvas = document.getElementById("demo");
+    const ctx = canvas.getContext("2d");
+
+    const levelEl = document.getElementById("level");
+    const rateEl = document.getElementById("rate");
+    const gainEl = document.getElementById("gain");
+    const levelLabel = document.getElementById("levelLabel");
+    const rateLabel = document.getElementById("rateLabel");
+    const gainLabel = document.getElementById("gainLabel");
+    const freqRead = document.getElementById("freqRead");
+    const airRead = document.getElementById("airRead");
+    const fillBtn = document.getElementById("fillBtn");
+    const impactBtn = document.getElementById("impactBtn");
+    const soundBtn = document.getElementById("soundBtn");
+
+    let W = 900, H = 560, dpr = 1;
+    let filling = false;
+    let soundOn = false;
+    let audioCtx = null;
+    let masterGain = null;
+
+    let level = Number(levelEl.value) / 100;
+    let impactRate = Number(rateEl.value);
+    let userGain = Number(gainEl.value) / 100;
+
+    let lastT = performance.now();
+    let impactAccumulator = 0;
+    let pulses = [];
+    let droplets = [];
+    let ripples = [];
+    let microParticles = [];
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.round(rect.width * dpr);
+      H = Math.round(rect.height * dpr);
+      canvas.width = W;
+      canvas.height = H;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      W = rect.width;
+      H = rect.height;
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+
+    function bottleMetrics() {
+      const cx = W * 0.40;
+      const top = H * 0.07;
+      const neckW = Math.min(78, W * 0.10);
+      const neckL = cx - neckW / 2;
+      const neckR = cx + neckW / 2;
+      const shoulderY = H * 0.22;
+      const bodyTop = H * 0.34;
+      const bodyW = Math.min(W * 0.43, 330);
+      const bodyL = cx - bodyW / 2;
+      const bodyR = cx + bodyW / 2;
+      const bottom = H * 0.91;
+      const waterY = bottom - level * (bottom - shoulderY);
+      return { cx, top, neckW, neckL, neckR, shoulderY, bodyTop, bodyW, bodyL, bodyR, bottom, waterY };
+    }
+
+    function bottlePath() {
+      const m = bottleMetrics();
+      const p = new Path2D();
+      p.moveTo(m.neckL, m.top);
+      p.lineTo(m.neckL, m.shoulderY);
+      p.bezierCurveTo(m.neckL, m.bodyTop - 45, m.bodyL, m.bodyTop - 28, m.bodyL, m.bodyTop + 18);
+      p.lineTo(m.bodyL, m.bottom - 24);
+      p.quadraticCurveTo(m.bodyL, m.bottom, m.bodyL + 24, m.bottom);
+      p.lineTo(m.bodyR - 24, m.bottom);
+      p.quadraticCurveTo(m.bodyR, m.bottom, m.bodyR, m.bottom - 24);
+      p.lineTo(m.bodyR, m.bodyTop + 18);
+      p.bezierCurveTo(m.bodyR, m.bodyTop - 28, m.neckR, m.bodyTop - 45, m.neckR, m.shoulderY);
+      p.lineTo(m.neckR, m.top);
+      p.closePath();
+      return p;
+    }
+
+    function glassHighlightPath() {
+      const m = bottleMetrics();
+      const p = new Path2D();
+      p.moveTo(m.cx - m.bodyW * .25, m.bodyTop + 10);
+      p.bezierCurveTo(m.cx - m.bodyW * .38, m.bodyTop + 120, m.cx - m.bodyW * .36, m.bottom - 90, m.cx - m.bodyW * .22, m.bottom - 42);
+      return p;
+    }
+
+    function airFraction() {
+      return Math.max(0.10, 1 - level);
+    }
+
+    function resonantFrequency() {
+      // Modelo relativo: f sube con 1/sqrt(volumen de aire).
+      // La constante se eligió para que sea audible y pedagógica.
+      const fEmpty = 215;
+      return Math.min(980, fEmpty / Math.sqrt(airFraction()));
+    }
+
+    function updateLabels() {
+      levelLabel.textContent = `${Math.round(level * 100)}%`;
+      rateLabel.textContent = `${impactRate} por segundo`;
+      gainLabel.textContent = `${Math.round(userGain * 100)}%`;
+      freqRead.textContent = `${Math.round(resonantFrequency())} Hz`;
+      airRead.textContent = `${Math.round(airFraction() * 100)}%`;
+    }
+
+    levelEl.addEventListener("input", () => {
+      level = Number(levelEl.value) / 100;
+      updateLabels();
+    });
+
+    rateEl.addEventListener("input", () => {
+      impactRate = Number(rateEl.value);
+      updateLabels();
+    });
+
+    gainEl.addEventListener("input", () => {
+      userGain = Number(gainEl.value) / 100;
+      if (masterGain) masterGain.gain.value = userGain * 0.45;
+      updateLabels();
+    });
+
+    fillBtn.addEventListener("click", () => {
+      filling = !filling;
+      fillBtn.textContent = filling ? "Pausar llenado" : "Iniciar llenado";
+    });
+
+    impactBtn.addEventListener("click", () => {
+      spawnImpact(true);
+    });
+
+    soundBtn.addEventListener("click", async () => {
+      if (!audioCtx) initAudio();
+      await audioCtx.resume();
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? "Silenciar sonido" : "Activar sonido";
+      soundBtn.classList.toggle("secondary", soundOn);
+      soundBtn.classList.toggle("warn", !soundOn);
+      if (soundOn) spawnImpact(true);
+    });
+
+    function initAudio() {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = userGain * 0.45;
+      masterGain.connect(audioCtx.destination);
+    }
+
+    function playImpactSound(strength = 1) {
+      if (!soundOn || !audioCtx || !masterGain) return;
+
+      const now = audioCtx.currentTime;
+      const f = resonantFrequency();
+
+      // Golpe breve y ruidoso: representa el impacto desordenado del agua.
+      const noiseDur = 0.045;
+      const buffer = audioCtx.createBuffer(1, Math.max(1, Math.floor(audioCtx.sampleRate * noiseDur)), audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.value = Math.min(2500, f * 2.1);
+      noiseFilter.Q.value = 1.2;
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.12 * strength, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + noiseDur);
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      noise.start(now);
+      noise.stop(now + noiseDur);
+
+      // Ringdown resonante: la botella elige una frecuencia y la deja vibrar un momento.
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      const lowpass = audioCtx.createBiquadFilter();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(f, now);
+      osc.frequency.exponentialRampToValueAtTime(f * 0.997, now + 0.26);
+      lowpass.type = "lowpass";
+      lowpass.frequency.value = 2200;
+      oscGain.gain.setValueAtTime(0.0001, now);
+      oscGain.gain.linearRampToValueAtTime(0.17 * strength, now + 0.012);
+      oscGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.38);
+      osc.connect(lowpass);
+      lowpass.connect(oscGain);
+      oscGain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.42);
+
+      // Segundo armónico débil, para que no suene totalmente artificial.
+      const osc2 = audioCtx.createOscillator();
+      const g2 = audioCtx.createGain();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(f * 2.02, now);
+      g2.gain.setValueAtTime(0.0001, now);
+      g2.gain.linearRampToValueAtTime(0.035 * strength, now + 0.01);
+      g2.gain.exponentialRampToValueAtTime(0.0008, now + 0.18);
+      osc2.connect(g2);
+      g2.connect(masterGain);
+      osc2.start(now);
+      osc2.stop(now + 0.2);
+    }
+
+    function spawnDroplet() {
+      const m = bottleMetrics();
+      droplets.push({
+        x: m.cx + (Math.random() - 0.5) * m.neckW * 0.45,
+        y: 0,
+        vy: 220 + Math.random() * 120,
+        r: 3 + Math.random() * 2.5,
+        age: 0
+      });
+    }
+
+    function spawnImpact(manual = false) {
+      const m = bottleMetrics();
+      const spread = Math.min(m.bodyW * 0.45, 120);
+      const x = m.cx + (Math.random() - 0.5) * spread;
+      const y = Math.min(m.bottom - 5, Math.max(m.top + 20, m.waterY));
+
+      pulses.push({
+        x,
+        y,
+        age: 0,
+        life: 1.35,
+        speed: 275 + Math.random() * 80,
+        width: 16 + Math.random() * 10,
+        phase: Math.random() * Math.PI * 2,
+        strength: manual ? 1.15 : 0.75 + Math.random() * 0.35
+      });
+
+      ripples.push({
+        x,
+        y,
+        age: 0,
+        life: 0.8,
+        maxR: 60 + Math.random() * 25
+      });
+
+      for (let i = 0; i < 12; i++) {
+        microParticles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 120,
+          vy: -30 - Math.random() * 110,
+          age: 0,
+          life: 0.45 + Math.random() * 0.2,
+          r: 1.5 + Math.random() * 2.5
+        });
+      }
+
+      playImpactSound(manual ? 1 : 0.72);
+    }
+
+    function drawBackground(t) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, "rgba(255,255,255,0.05)");
+      grad.addColorStop(1, "rgba(0,0,0,0.12)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      for (let i = 0; i < 38; i++) {
+        const x = (i * 73 + (t * 12) % 73) % W;
+        const y = (i * 47) % H;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawWater(t) {
+      const m = bottleMetrics();
+      const p = bottlePath();
+      ctx.save();
+      ctx.clip(p);
+
+      const waterGrad = ctx.createLinearGradient(0, m.waterY, 0, m.bottom);
+      waterGrad.addColorStop(0, "rgba(105,205,255,0.80)");
+      waterGrad.addColorStop(1, "rgba(20,90,210,0.86)");
+      ctx.fillStyle = waterGrad;
+      ctx.fillRect(0, m.waterY, W, H);
+
+      // superficie ondulada
+      ctx.beginPath();
+      const amp = 4 + Math.min(12, ripples.length * 0.6);
+      ctx.moveTo(m.bodyL, m.waterY);
+      for (let x = m.bodyL; x <= m.bodyR; x += 8) {
+        const y = m.waterY + Math.sin(x * 0.035 + t * 0.006) * amp * 0.35
+          + Math.sin(x * 0.083 - t * 0.009) * amp * 0.2;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(m.bodyR, m.bottom);
+      ctx.lineTo(m.bodyL, m.bottom);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(124,221,255,0.22)";
+      ctx.fill();
+
+      ctx.restore();
+
+      // línea de superficie
+      ctx.save();
+      ctx.clip(p);
+      ctx.beginPath();
+      for (let x = m.bodyL; x <= m.bodyR; x += 6) {
+        const y = m.waterY + Math.sin(x * 0.04 + t * 0.006) * 2.4;
+        if (x === m.bodyL) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = "rgba(220,249,255,0.85)";
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawAirPulseField(t) {
+      const m = bottleMetrics();
+      const p = bottlePath();
+
+      // Región de aire: botella recortada hasta la superficie del agua.
+      ctx.save();
+      ctx.clip(p);
+      ctx.beginPath();
+      ctx.rect(0, 0, W, m.waterY);
+      ctx.clip();
+
+      // Pulso colectivo tenue: el aire entero se comprime-expande a la frecuencia actual.
+      const breath = 0.5 + 0.5 * Math.sin(t * 0.012 * Math.sqrt(resonantFrequency() / 260));
+      ctx.fillStyle = `rgba(255,255,255,${0.018 + breath * 0.025})`;
+      ctx.fillRect(0, 0, W, m.waterY);
+
+      for (const pulse of pulses) {
+        const progress = pulse.age / pulse.life;
+        const baseR = pulse.age * pulse.speed;
+        const alpha = Math.max(0, 1 - progress);
+
+        // varios anillos alternados: compresión/expansión.
+        for (let k = 0; k < 5; k++) {
+          const r = baseR - k * pulse.width * 1.45;
+          if (r <= 3) continue;
+          const positive = k % 2 === 0;
+          ctx.beginPath();
+          ctx.arc(pulse.x, pulse.y, r, 0, Math.PI * 2);
+          ctx.strokeStyle = positive
+            ? `rgba(255,115,115,${0.42 * alpha})`
+            : `rgba(105,195,255,${0.36 * alpha})`;
+          ctx.lineWidth = Math.max(1.2, pulse.width * (0.55 - k * 0.055));
+          ctx.stroke();
+
+          // Sombra suave alrededor de cada anillo.
+          ctx.beginPath();
+          ctx.arc(pulse.x, pulse.y, r, 0, Math.PI * 2);
+          ctx.strokeStyle = positive
+            ? `rgba(255,115,115,${0.10 * alpha})`
+            : `rgba(105,195,255,${0.09 * alpha})`;
+          ctx.lineWidth = pulse.width * 1.55;
+          ctx.stroke();
+        }
+
+        // Núcleo del impacto
+        const core = ctx.createRadialGradient(pulse.x, pulse.y, 0, pulse.x, pulse.y, 80 + baseR * 0.08);
+        core.addColorStop(0, `rgba(255,230,170,${0.18 * alpha})`);
+        core.addColorStop(1, "rgba(255,230,170,0)");
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(pulse.x, pulse.y, 80 + baseR * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawRipples(t) {
+      const m = bottleMetrics();
+      const p = bottlePath();
+
+      ctx.save();
+      ctx.clip(p);
+      ctx.beginPath();
+      ctx.rect(0, m.waterY - 10, W, 35);
+      ctx.clip();
+
+      for (const r of ripples) {
+        const a = Math.max(0, 1 - r.age / r.life);
+        const rad = r.maxR * (r.age / r.life);
+        ctx.beginPath();
+        ctx.ellipse(r.x, r.y, rad * 1.15, rad * 0.22, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(230,250,255,${0.55 * a})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawDroplets(dt) {
+      const m = bottleMetrics();
+      const p = bottlePath();
+
+      ctx.save();
+      ctx.clip(p);
+      ctx.beginPath();
+      ctx.rect(m.neckL - 10, 0, m.neckW + 20, m.waterY + 20);
+      ctx.clip();
+
+      // chorro central tenue
+      if (filling) {
+        ctx.beginPath();
+        ctx.moveTo(m.cx, 0);
+        ctx.lineTo(m.cx + Math.sin(performance.now()*0.004)*2, m.waterY);
+        ctx.strokeStyle = "rgba(150,225,255,0.38)";
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(m.cx, 0);
+        ctx.lineTo(m.cx, m.waterY);
+        ctx.strokeStyle = "rgba(245,252,255,0.28)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      for (const drop of droplets) {
+        const g = ctx.createRadialGradient(drop.x - drop.r*.4, drop.y - drop.r*.4, 0, drop.x, drop.y, drop.r*1.5);
+        g.addColorStop(0, "rgba(240,252,255,0.95)");
+        g.addColorStop(1, "rgba(75,180,250,0.6)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(drop.x, drop.y, drop.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawMicroParticles() {
+      const m = bottleMetrics();
+      const p = bottlePath();
+
+      ctx.save();
+      ctx.clip(p);
+      for (const part of microParticles) {
+        const a = Math.max(0, 1 - part.age / part.life);
+        ctx.fillStyle = `rgba(215,245,255,${0.55 * a})`;
+        ctx.beginPath();
+        ctx.arc(part.x, part.y, part.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawBottleOutline() {
+      const p = bottlePath();
+      const m = bottleMetrics();
+
+      ctx.save();
+
+      // sombra
+      ctx.shadowColor = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = 25;
+      ctx.shadowOffsetY = 15;
+      ctx.fillStyle = "rgba(0,0,0,0.10)";
+      ctx.fill(p);
+      ctx.restore();
+
+      ctx.save();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(225,245,255,0.78)";
+      ctx.stroke(p);
+
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = "rgba(255,255,255,0.32)";
+      ctx.stroke(glassHighlightPath());
+
+      // boca superior
+      ctx.beginPath();
+      ctx.ellipse(m.cx, m.top, m.neckW * .55, 9, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(215,240,255,0.13)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(230,248,255,0.65)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // etiqueta del resonador
+      ctx.fillStyle = "rgba(255,255,255,0.86)";
+      ctx.font = W < 520 ? "700 12px system-ui, sans-serif" : "700 15px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("cavidad de aire resonante", m.cx, Math.max(m.top + 76, m.waterY * 0.54));
+      ctx.font = W < 520 ? "500 10.5px system-ui, sans-serif" : "500 13px system-ui, sans-serif";
+      ctx.fillStyle = "rgba(220,235,250,0.75)";
+      ctx.fillText(W < 520 ? "pulsos recortados por paredes y agua" : "los pulsos quedan recortados por paredes y agua", m.cx, Math.max(m.top + 96, m.waterY * 0.54 + 20));
+      ctx.restore();
+    }
+
+    function drawAnnotations() {
+      const m = bottleMetrics();
+      ctx.save();
+      ctx.font = "700 14px system-ui, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.textAlign = "left";
+
+      // flecha de gotas
+      if (filling) {
+        ctx.beginPath();
+        ctx.moveTo(m.cx + 58, 26);
+        ctx.lineTo(m.cx + 18, m.waterY - 14);
+        ctx.strokeStyle = "rgba(255,236,190,0.85)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillText("agua cayendo = impactos", m.cx + 62, 32);
+      }
+
+      // Flecha al espacio de aire. En pantallas chicas, el texto se ubica dentro del lienzo.
+      const mobile = W < 620;
+      const labelX = mobile ? Math.max(14, m.bodyL - 8) : m.bodyR + 14;
+      const labelY = Math.max(m.top + 135, m.waterY * 0.55);
+      ctx.beginPath();
+      if (mobile) {
+        ctx.moveTo(labelX + 118, labelY - 8);
+        ctx.lineTo(m.bodyR - 18, Math.max(m.top + 120, m.waterY * 0.52));
+      } else {
+        ctx.moveTo(m.bodyR + 24, Math.max(m.top + 130, m.waterY * 0.55));
+        ctx.lineTo(m.bodyR - 20, Math.max(m.top + 120, m.waterY * 0.52));
+      }
+      ctx.strokeStyle = "rgba(103,213,255,0.85)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.textAlign = "left";
+      ctx.fillText("menos aire → tono más agudo", labelX, labelY);
+
+      ctx.restore();
+    }
+
+    function updatePhysics(dt) {
+      if (filling) {
+        level = Math.min(0.90, level + dt * 0.024);
+        levelEl.value = Math.round(level * 100);
+        if (level >= 0.90) {
+          filling = false;
+          fillBtn.textContent = "Iniciar llenado";
+        }
+      }
+
+      impactAccumulator += dt * impactRate;
+      while (impactAccumulator >= 1) {
+        impactAccumulator -= 1;
+        if (filling || Math.random() < 0.65) {
+          spawnDroplet();
+          spawnImpact(false);
+        }
+      }
+
+      const m = bottleMetrics();
+
+      for (const drop of droplets) {
+        drop.age += dt;
+        drop.y += drop.vy * dt;
+        drop.vy += 520 * dt;
+        if (drop.y >= m.waterY) {
+          drop.dead = true;
+        }
+      }
+      droplets = droplets.filter(d => !d.dead && d.age < 1.5);
+
+      for (const p of pulses) p.age += dt;
+      pulses = pulses.filter(p => p.age < p.life);
+
+      for (const r of ripples) r.age += dt;
+      ripples = ripples.filter(r => r.age < r.life);
+
+      for (const part of microParticles) {
+        part.age += dt;
+        part.x += part.vx * dt;
+        part.y += part.vy * dt;
+        part.vy += 320 * dt;
+      }
+      microParticles = microParticles.filter(p => p.age < p.life);
+
+      updateLabels();
+    }
+
+    function draw() {
+      const now = performance.now();
+      const dt = Math.min(0.04, (now - lastT) / 1000);
+      lastT = now;
+      updatePhysics(dt);
+
+      ctx.clearRect(0, 0, W, H);
+      drawBackground(now);
+      drawWater(now);
+      drawAirPulseField(now);
+      drawRipples(now);
+      drawDroplets(dt);
+      drawMicroParticles();
+      drawBottleOutline();
+      drawAnnotations();
+
+      requestAnimationFrame(draw);
+    }
+
+    // Estado inicial con algunos pulsos suaves.
+    updateLabels();
+    setTimeout(() => spawnImpact(false), 300);
+    setTimeout(() => spawnImpact(false), 700);
+    setTimeout(() => spawnImpact(false), 1150);
+    draw();
+  </script>
+</body>
+</html>
