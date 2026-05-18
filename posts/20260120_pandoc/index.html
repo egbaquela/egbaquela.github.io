@@ -50,9 +50,11 @@
 <pre><code class="language-julia">sudo dnf install pandoc texlive pdflatex</code></pre>
 <p>Y luego hacemos:</p>
 <pre><code class="language-julia">pandoc input.md -o output.pdf</code></pre>
-<p>&#40;y con el mismo <em>pandoc</em> podemos convertir a html, por ejemplo&#41;.</p>
+<p>Pandoc admite mas comandos, como personalizar los márgenes y el tipo de letra:</p>
+<pre><code class="language-julia">pandoc input.md -o output.pdf -V documentclass&#61;extarticle -V fontsize&#61;14pt -V geometry:margin&#61;1.5cm</code></pre>
+<p>Además de esto, pandoc no solo convierte a PDF, sino que tenemos varios formatos de salida, como HTML por ejemplo.</p>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: January 27, 2026.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: May 07, 2026.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

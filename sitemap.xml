@@ -50,6 +50,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://www.egbaquela.com.ar/posts/20260507_rmarkdown_por_terminal/index.html</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://www.egbaquela.com.ar/sobre_mi/index.html</loc>
     <lastmod>2025-12-30</lastmod>
     <changefreq>monthly</changefreq>
@@ -111,7 +117,7 @@
 </url>
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20260120_pandoc/index.html</loc>
-    <lastmod>2026-01-27</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -124,6 +130,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/posts/20251201_sitios_basados_en_pluto/index.html</loc>
     <lastmod>2026-01-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/posts/20260502_symbOS_so_para_z80/index.html</loc>
+    <lastmod>2026-05-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
@@ -436,6 +448,12 @@
 <url>
     <loc>https://www.egbaquela.com.ar/files/intro_estadistica_para_operaciones/07_regresion_series_tiempo/</loc>
     <lastmod>2026-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://www.egbaquela.com.ar/files/simulacion/simulador_mochila/</loc>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
