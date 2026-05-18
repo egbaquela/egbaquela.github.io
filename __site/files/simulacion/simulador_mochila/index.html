@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulador de mochila multidimensional — variables binarias</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #172033;
+      --muted: #607089;
+      --line: #d9e2ef;
+      --brand: #244c8f;
+      --brand-2: #16376d;
+      --accent: #0f9f85;
+      --warning: #c47a00;
+      --danger: #c53030;
+      --danger-soft: #fff1f1;
+      --ok-soft: #ecfdf7;
+      --shadow: 0 14px 34px rgba(25, 35, 60, 0.10);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(36, 76, 143, 0.12), transparent 36rem),
+        linear-gradient(180deg, #eef4ff 0%, var(--bg) 18rem);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.45;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 34px 18px 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      letter-spacing: -0.04em;
+      line-height: 1.04;
+      color: #122344;
+    }
+
+    h2, h3 { letter-spacing: -0.02em; }
+
+    .subtitle {
+      margin: 0;
+      max-width: 820px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 10px 18px 42px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(217, 226, 239, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .intro h2 { margin: 0 0 8px; }
+    .intro p { margin: 0 0 10px; color: var(--muted); }
+
+    .rules {
+      background: #f2f7ff;
+      border: 1px solid #cfe0ff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 0.96rem;
+      color: #263f68;
+    }
+
+    .model-box {
+      background: #101b2f;
+      color: #eaf2ff;
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100%;
+    }
+
+    .model-box strong {
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .model-box code {
+      display: block;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      color: #d9e9ff;
+    }
+
+    .scenario-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 18px;
+    }
+
+    .scenario-row label {
+      font-weight: 700;
+      color: #223a61;
+      margin-right: 4px;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      background: #e8eef9;
+      color: #20395f;
+      padding: 9px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(20, 40, 70, 0.12); }
+    button:active { transform: translateY(0); box-shadow: none; }
+
+    button.primary { background: var(--brand); color: white; }
+    button.secondary { background: #e9f7f4; color: #087564; }
+    button.warning { background: #fff3d7; color: #8a5800; }
+    button.danger { background: #ffe7e7; color: #9b2525; }
+    button.active { background: var(--brand); color: white; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(330px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .section-title h2, .section-title h3 {
+      margin: 0;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .drop-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .dropzone {
+      min-height: 480px;
+      background: var(--panel-soft);
+      border: 2px dashed #cbd8ea;
+      border-radius: 18px;
+      padding: 12px;
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    .dropzone.drag-over {
+      background: #edf6ff;
+      border-color: var(--brand);
+    }
+
+    .dropzone h3 {
+      margin: 0 0 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #243b5f;
+    }
+
+    .zone-subtitle {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+    }
+
+    .item-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 5px 16px rgba(25, 35, 60, 0.06);
+      cursor: grab;
+      user-select: none;
+    }
+
+    .item-card:active { cursor: grabbing; }
+    .item-card.selected { border-color: rgba(15, 159, 133, 0.5); background: #fbfffd; }
+    .item-card.infeasible-add { border-color: rgba(196, 122, 0, 0.55); }
+
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: start;
+      margin-bottom: 6px;
+    }
+
+    .item-name {
+      font-weight: 800;
+      color: #17284a;
+    }
+
+    .item-desc {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #eef4ff;
+      color: #244c8f;
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .chip {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .toggle-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 0.86rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .metric .value {
+      margin-top: 5px;
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #15284b;
+    }
+
+    .metric.ok { background: var(--ok-soft); border-color: #bee8dc; }
+    .metric.bad { background: var(--danger-soft); border-color: #ffd0d0; }
+    .metric.bad .value { color: var(--danger); }
+
+    .capacity-editor {
+      display: grid;
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .capacity-row {
+      display: grid;
+      grid-template-columns: 1fr 105px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .capacity-row label {
+      color: #233a60;
+      font-weight: 800;
+    }
+
+    .capacity-row input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      text-align: right;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      vertical-align: middle;
+    }
+
+    th {
+      color: #344966;
+      background: #f5f8fc;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .status-ok { color: #087564; font-weight: 900; }
+    .status-bad { color: var(--danger); font-weight: 900; }
+
+    .bar {
+      height: 9px;
+      border-radius: 999px;
+      background: #e6edf6;
+      overflow: hidden;
+      min-width: 72px;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width .2s ease, background .2s ease;
+    }
+
+    .bar > span.warn { background: var(--warning); }
+    .bar > span.bad { background: var(--danger); }
+
+    .violations {
+      border-radius: 14px;
+      padding: 11px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      margin: 12px 0 14px;
+      min-height: 44px;
+      color: var(--muted);
+    }
+
+    .violations.bad {
+      background: var(--danger-soft);
+      border-color: #ffc5c5;
+      color: #8f1d1d;
+      font-weight: 800;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 0;
+    }
+
+    .teacher-panel {
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .teacher-panel details {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcff;
+      padding: 10px 12px;
+    }
+
+    .teacher-panel summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: #233a60;
+    }
+
+    .code-output {
+      margin-top: 10px;
+      background: #101b2f;
+      color: #eaf2ff;
+      border-radius: 12px;
+      padding: 12px;
+      max-height: 260px;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      white-space: pre;
+    }
+
+    .student-line {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .student-line label {
+      font-weight: 900;
+      color: #233a60;
+    }
+
+    .student-line input {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: white;
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 18px auto 0;
+      padding: 0 18px 34px;
+      color: var(--muted);
+      text-align: right;
+      font-size: 0.92rem;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      background: #101b2f;
+      color: white;
+      border-radius: 999px;
+      padding: 11px 16px;
+      box-shadow: var(--shadow);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 10;
+      max-width: min(92vw, 720px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .empty {
+      border: 1px dashed #cbd8ea;
+      border-radius: 14px;
+      padding: 16px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.55);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .intro, .grid, .drop-layout { grid-template-columns: 1fr; }
+      .dropzone { min-height: 260px; }
+    }
+
+    @media (max-width: 640px) {
+      .metrics { grid-template-columns: 1fr; }
+      .section-title { flex-direction: column; align-items: start; }
+      .student-line { grid-template-columns: 1fr; }
+      table { font-size: 0.82rem; }
+      th, td { padding: 7px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Simulador de mochila multidimensional</h1>
+    <p class="subtitle">Seleccioná objetos, proyectos o alternativas con una decisión binaria: entra o no entra. El objetivo es lograr el mayor valor posible sin violar las capacidades disponibles.</p>
+  </header>
+
+  <main>
+    <section class="intro card">
+      <div>
+        <h2>Consigna</h2>
+        <p>Arrastrá elementos hacia la mochila —o hacé clic en “seleccionar”— para construir una solución factible. Cada elemento usa varios recursos al mismo tiempo.</p>
+        <div class="rules"><strong>Reglas:</strong> se permite seleccionar cada elemento a lo sumo una vez. Si el peso, el volumen, el presupuesto u otra capacidad se exceden, el simulador lo marca como restricción violada.</div>
+      </div>
+      <div class="model-box" aria-label="Modelo matemático">
+        <strong>Modelo base</strong>
+        <code>max  Σ valorᵢ · xᵢ
+s.a. Σ usoᵢᵣ · xᵢ ≤ capacidadᵣ   ∀ recurso r
+     xᵢ ∈ {0,1}                  ∀ elemento i</code>
+      </div>
+    </section>
+
+    <section class="scenario-row" aria-label="Selector de casos">
+      <label>Caso:</label>
+      <button id="scenario-expedicion" class="active" data-scenario="expedicion">Mochila técnica</button>
+      <button id="scenario-proyectos" data-scenario="proyectos">Cartera de proyectos</button>
+      <button id="scenario-logistica" data-scenario="logistica">Carga logística</button>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2 id="case-title">Caso</h2>
+            <div class="hint" id="case-description">Descripción del caso</div>
+          </div>
+          <div class="hint">Tip: también podés tocar una tarjeta para seleccionarla.</div>
+        </div>
+
+        <div class="drop-layout">
+          <div id="available-zone" class="dropzone" data-zone="available">
+            <h3>Disponibles <span class="pill" id="available-count">0</span></h3>
+            <div class="zone-subtitle">Arrastrá desde acá hacia la mochila.</div>
+            <div id="available-list" class="item-list"></div>
+          </div>
+
+          <div id="selected-zone" class="dropzone" data-zone="selected">
+            <h3>Seleccionados <span class="pill" id="selected-count">0</span></h3>
+            <div class="zone-subtitle">Estos elementos tienen variable binaria igual a 1.</div>
+            <div id="selected-list" class="item-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card">
+        <div class="section-title">
+          <h2>Resultado</h2>
+          <span class="hint">actualización automática</span>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">Valor total</div>
+            <div class="value" id="metric-value">0</div>
+          </div>
+          <div class="metric" id="metric-feasible-box">
+            <div class="label">Estado</div>
+            <div class="value" id="metric-feasible">Factible</div>
+          </div>
+          <div class="metric">
+            <div class="label">Elementos seleccionados</div>
+            <div class="value" id="metric-count">0</div>
+          </div>
+          <div class="metric">
+            <div class="label">Recurso más ajustado</div>
+            <div class="value" id="metric-critical">–</div>
+          </div>
+        </div>
+
+        <h3>Capacidades</h3>
+        <div id="capacity-editor" class="capacity-editor"></div>
+
+        <h3>Recursos — consumo vs disponibilidad</h3>
+        <table aria-label="Recursos utilizados">
+          <thead>
+            <tr>
+              <th>Recurso</th>
+              <th>Usado</th>
+              <th>Disp.</th>
+              <th>Uso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="resource-table"></tbody>
+        </table>
+
+        <div id="violations" class="violations">Restricciones violadas: –</div>
+
+        <div class="actions">
+          <button class="secondary" id="btn-greedy">Plan heurístico</button>
+          <button class="warning" id="btn-reset">Reiniciar</button>
+          <button class="primary" id="btn-csv">Descargar CSV</button>
+        </div>
+
+        <div class="teacher-panel">
+          <details>
+            <summary>Comparación con el óptimo</summary>
+            <p class="hint">El botón “resolver óptimo” enumera todas las combinaciones posibles. Es útil para comparar contra la solución manual, pero el método de enumeración (fuerza bruta) es limitado, no escala bien con el tamaño del problema.</p>
+            <div class="actions">
+              <button class="primary" id="btn-optimal">Resolver óptimo</button>
+              <button id="btn-copy-jump">Copiar modelo JuMP</button>
+            </div>
+            <pre class="code-output" id="jump-code" aria-label="Código JuMP"></pre>
+          </details>
+        </div>
+
+        <div class="student-line">
+          <label for="student-name">Plan hecho por:</label>
+          <input id="student-name" type="text" placeholder="Nombre / grupo" />
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer><a href="https://www.egbaquela.com.ar/">Enrique Gabriel Baquela</a></footer>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    "use strict";
+
+    const scenarios = {
+      expedicion: {
+        title: "Caso A — Mochila técnica para una visita a planta",
+        description: "Un equipo de ingeniería debe visitar una planta con capacidad limitada de transporte. Cada ítem aporta valor operativo, pero consume peso, volumen y presupuesto.",
+        objectiveName: "valor operativo",
+        resources: [
+          { key: "peso", label: "Peso", unit: "kg", cap: 18 },
+          { key: "volumen", label: "Volumen", unit: "L", cap: 45 },
+          { key: "costo", label: "Presupuesto", unit: "k$", cap: 220 }
+        ],
+        items: [
+          { id: "notebook", name: "Notebook industrial", desc: "Diagnóstico, planillas y conexión a PLC.", value: 85, peso: 3.2, volumen: 5, costo: 70 },
+          { id: "sensores", name: "Kit de sensores", desc: "Releva temperatura, vibración y humedad.", value: 54, peso: 2.5, volumen: 8, costo: 38 },
+          { id: "bateria", name: "Batería portátil", desc: "Autonomía para equipos de medición.", value: 48, peso: 4.8, volumen: 7, costo: 42 },
+          { id: "herramientas", name: "Herramientas mecánicas", desc: "Permiten ajustes menores en campo.", value: 44, peso: 5.0, volumen: 12, costo: 25 },
+          { id: "router", name: "Router 4G", desc: "Conectividad de respaldo para datos.", value: 34, peso: 0.7, volumen: 2, costo: 18 },
+          { id: "etiquetadora", name: "Impresora de etiquetas", desc: "Identificación rápida de muestras y activos.", value: 26, peso: 1.6, volumen: 6, costo: 28 },
+          { id: "drone", name: "Drone de inspección", desc: "Inspección visual de altura o zonas riesgosas.", value: 42, peso: 2.2, volumen: 10, costo: 55 },
+          { id: "seguridad", name: "Kit de seguridad", desc: "EPP adicional y elementos de señalización.", value: 30, peso: 3.5, volumen: 9, costo: 12 },
+          { id: "repuestos", name: "Repuestos críticos", desc: "Componentes con alta probabilidad de falla.", value: 65, peso: 6.0, volumen: 14, costo: 60 },
+          { id: "manuales", name: "Manuales impresos", desc: "Documentación técnica y procedimientos.", value: 18, peso: 0.8, volumen: 3, costo: 5 },
+          { id: "camara", name: "Cámara térmica", desc: "Identificación de puntos calientes.", value: 24, peso: 1.2, volumen: 3, costo: 20 },
+          { id: "botiquin", name: "Botiquín ampliado", desc: "Atención inicial ante incidentes menores.", value: 20, peso: 1.5, volumen: 4, costo: 8 }
+        ]
+      },
+      proyectos: {
+        title: "Caso B — Selección de cartera de proyectos",
+        description: "Una empresa debe elegir iniciativas de mejora. Cada proyecto aporta beneficio esperado, pero consume capital, horas de ingeniería y capacidad de gestión del cambio.",
+        objectiveName: "beneficio esperado",
+        resources: [
+          { key: "capital", label: "Capital", unit: "kUSD", cap: 180 },
+          { key: "horas", label: "Horas ingeniería", unit: "h", cap: 260 },
+          { key: "cambio", label: "Gestión del cambio", unit: "pts", cap: 35 }
+        ],
+        items: [
+          { id: "erp", name: "Integración ERP-WMS", desc: "Reduce errores de inventario y tiempos administrativos.", value: 92, capital: 68, horas: 80, cambio: 10 },
+          { id: "forecast", name: "Forecasting con ML", desc: "Mejora la planificación de demanda.", value: 70, capital: 42, horas: 75, cambio: 8 },
+          { id: "kanban", name: "Kanban en línea crítica", desc: "Disminuye WIP y faltantes internos.", value: 38, capital: 18, horas: 38, cambio: 7 },
+          { id: "mantenimiento", name: "Mantenimiento predictivo", desc: "Sensores y modelo de alerta temprana.", value: 76, capital: 55, horas: 68, cambio: 9 },
+          { id: "layout", name: "Rediseño de layout", desc: "Reduce traslados y esperas internas.", value: 58, capital: 36, horas: 54, cambio: 8 },
+          { id: "capacitacion", name: "Capacitación Lean", desc: "Mejora habilidades operativas del equipo.", value: 32, capital: 14, horas: 30, cambio: 6 },
+          { id: "dashboard", name: "Dashboard operativo", desc: "Visibilidad diaria de KPIs y cuellos de botella.", value: 44, capital: 22, horas: 46, cambio: 5 },
+          { id: "proveedores", name: "Portal de proveedores", desc: "Mejora seguimiento de entregas y reclamos.", value: 50, capital: 31, horas: 44, cambio: 6 },
+          { id: "robot", name: "Cobot de empaque", desc: "Automatiza una tarea repetitiva de fin de línea.", value: 80, capital: 72, horas: 52, cambio: 10 },
+          { id: "smed", name: "Proyecto SMED", desc: "Reduce tiempos de setup en máquinas compartidas.", value: 46, capital: 20, horas: 42, cambio: 7 },
+          { id: "calidad", name: "Sistema de trazabilidad", desc: "Reduce retrabajos y mejora auditorías.", value: 62, capital: 45, horas: 55, cambio: 8 },
+          { id: "ruteo", name: "Optimización de ruteo", desc: "Disminuye kilómetros y mejora cumplimiento de entregas.", value: 60, capital: 34, horas: 62, cambio: 6 }
+        ]
+      },
+      logistica: {
+        title: "Caso C — Carga logística con recursos múltiples",
+        description: "Una camioneta debe transportar pedidos urgentes. Cada pedido genera prioridad de servicio, pero ocupa peso, volumen y tiempo de preparación.",
+        objectiveName: "prioridad atendida",
+        resources: [
+          { key: "peso", label: "Peso", unit: "kg", cap: 850 },
+          { key: "volumen", label: "Volumen", unit: "m³", cap: 5.8 },
+          { key: "preparacion", label: "Preparación", unit: "min", cap: 210 }
+        ],
+        items: [
+          { id: "p01", name: "Pedido hospital", desc: "Insumos críticos con alta urgencia.", value: 96, peso: 160, volumen: 0.9, preparacion: 28 },
+          { id: "p02", name: "Pedido línea A", desc: "Repuestos para evitar parada de producción.", value: 88, peso: 210, volumen: 1.1, preparacion: 35 },
+          { id: "p03", name: "Pedido laboratorio", desc: "Material delicado de bajo peso.", value: 54, peso: 55, volumen: 0.7, preparacion: 24 },
+          { id: "p04", name: "Pedido mantenimiento", desc: "Herramientas y consumibles pesados.", value: 62, peso: 190, volumen: 0.8, preparacion: 30 },
+          { id: "p05", name: "Pedido retail", desc: "Alto volumen, prioridad media.", value: 42, peso: 120, volumen: 1.4, preparacion: 22 },
+          { id: "p06", name: "Pedido exportación", desc: "Documentación y muestras urgentes.", value: 58, peso: 70, volumen: 0.4, preparacion: 36 },
+          { id: "p07", name: "Pedido escuela técnica", desc: "Equipamiento para actividad programada.", value: 40, peso: 95, volumen: 0.6, preparacion: 18 },
+          { id: "p08", name: "Pedido agro", desc: "Insumos estacionales con fecha límite.", value: 76, peso: 240, volumen: 1.2, preparacion: 32 },
+          { id: "p09", name: "Pedido e-commerce", desc: "Lotes chicos de rápida preparación.", value: 34, peso: 40, volumen: 0.5, preparacion: 16 },
+          { id: "p10", name: "Pedido construcción", desc: "Alta prioridad, pero muy pesado.", value: 74, peso: 310, volumen: 1.0, preparacion: 40 },
+          { id: "p11", name: "Pedido farmacia", desc: "Entrega chica con prioridad regulatoria.", value: 66, peso: 65, volumen: 0.3, preparacion: 20 },
+          { id: "p12", name: "Pedido automotriz", desc: "Componentes medianos de línea.", value: 68, peso: 145, volumen: 0.75, preparacion: 27 }
+        ]
+      }
+    };
+
+    let currentScenarioKey = "expedicion";
+    let selected = new Set();
+    let toastTimer = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    function scenario() {
+      return scenarios[currentScenarioKey];
+    }
+
+    function formatNumber(value) {
+      const rounded = Math.abs(value) >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
+      return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 }).format(rounded);
+    }
+
+    function showToast(message) {
+      const el = $("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("show"), 2300);
+    }
+
+    function getCapacities() {
+      const caps = {};
+      scenario().resources.forEach(r => {
+        const input = $("cap-" + r.key);
+        caps[r.key] = input ? Number(input.value) : r.cap;
+      });
+      return caps;
+    }
+
+    function compute(selection = selected) {
+      const sc = scenario();
+      const caps = getCapacities();
+      const totals = {};
+      sc.resources.forEach(r => totals[r.key] = 0);
+      let value = 0;
+      let count = 0;
+
+      for (const item of sc.items) {
+        if (!selection.has(item.id)) continue;
+        count += 1;
+        value += item.value;
+        sc.resources.forEach(r => totals[r.key] += Number(item[r.key] || 0));
+      }
+
+      const violations = sc.resources
+        .filter(r => totals[r.key] > caps[r.key] + 1e-9)
+        .map(r => ({
+          resource: r,
+          excess: totals[r.key] - caps[r.key]
+        }));
+
+      let critical = null;
+      for (const r of sc.resources) {
+        const ratio = caps[r.key] > 0 ? totals[r.key] / caps[r.key] : Infinity;
+        if (!critical || ratio > critical.ratio) critical = { resource: r, ratio };
+      }
+
+      return {
+        value,
+        count,
+        totals,
+        caps,
+        feasible: violations.length === 0,
+        violations,
+        critical
+      };
+    }
+
+    function wouldBeFeasibleIfAdded(itemId) {
+      const trial = new Set(selected);
+      trial.add(itemId);
+      return compute(trial).feasible;
+    }
+
+    function renderScenarioButtons() {
+      document.querySelectorAll("[data-scenario]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.scenario === currentScenarioKey);
+      });
+    }
+
+    function renderCapacityEditor() {
+      const sc = scenario();
+      const box = $("capacity-editor");
+      box.innerHTML = "";
+      sc.resources.forEach(r => {
+        const row = document.createElement("div");
+        row.className = "capacity-row";
+        row.innerHTML = `
+          <label for="cap-${r.key}">${r.label} <span class="hint">(${r.unit})</span></label>
+          <input id="cap-${r.key}" type="number" step="0.1" min="0" value="${r.cap}">
+        `;
+        box.appendChild(row);
+        row.querySelector("input").addEventListener("input", renderAll);
+      });
+    }
+
+    function itemCard(item, isSelected) {
+      const sc = scenario();
+      const card = document.createElement("article");
+      card.className = "item-card" + (isSelected ? " selected" : "") + (!isSelected && !wouldBeFeasibleIfAdded(item.id) ? " infeasible-add" : "");
+      card.draggable = true;
+      card.dataset.itemId = item.id;
+      card.setAttribute("aria-label", item.name);
+
+      const chips = sc.resources.map(r => `<span class="chip">${r.label}: ${formatNumber(item[r.key])} ${r.unit}</span>`).join("");
+      card.innerHTML = `
+        <div class="item-head">
+          <div class="item-name">${item.name}</div>
+          <span class="pill">+${formatNumber(item.value)}</span>
+        </div>
+        <p class="item-desc">${item.desc}</p>
+        <div class="chips">${chips}</div>
+        <button class="toggle-btn ${isSelected ? "danger" : "secondary"}" type="button">${isSelected ? "Quitar de la mochila" : "Seleccionar"}</button>
+      `;
+
+      card.addEventListener("dragstart", (event) => {
+        event.dataTransfer.setData("text/plain", item.id);
+        event.dataTransfer.effectAllowed = "move";
+      });
+
+      card.querySelector(".toggle-btn").addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleItem(item.id);
+      });
+
+      card.addEventListener("dblclick", () => toggleItem(item.id));
+      return card;
+    }
+
+    function renderLists() {
+      const sc = scenario();
+      const available = $("available-list");
+      const selectedList = $("selected-list");
+      available.innerHTML = "";
+      selectedList.innerHTML = "";
+
+      const availableItems = sc.items.filter(item => !selected.has(item.id));
+      const selectedItems = sc.items.filter(item => selected.has(item.id));
+
+      if (availableItems.length === 0) {
+        available.innerHTML = `<div class="empty">No quedan elementos disponibles.</div>`;
+      } else {
+        availableItems.forEach(item => available.appendChild(itemCard(item, false)));
+      }
+
+      if (selectedItems.length === 0) {
+        selectedList.innerHTML = `<div class="empty">La mochila está vacía. Arrastrá elementos hacia acá.</div>`;
+      } else {
+        selectedItems.forEach(item => selectedList.appendChild(itemCard(item, true)));
+      }
+
+      $("available-count").textContent = availableItems.length;
+      $("selected-count").textContent = selectedItems.length;
+    }
+
+    function renderMetricsAndTable() {
+      const sc = scenario();
+      const result = compute();
+
+      $("metric-value").textContent = formatNumber(result.value);
+      $("metric-count").textContent = result.count;
+      $("metric-feasible").textContent = result.feasible ? "Factible" : "No factible";
+      $("metric-feasible-box").classList.toggle("ok", result.feasible);
+      $("metric-feasible-box").classList.toggle("bad", !result.feasible);
+      $("metric-critical").textContent = result.critical && result.critical.ratio > 0
+        ? result.critical.resource.label
+        : "–";
+
+      const tbody = $("resource-table");
+      tbody.innerHTML = "";
+      sc.resources.forEach(r => {
+        const used = result.totals[r.key];
+        const cap = result.caps[r.key];
+        const ratio = cap > 0 ? used / cap : Infinity;
+        const status = used <= cap + 1e-9;
+        const barWidth = Math.min(140, Math.max(0, ratio * 100));
+        const barClass = ratio > 1 ? "bad" : ratio > 0.88 ? "warn" : "";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><strong>${r.label}</strong></td>
+          <td>${formatNumber(used)} ${r.unit}</td>
+          <td>${formatNumber(cap)} ${r.unit}</td>
+          <td><div class="bar" title="${formatNumber(ratio * 100)}%"><span class="${barClass}" style="width:${barWidth}%"></span></div></td>
+          <td class="${status ? "status-ok" : "status-bad"}">${status ? "OK" : "+" + formatNumber(used - cap) + " " + r.unit}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      const vBox = $("violations");
+      if (result.feasible) {
+        vBox.classList.remove("bad");
+        vBox.textContent = "Restricciones violadas: –";
+      } else {
+        vBox.classList.add("bad");
+        vBox.textContent = "Restricciones violadas: " + result.violations.map(v => `${v.resource.label} excede en ${formatNumber(v.excess)} ${v.resource.unit}`).join("; ");
+      }
+    }
+
+    function renderJuMPCode() {
+      const sc = scenario();
+      const caps = getCapacities();
+      const items = sc.items.map(i => i.name);
+      const safeName = name => name.replace(/"/g, "\\\"");
+      const vector = arr => "[" + arr.join(", ") + "]";
+      const stringVector = arr => "[" + arr.map(x => `\"${safeName(x)}\"`).join(", ") + "]";
+
+      let code = `using JuMP, HiGHS\n\n`;
+      code += `items = ${stringVector(items)}\n`;
+      code += `valor = Dict(zip(items, ${vector(sc.items.map(i => i.value))}))\n`;
+      sc.resources.forEach(r => {
+        code += `${r.key} = Dict(zip(items, ${vector(sc.items.map(i => i[r.key]))}))\n`;
+      });
+      code += `\nmodelo = Model(HiGHS.Optimizer)\n`;
+      code += `@variable(modelo, x[items], Bin)\n`;
+      code += `@objective(modelo, Max, sum(valor[i] * x[i] for i in items))\n`;
+      sc.resources.forEach(r => {
+        code += `@constraint(modelo, cap_${r.key}, sum(${r.key}[i] * x[i] for i in items) <= ${caps[r.key]})\n`;
+      });
+      code += `\noptimize!(modelo)\n\n`;
+      code += `println("Valor óptimo: ", objective_value(modelo))\n`;
+      code += `for i in items\n    if value(x[i]) > 0.5\n        println(i)\n    end\nend\n`;
+      $("jump-code").textContent = code;
+      return code;
+    }
+
+    function renderAll() {
+      $("case-title").textContent = scenario().title;
+      $("case-description").textContent = scenario().description;
+      renderScenarioButtons();
+      renderLists();
+      renderMetricsAndTable();
+      renderJuMPCode();
+    }
+
+    function toggleItem(itemId) {
+      if (selected.has(itemId)) {
+        selected.delete(itemId);
+        renderAll();
+        return;
+      }
+      selected.add(itemId);
+      const result = compute();
+      renderAll();
+      if (!result.feasible) {
+        showToast("Atención: la selección viola al menos una restricción de capacidad.");
+      }
+    }
+
+    function moveItem(itemId, targetZone) {
+      if (!scenario().items.some(item => item.id === itemId)) return;
+      if (targetZone === "selected") {
+        const wasSelected = selected.has(itemId);
+        selected.add(itemId);
+        const result = compute();
+        renderAll();
+        if (!wasSelected && !result.feasible) showToast("Atención: la selección viola al menos una restricción de capacidad.");
+      } else {
+        selected.delete(itemId);
+        renderAll();
+      }
+    }
+
+    function setupDropzones() {
+      document.querySelectorAll(".dropzone").forEach(zone => {
+        zone.addEventListener("dragover", event => {
+          event.preventDefault();
+          zone.classList.add("drag-over");
+        });
+        zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+        zone.addEventListener("drop", event => {
+          event.preventDefault();
+          zone.classList.remove("drag-over");
+          const itemId = event.dataTransfer.getData("text/plain");
+          moveItem(itemId, zone.dataset.zone);
+        });
+      });
+    }
+
+    function resetSelection() {
+      selected = new Set();
+      renderAll();
+      showToast("Selección reiniciada.");
+    }
+
+    function greedySolution() {
+      selected = new Set();
+      const sc = scenario();
+      const caps = getCapacities();
+      const sorted = [...sc.items].sort((a, b) => {
+        const score = item => item.value / sc.resources.reduce((acc, r) => acc + (Number(item[r.key] || 0) / Math.max(1e-9, caps[r.key])), 0);
+        return score(b) - score(a);
+      });
+
+      for (const item of sorted) {
+        const trial = new Set(selected);
+        trial.add(item.id);
+        if (compute(trial).feasible) selected = trial;
+      }
+      renderAll();
+      showToast("Se generó una solución heurística greedy factible.");
+    }
+
+    function optimalSolution() {
+      const sc = scenario();
+      const n = sc.items.length;
+      let bestValue = -Infinity;
+      let bestSet = new Set();
+      const totalComb = 1 << n;
+
+      for (let mask = 0; mask < totalComb; mask++) {
+        const trial = new Set();
+        for (let i = 0; i < n; i++) {
+          if (mask & (1 << i)) trial.add(sc.items[i].id);
+        }
+        const result = compute(trial);
+        if (result.feasible && result.value > bestValue) {
+          bestValue = result.value;
+          bestSet = trial;
+        }
+      }
+
+      selected = bestSet;
+      renderAll();
+      showToast(`Óptimo encontrado por enumeración: valor ${formatNumber(bestValue)}.`);
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      return /[",;\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function downloadCSV() {
+      const sc = scenario();
+      const result = compute();
+      const student = $("student-name").value.trim();
+      const header = ["caso", "grupo", "id", "elemento", "valor", ...sc.resources.map(r => r.label), "seleccionado"];
+      const rows = [header];
+      sc.items.forEach(item => {
+        rows.push([
+          sc.title,
+          student,
+          item.id,
+          item.name,
+          item.value,
+          ...sc.resources.map(r => item[r.key]),
+          selected.has(item.id) ? 1 : 0
+        ]);
+      });
+      rows.push([]);
+      rows.push(["Resumen", "", "", "Valor total", result.value]);
+      rows.push(["Resumen", "", "", "Factible", result.feasible ? "SI" : "NO"]);
+      sc.resources.forEach(r => rows.push(["Resumen", "", "", `Uso ${r.label}`, result.totals[r.key], `Capacidad ${r.label}`, result.caps[r.key]]));
+
+      const csv = rows.map(row => row.map(csvEscape).join(";")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "solucion_mochila_binaria.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("CSV descargado.");
+    }
+
+    async function copyJuMP() {
+      const code = renderJuMPCode();
+      try {
+        await navigator.clipboard.writeText(code);
+        showToast("Modelo JuMP copiado al portapapeles.");
+      } catch (err) {
+        showToast("No se pudo copiar automáticamente. Podés seleccionar el código manualmente.");
+      }
+    }
+
+    function switchScenario(key) {
+      currentScenarioKey = key;
+      selected = new Set();
+      renderCapacityEditor();
+      renderAll();
+      showToast("Caso cambiado. La selección se reinició.");
+    }
+
+    function init() {
+      setupDropzones();
+      renderCapacityEditor();
+      renderAll();
+
+      document.querySelectorAll("[data-scenario]").forEach(btn => {
+        btn.addEventListener("click", () => switchScenario(btn.dataset.scenario));
+      });
+      $("btn-reset").addEventListener("click", resetSelection);
+      $("btn-greedy").addEventListener("click", greedySolution);
+      $("btn-optimal").addEventListener("click", optimalSolution);
+      $("btn-csv").addEventListener("click", downloadCSV);
+      $("btn-copy-jump").addEventListener("click", copyJuMP);
+    }
+
+    init();
+  </script>
+</body>
+</html>

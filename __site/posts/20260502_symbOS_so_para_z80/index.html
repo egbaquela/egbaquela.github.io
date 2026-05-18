@@ -21,7 +21,7 @@
 </style>
 <link rel="icon" href="/assets/favicon.png">
 
-   <title>¿Como convertir un archivo markdown a PDF en _Fedora Linux_?</title>  
+   <title>SymbOS, ¡un sistema operativo con interface gráfica y multitasking para el Z80!</title>  
 </head>
 <body>
 <div class="sidebar">
@@ -45,16 +45,10 @@
 
 <!-- Content appended here -->
 <div class="franklin-content">
-<h1 id="como_convertir_un_archivo_markdown_a_pdf_en_fedora_linux"><a href="#como_convertir_un_archivo_markdown_a_pdf_en_fedora_linux" class="header-anchor">¿Como convertir un archivo markdown a PDF en <em>Fedora Linux</em>?</a></h1>
-<p>Vamos a utilizar <a href="https://pandoc.org/"><em>pandoc</em></a>. Para ello, en la terminal, lo instalamos con el siguiente comando:</p>
-<pre><code class="language-julia">sudo dnf install pandoc texlive pdflatex</code></pre>
-<p>Y luego hacemos:</p>
-<pre><code class="language-julia">pandoc input.md -o output.pdf</code></pre>
-<p>Pandoc admite mas comandos, como personalizar los márgenes y el tipo de letra:</p>
-<pre><code class="language-julia">pandoc input.md -o output.pdf -V documentclass&#61;extarticle -V fontsize&#61;14pt -V geometry:margin&#61;1.5cm</code></pre>
-<p>Además de esto, pandoc no solo convierte a PDF, sino que tenemos varios formatos de salida, como HTML por ejemplo.</p>
+<h1 id="symbos_un_sistema_operativo_con_interface_gráfica_y_multitasking_para_el_z80"><a href="#symbos_un_sistema_operativo_con_interface_gráfica_y_multitasking_para_el_z80" class="header-anchor">SymbOS, ¡un sistema operativo con interface gráfica y multitasking para el Z80&#33;</a></h1>
+<p>Leyendo las novedades del proyecto <a href="https://www.kickstarter.com/projects/spectrumnext/zx-spectrum-next-issue-3-0/posts/4676856">ZX Spectrum Next</a>, puntualmente la actualización 18, acabo de descubrir que existe un sistema operativo gráfico multitarea para el <a href="https://es.wikipedia.org/wiki/Zilog_Z80">Z80</a>, <a href="https://www.symbos.org/">SymbOS</a>. Programado en ensamblador, está compilado para múltiples plataformas, pudiendo ejecutarse las aplicaciones en varios microcomputadores de los 80s. La Wikipedia tiene una <a href="https://es.wikipedia.org/wiki/SymbOS">buena entrada</a>, así como <a href="https://hackaday.com/2025/07/19/symbos-is-a-funhouse-mirror-look-at-a-future-that-never-was/">Hackaday</a> y <a href="https://sites.google.com/site/ellaboratoriodeoscar/8-bits/--symbos">El laboratorio de Oscar</a>. Mas interesantemente, al menos para mi, según la mencionada actualización de <em>ZX Spectrum Next</em>, ¡hay un port para la <a href="https://es.wikipedia.org/wiki/Sinclair_ZX_Spectrum">ZX Spectrum</a>&#33;</p>
 <div class="page-foot">
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: May 07, 2026.
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> Enrique Gabriel Baquela. Last modified: May 03, 2026.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
