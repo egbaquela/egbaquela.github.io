@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador DES de Manufactura | Sistema de Operaciones</title>
+  <style>
+    :root{
+      --bg: #0d1321;
+      --bg-2: #111827;
+      --panel: rgba(255,255,255,0.075);
+      --panel-2: rgba(255,255,255,0.105);
+      --card: rgba(255,255,255,0.09);
+      --line: rgba(255,255,255,0.14);
+      --text: #eef2ff;
+      --muted: #a7b0c9;
+      --soft: #dbe7ff;
+      --accent: #74d3ae;
+      --accent-2: #7cc7ff;
+      --accent-3: #ffd166;
+      --danger: #ff6b6b;
+      --warn: #f7b267;
+      --good: #8ee3a8;
+      --shadow: 0 20px 60px rgba(0,0,0,.36);
+      --radius: 22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    *{ box-sizing: border-box; }
+    html{ scroll-behavior: smooth; }
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(124,199,255,.20), transparent 30%),
+        radial-gradient(circle at 82% 6%, rgba(116,211,174,.18), transparent 32%),
+        linear-gradient(135deg, #0d1321 0%, #131a2c 54%, #0b1020 100%);
+      color: var(--text);
+      overflow-x:hidden;
+    }
+
+    .page{ width:min(1440px, 96vw); margin:0 auto; padding: 28px 0 60px; }
+
+    header{
+      position: relative;
+      overflow: hidden;
+      border:1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.04));
+      border-radius: 30px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+    header:before{
+      content:"";
+      position:absolute;
+      inset:-90px -120px auto auto;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(116,211,174,.18), transparent 66%);
+      transform: rotate(25deg);
+      pointer-events:none;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(116,211,174,.30);
+      color: #bff4df;
+      background: rgba(116,211,174,.08);
+      padding: 8px 12px;
+      border-radius:999px;
+      font-size: .86rem;
+      letter-spacing:.02em;
+      margin-bottom: 18px;
+    }
+    .dot{ width:9px; height:9px; border-radius:999px; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+    h1{ margin:0; font-size: clamp(2.0rem, 4vw, 4.4rem); line-height: .98; letter-spacing:-.05em; max-width: 1050px; }
+    .subtitle{ margin:18px 0 0; color: var(--muted); max-width: 930px; font-size: clamp(1rem, 1.4vw, 1.18rem); line-height:1.55; }
+    .header-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
+
+    button, select, input[type="number"], input[type="range"]{ font: inherit; }
+    button{
+      border:0;
+      color: #07131d;
+      background: var(--accent);
+      border-radius: 15px;
+      padding: 11px 15px;
+      font-weight: 750;
+      cursor:pointer;
+      transition: transform .15s ease, filter .15s ease, background .15s ease, opacity .15s ease;
+      box-shadow: 0 12px 28px rgba(116,211,174,.18);
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.04); }
+    button:active{ transform: translateY(0px) scale(.99); }
+    button.secondary{ background: rgba(255,255,255,.12); color: var(--text); border:1px solid var(--line); box-shadow:none; }
+    button.ghost{ background: transparent; color: var(--soft); border:1px solid var(--line); box-shadow:none; }
+    button.warn{ background: var(--accent-3); }
+    button.danger{ background: rgba(255,107,107,.16); color:#ffd6d6; border:1px solid rgba(255,107,107,.28); box-shadow:none; }
+    button:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 390px minmax(0,1fr);
+      gap:18px;
+      margin-top:18px;
+    }
+    @media(max-width: 1100px){ .grid{ grid-template-columns: 1fr; } }
+
+    .panel{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.055));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel.pad{ padding: 18px; }
+    .panel-head{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap:12px;
+      padding: 17px 18px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .panel-title{ margin:0; font-size:1.02rem; letter-spacing:-.015em; }
+    .panel-kicker{ margin: 4px 0 0; color:var(--muted); font-size:.86rem; line-height:1.35; }
+
+    .controls{ display:grid; gap:13px; padding: 18px; }
+    .control{
+      background: rgba(0,0,0,.12);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:13px;
+    }
+    .label-row{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:9px; }
+    label{ font-size:.91rem; color:#e8edff; font-weight:720; }
+    .value{ font-family:var(--mono); color: #cde7ff; font-size:.86rem; white-space:nowrap; }
+    input[type="range"]{ width:100%; accent-color: var(--accent); }
+    select, input[type="number"]{
+      width:100%;
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:9px 10px;
+      outline:none;
+    }
+    select option{ color:#111827; }
+    .button-stack{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .button-stack button:first-child{ grid-column: 1 / -1; }
+
+    .scenario-note{
+      margin:0;
+      color: var(--muted);
+      font-size:.88rem;
+      line-height:1.45;
+      padding: 0 18px 18px;
+    }
+    .scenario-note strong{ color:var(--soft); }
+
+    .kpi-grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 12px;
+      margin-bottom:18px;
+    }
+    @media(max-width: 1200px){ .kpi-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media(max-width: 520px){ .kpi-grid{ grid-template-columns: 1fr; } }
+
+    .kpi{
+      position:relative;
+      border:1px solid var(--line);
+      border-radius: 20px;
+      padding: 15px;
+      overflow:hidden;
+      background: linear-gradient(135deg, rgba(255,255,255,.105), rgba(255,255,255,.055));
+      min-height: 104px;
+    }
+    .kpi:before{
+      content:""; position:absolute; inset:auto -40px -70px auto; width:140px; height:140px;
+      background: radial-gradient(circle, rgba(124,199,255,.13), transparent 72%);
+    }
+    .kpi small{ color: var(--muted); font-size:.80rem; display:block; margin-bottom:7px; }
+    .kpi strong{ font-size: clamp(1.45rem, 2vw, 2.1rem); line-height:1; letter-spacing:-.04em; }
+    .kpi span{ display:block; margin-top:8px; font-size:.82rem; color:var(--muted); line-height:1.25; }
+    .good-text{ color: var(--good); } .warn-text{ color: var(--warn); } .danger-text{ color: #ff9b9b; }
+
+    .factory-wrap{ padding:18px; }
+    .factory-top{
+      display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px;
+    }
+    .clock{
+      display:flex; gap:10px; align-items:center;
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      border-radius: 18px;
+      padding:10px 12px;
+      font-family: var(--mono);
+    }
+    .clock b{ color:#d9f9eb; }
+    .play-controls{ display:flex; gap:9px; flex-wrap:wrap; align-items:center; }
+
+    .factory{
+      position:relative;
+      min-height: 330px;
+      border-radius: 24px;
+      border:1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(9,17,32,.82), rgba(8,14,28,.62));
+      background-size: 38px 38px, 38px 38px, auto;
+      overflow:hidden;
+      padding: 24px;
+    }
+    .flow{
+      display:grid;
+      grid-template-columns: 1.1fr .85fr 1fr .85fr 1fr;
+      gap: 12px;
+      align-items: stretch;
+      min-height: 245px;
+    }
+    @media(max-width: 900px){
+      .flow{ grid-template-columns: 1fr; }
+      .arrow{ display:none!important; }
+      .factory{ min-height: unset; }
+    }
+    .zone{
+      position:relative;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.065);
+      border-radius: 22px;
+      padding: 14px;
+      overflow:hidden;
+      min-height: 220px;
+    }
+    .zone h3{ margin:0 0 8px; font-size: .95rem; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px; padding:5px 8px;
+      border-radius:999px; font-size:.73rem; color:var(--muted);
+      border:1px solid var(--line); background:rgba(0,0,0,.13); font-weight:700;
+    }
+    .queue-box{
+      display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px;
+      min-height: 142px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.12);
+      border:1px dashed rgba(255,255,255,.18);
+      padding:10px;
+    }
+    .job{
+      width:22px; height:22px; border-radius:7px;
+      background: linear-gradient(135deg, #7cc7ff, #74d3ae);
+      box-shadow: 0 5px 14px rgba(124,199,255,.15);
+      display:inline-flex; align-items:center; justify-content:center;
+      color:#07131d; font-size:.62rem; font-weight:900;
+      animation: pop .25s ease;
+    }
+    .job.done{ background: linear-gradient(135deg, #ffd166, #8ee3a8); }
+    .job.lost{ background: linear-gradient(135deg, #ff6b6b, #f7b267); color:#2b0d0d; }
+    @keyframes pop{ from{ transform:scale(.65); opacity:.3;} to{ transform:scale(1); opacity:1;} }
+
+    .machine{
+      min-height: 160px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap: 10px;
+    }
+    .machine-icon{
+      width: 92px; height: 92px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(124,199,255,.26), rgba(116,211,174,.18));
+      border:1px solid rgba(255,255,255,.18);
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 16px 35px rgba(0,0,0,.18);
+    }
+    .machine-icon svg{ width:58px; height:58px; opacity:.95; }
+    .machine.busy .machine-icon:after{
+      content:""; position:absolute; width: 116px; height:116px; border-radius:32px;
+      border:2px solid rgba(116,211,174,.30); animation: pulse 1.2s infinite ease-out;
+    }
+    .machine.blocked .machine-icon{ background: linear-gradient(135deg, rgba(255,107,107,.25), rgba(247,178,103,.16)); }
+    .machine.idle .machine-icon{ filter:saturate(.65); opacity:.78; }
+    @keyframes pulse{ from{ transform:scale(.78); opacity:.8;} to{ transform:scale(1.1); opacity:0;} }
+    .machine-status{ font-weight:850; }
+    .machine-detail{ color:var(--muted); font-size:.82rem; min-height: 2.4em; line-height:1.25; }
+    .status-pill{ padding:5px 8px; border-radius:999px; font-size:.72rem; font-weight:850; border:1px solid var(--line); background: rgba(0,0,0,.16); }
+    .status-pill.busy{ color:#bff4df; border-color:rgba(116,211,174,.35); }
+    .status-pill.idle{ color:#ccd6ed; }
+    .status-pill.blocked{ color:#ffd1d1; border-color:rgba(255,107,107,.35); }
+
+    .arrow{
+      display:flex; align-items:center; justify-content:center;
+      color:rgba(255,255,255,.34);
+      font-size:2.2rem;
+      font-weight:900;
+    }
+
+    .timeline-control{ margin-top:14px; display:grid; gap:8px; }
+    .timeline-meta{ display:flex; justify-content:space-between; color:var(--muted); font-size:.82rem; }
+
+    .chart-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+      margin-top:18px;
+    }
+    @media(max-width: 920px){ .chart-grid{ grid-template-columns:1fr; } }
+    .chart-card{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      border-radius: var(--radius);
+      padding: 16px;
+      min-height: 330px;
+      overflow:hidden;
+    }
+    .chart-card h3{ margin: 0; font-size:1rem; }
+    .chart-card p{ margin:5px 0 12px; color:var(--muted); font-size:.84rem; line-height:1.35; }
+    canvas.chart{ width:100%; height:245px; display:block; background:rgba(0,0,0,.10); border-radius:16px; border:1px solid rgba(255,255,255,.08); }
+
+    .lower-grid{
+      display:grid;
+      grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr);
+      gap:18px;
+      margin-top:18px;
+    }
+    @media(max-width: 1100px){ .lower-grid{ grid-template-columns:1fr; } }
+
+    .insights{ display:grid; gap:10px; padding: 18px; }
+    .insight{
+      display:grid; grid-template-columns: 34px 1fr; gap:10px;
+      border:1px solid var(--line); border-radius:18px; padding:12px;
+      background: rgba(0,0,0,.12);
+    }
+    .insight-icon{ width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:rgba(124,199,255,.13); }
+    .insight b{ display:block; margin-bottom:3px; }
+    .insight span{ color:var(--muted); font-size:.88rem; line-height:1.38; }
+
+    .event-log{
+      max-height: 430px;
+      overflow:auto;
+      padding: 12px 18px 18px;
+    }
+    .event-row{
+      display:grid;
+      grid-template-columns: 82px 1fr;
+      gap:12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      padding:10px 0;
+      font-size:.88rem;
+    }
+    .event-row:last-child{ border-bottom:0; }
+    .event-time{ font-family:var(--mono); color:#cde7ff; }
+    .event-text{ color:#dbe3f7; line-height:1.35; }
+    .event-type{ display:inline-block; margin-right:6px; padding:2px 6px; border-radius:999px; background:rgba(255,255,255,.10); color:#bff4df; font-size:.72rem; font-weight:800; }
+
+    .scenario-table-wrap{ overflow:auto; padding: 0 18px 18px; }
+    table{ width:100%; border-collapse:collapse; min-width: 760px; }
+    th, td{ border-bottom:1px solid rgba(255,255,255,.09); padding:10px 9px; text-align:left; font-size:.86rem; }
+    th{ color:#cfe1ff; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; }
+    td{ color:#e9eefc; }
+    .empty-table{ color:var(--muted); padding: 0 18px 18px; font-size:.9rem; line-height:1.4; }
+
+    .teaching-card{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:18px;
+    }
+    @media(max-width: 1050px){ .teaching-card{ grid-template-columns:1fr; } }
+    .mini{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      border-radius: var(--radius);
+      padding:18px;
+    }
+    .mini h3{ margin:0 0 8px; }
+    .mini p, .mini li{ color:var(--muted); line-height:1.46; font-size:.92rem; }
+    .mini ul{ margin:10px 0 0; padding-left:20px; }
+    .code{
+      display:inline-block;
+      font-family:var(--mono);
+      color:#d9f9eb;
+      background: rgba(116,211,174,.10);
+      border:1px solid rgba(116,211,174,.18);
+      padding:2px 6px;
+      border-radius:8px;
+      font-size:.86em;
+    }
+
+    .footer{ margin-top:20px; color:var(--muted); text-align:center; font-size:.86rem; }
+
+    .tooltip{
+      position:relative;
+      border-bottom:1px dotted rgba(255,255,255,.35);
+      cursor:help;
+    }
+    .tooltip:hover:after{
+      content:attr(data-tip);
+      position:absolute;
+      z-index:20;
+      left:0;
+      bottom: 130%;
+      width:min(310px, 80vw);
+      background:#101827;
+      color:#edf4ff;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow:0 14px 38px rgba(0,0,0,.35);
+      font-size:.83rem;
+      line-height:1.35;
+    }
+
+    .sr-only{
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+      clip:rect(0,0,0,0); white-space:nowrap; border:0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="eyebrow"><span class="dot"></span> Simulación de eventos discretos para Gestión de Operaciones</div>
+      <h1>Mini fábrica: decisiones de capacidad, buffers y variabilidad</h1>
+      <p class="subtitle">
+        Este simulador reproduce un sistema de manufactura simple con llegada de órdenes, cola inicial, una estación de preparación, un buffer intermedio y una estación de ensamble. Permite discutir cómo cambian throughput, lead time, utilización, WIP, esperas, pérdidas y bloqueo cuando se modifican demanda, capacidad, variabilidad y tamaño de buffer.
+      </p>
+      <div class="header-actions">
+        <button id="btnRunTop">Ejecutar simulación</button>
+        <button class="secondary" id="btnPresetBalanced">Escenario balanceado</button>
+        <button class="secondary" id="btnPresetBottleneck">Crear cuello de botella</button>
+        <button class="ghost" onclick="document.getElementById('teaching').scrollIntoView({behavior:'smooth'})">Cómo usarlo en clase</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Parámetros del sistema</h2>
+            <p class="panel-kicker">Modificá un supuesto y volvé a simular.</p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control">
+            <div class="label-row"><label for="arrivalRate">Demanda media</label><span class="value" id="arrivalRateVal"></span></div>
+            <input type="range" id="arrivalRate" min="4" max="36" value="16" step="1" />
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="variabilityDemand">Variabilidad de demanda</label><span class="value" id="variabilityDemandVal"></span></div>
+            <select id="variabilityDemand">
+              <option value="0.10">Baja: llegadas casi constantes</option>
+              <option value="0.35">Media: demanda bastante regular</option>
+              <option value="0.80">Alta: demanda variable</option>
+              <option value="1.00" selected>Poisson aprox.: aleatoriedad base</option>
+              <option value="1.15">Muy alta: demanda con picos</option>
+            </select>
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="procA">Tiempo medio Estación A</label><span class="value" id="procAVal"></span></div>
+            <input type="range" id="procA" min="1" max="18" value="4" step="0.5" />
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="variabilityA">Variabilidad Estación A</label><span class="value" id="variabilityAVal"></span></div>
+            <select id="variabilityA">
+              <option value="0.10">Baja: tiempos casi constantes</option>
+              <option value="0.35" selected>Media: operación normal</option>
+              <option value="0.80">Alta: mucha variabilidad</option>
+              <option value="1.15">Muy alta: operación inestable</option>
+            </select>
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="procB">Tiempo medio Estación B</label><span class="value" id="procBVal"></span></div>
+            <input type="range" id="procB" min="1" max="18" value="5" step="0.5" />
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="variabilityB">Variabilidad Estación B</label><span class="value" id="variabilityBVal"></span></div>
+            <select id="variabilityB">
+              <option value="0.10">Baja: tiempos casi constantes</option>
+              <option value="0.35" selected>Media: operación normal</option>
+              <option value="0.80">Alta: mucha variabilidad</option>
+              <option value="1.15">Muy alta: operación inestable</option>
+            </select>
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="queueCap">Capacidad cola inicial</label><span class="value" id="queueCapVal"></span></div>
+            <input type="range" id="queueCap" min="3" max="80" value="24" step="1" />
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="bufferCap">Capacidad buffer intermedio</label><span class="value" id="bufferCapVal"></span></div>
+            <input type="range" id="bufferCap" min="0" max="35" value="8" step="1" />
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="horizon">Horizonte</label><span class="value" id="horizonVal"></span></div>
+            <input type="range" id="horizon" min="2" max="16" value="8" step="1" />
+          </div>
+          <div class="control">
+            <div class="label-row"><label for="seed">Semilla aleatoria</label><span class="value">reproducible</span></div>
+            <input type="number" id="seed" value="2026" min="1" max="999999" />
+          </div>
+          <div class="button-stack">
+            <button id="btnRun">Ejecutar simulación</button>
+            <button class="secondary" id="btnSaveScenario">Guardar escenario</button>
+            <button class="danger" id="btnClearScenarios">Limpiar tabla</button>
+          </div>
+        </div>
+        <p class="scenario-note"><strong>Lectura rápida:</strong> si la demanda supera la capacidad de la estación más lenta, aumentan cola, WIP y lead time. Si el buffer es pequeño, puede aparecer bloqueo aguas arriba.</p>
+      </aside>
+
+      <main>
+        <section class="kpi-grid" aria-label="Indicadores principales">
+          <div class="kpi"><small>Throughput</small><strong id="kpiThroughput">—</strong><span id="kpiThroughputSub">unidades terminadas por hora</span></div>
+          <div class="kpi"><small>Lead time promedio</small><strong id="kpiLead">—</strong><span>tiempo desde llegada hasta finalización</span></div>
+          <div class="kpi"><small>WIP promedio</small><strong id="kpiWip">—</strong><span>órdenes dentro del sistema</span></div>
+          <div class="kpi"><small>Órdenes perdidas</small><strong id="kpiLost">—</strong><span>por saturación de la cola inicial</span></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Vista visual del sistema</h2>
+              <p class="panel-kicker">Usá la línea de tiempo para inspeccionar eventos y estados.</p>
+            </div>
+          </div>
+          <div class="factory-wrap">
+            <div class="factory-top">
+              <div class="clock"><span>Reloj:</span> <b id="clockLabel">00:00</b> <span id="eventLabel">Sin simulación</span></div>
+              <div class="play-controls">
+                <button class="secondary" id="btnPrev">◀ Evento</button>
+                <button class="warn" id="btnPlay">Reproducir</button>
+                <button class="secondary" id="btnNext">Evento ▶</button>
+              </div>
+            </div>
+            <div class="factory">
+              <div class="flow">
+                <div class="zone">
+                  <h3>Cola de órdenes <span class="tag" id="queueTag">0</span></h3>
+                  <div class="queue-box" id="queueBox"></div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="zone">
+                  <h3>Estación A <span class="tag">Preparación</span></h3>
+                  <div class="machine idle" id="machineA">
+                    <div class="machine-icon" aria-hidden="true">
+                      <svg viewBox="0 0 64 64" fill="none"><path d="M13 46h38v7H13z" fill="currentColor" opacity=".32"/><path d="M18 19h28l5 27H13l5-27Z" stroke="currentColor" stroke-width="4"/><path d="M25 19v-7h14v7M24 32h16" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="machine-status" id="statusA">Ociosa</div>
+                    <span class="status-pill idle" id="pillA">IDLE</span>
+                    <div class="machine-detail" id="detailA">Esperando trabajo</div>
+                  </div>
+                </div>
+                <div class="zone">
+                  <h3>Buffer intermedio <span class="tag" id="bufferTag">0</span></h3>
+                  <div class="queue-box" id="bufferBox"></div>
+                </div>
+                <div class="zone">
+                  <h3>Estación B <span class="tag">Ensamble</span></h3>
+                  <div class="machine idle" id="machineB">
+                    <div class="machine-icon" aria-hidden="true">
+                      <svg viewBox="0 0 64 64" fill="none"><path d="M12 49h40v6H12z" fill="currentColor" opacity=".32"/><circle cx="32" cy="29" r="13" stroke="currentColor" stroke-width="4"/><path d="M32 10v7M32 41v7M51 29h-7M20 29h-7M45 16l-5 5M24 37l-5 5M45 42l-5-5M24 21l-5-5" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="machine-status" id="statusB">Ociosa</div>
+                    <span class="status-pill idle" id="pillB">IDLE</span>
+                    <div class="machine-detail" id="detailB">Esperando trabajo</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-control">
+              <input type="range" id="timeline" min="0" max="0" value="0" step="1" />
+              <div class="timeline-meta"><span id="timelineLeft">Evento 0</span><span id="timelineRight">0 eventos</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-grid">
+          <div class="chart-card">
+            <h3>WIP y congestión</h3>
+            <p>El WIP alto suele anticipar tiempos de entrega altos y pérdida de control del sistema.</p>
+            <canvas class="chart" id="chartWip"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Throughput acumulado</h3>
+            <p>Compara llegadas aceptadas contra unidades terminadas. La separación indica trabajo pendiente.</p>
+            <canvas class="chart" id="chartThroughput"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Utilización y bloqueo</h3>
+            <p>Una estación muy utilizada puede ser restricción; el bloqueo muestra problemas de buffer o desbalance.</p>
+            <canvas class="chart" id="chartUtil"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Distribución de lead time</h3>
+            <p>No alcanza con mirar el promedio: la variabilidad genera colas y riesgo de incumplimiento.</p>
+            <canvas class="chart" id="chartLead"></canvas>
+          </div>
+        </section>
+
+        <section class="lower-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Diagnóstico gerencial automático</h2>
+                <p class="panel-kicker">Interpretación ejecutiva de la corrida actual.</p>
+              </div>
+            </div>
+            <div class="insights" id="insights"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Calendario de eventos</h2>
+                <p class="panel-kicker">Últimos eventos cercanos al estado visual.</p>
+              </div>
+            </div>
+            <div class="event-log" id="eventLog"></div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top:18px;">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Comparación de escenarios</h2>
+              <p class="panel-kicker">Guardá corridas para comparar resultados.</p>
+            </div>
+            <button class="secondary" id="btnDownloadCsv">Descargar CSV</button>
+          </div>
+          <div class="empty-table" id="scenarioEmpty">Todavía no guardaste escenarios. Ejecutá una simulación y presioná “Guardar escenario”.</div>
+          <div class="scenario-table-wrap" id="scenarioTableWrap" style="display:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Escenario</th><th>Demanda</th><th>A</th><th>B</th><th>Buffer</th><th>Throughput</th><th>Lead time</th><th>WIP</th><th>Perdidas</th><th>Restricción</th>
+                </tr>
+              </thead>
+              <tbody id="scenarioBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <section class="teaching-card" id="teaching">
+      <div class="mini">
+        <h3>Qué representa una simulación DES</h3>
+        <p>El sistema cambia de estado solamente cuando ocurre un evento: llega una orden, termina A, termina B, se bloquea una estación o se libera un buffer. Entre eventos, el reloj avanza sin recalcular todo segundo a segundo.</p>
+        <p>Esta lógica permite estudiar sistemas donde importan la cola, la variabilidad y las reglas operativas.</p>
+      </div>
+      <div class="mini">
+        <h3>Preguntas de repaso</h3>
+        <ul>
+          <li>¿Cuál parece ser la restricción del sistema?</li>
+          <li>¿Conviene invertir en A, en B o en buffer?</li>
+          <li>¿Por qué sube el lead time aunque el promedio de demanda parezca razonable?</li>
+          <li>¿Qué KPI usarías para justificar una decisión gerencial?</li>
+        </ul>
+      </div>
+      <div class="mini">
+        <h3>Modelo conceptual usado</h3>
+        <p><span class="code">Llegada → Cola → Estación A → Buffer → Estación B → Producto terminado</span></p>
+        <p>Los intervalos entre llegadas y los tiempos de proceso se generan con distribuciones lognormales controladas por coeficientes de variación independientes. El resultado cambia por congestión, bloqueo y acumulación de WIP.</p>
+      </div>
+    </section>
+
+    <div class="footer"><a href="https://www.egbaquela.com.ar">Enrique Gabriel Baquela</a>
+</div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const $ = (id) => document.getElementById(id);
+
+    const controls = {
+      arrivalRate: $("arrivalRate"),
+      variabilityDemand: $("variabilityDemand"),
+      procA: $("procA"),
+      variabilityA: $("variabilityA"),
+      procB: $("procB"),
+      variabilityB: $("variabilityB"),
+      queueCap: $("queueCap"),
+      bufferCap: $("bufferCap"),
+      horizon: $("horizon"),
+      seed: $("seed")
+    };
+
+    const app = {
+      result: null,
+      frameIndex: 0,
+      playTimer: null,
+      scenarioCount: 0,
+      scenarios: []
+    };
+
+    function params(){
+      return {
+        arrivalRate: Number(controls.arrivalRate.value),
+        demandVariability: Number(controls.variabilityDemand.value),
+        procA: Number(controls.procA.value),
+        variabilityA: Number(controls.variabilityA.value),
+        procB: Number(controls.procB.value),
+        variabilityB: Number(controls.variabilityB.value),
+        queueCap: Number(controls.queueCap.value),
+        bufferCap: Number(controls.bufferCap.value),
+        horizonMinutes: Number(controls.horizon.value) * 60,
+        seed: Math.max(1, Number(controls.seed.value) || 2026)
+      };
+    }
+
+    function updateControlLabels(){
+      const p = params();
+      const cvText = (cv) => `CV ${cv.toFixed(2).replace(".", ",")}`;
+      $("arrivalRateVal").textContent = `${p.arrivalRate} órdenes/h`;
+      $("variabilityDemandVal").textContent = cvText(p.demandVariability);
+      $("procAVal").textContent = `${p.procA.toFixed(1)} min/u`;
+      $("variabilityAVal").textContent = cvText(p.variabilityA);
+      $("procBVal").textContent = `${p.procB.toFixed(1)} min/u`;
+      $("variabilityBVal").textContent = cvText(p.variabilityB);
+      $("queueCapVal").textContent = `${p.queueCap} órdenes`;
+      $("bufferCapVal").textContent = `${p.bufferCap} órdenes`;
+      $("horizonVal").textContent = `${(p.horizonMinutes/60).toFixed(0)} h`;
+    }
+
+    class RNG{
+      constructor(seed){ this.seed = seed % 2147483647; if(this.seed <= 0) this.seed += 2147483646; }
+      next(){ return this.seed = this.seed * 16807 % 2147483647; }
+      uniform(){ return (this.next() - 1) / 2147483646; }
+      normal(){
+        let u = 0, v = 0;
+        while(u === 0) u = this.uniform();
+        while(v === 0) v = this.uniform();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+      }
+      exponential(mean){ return -Math.log(1 - this.uniform()) * mean; }
+      lognormalWithMeanCv(mean, cv){
+        const sigma2 = Math.log(1 + cv * cv);
+        const sigma = Math.sqrt(sigma2);
+        const mu = Math.log(mean) - sigma2 / 2;
+        return Math.max(0.05, Math.exp(mu + sigma * this.normal()));
+      }
+    }
+
+    function fmtTime(min){
+      const h = Math.floor(min / 60);
+      const m = Math.floor(min % 60);
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+    }
+    function fmtMin(min){
+      if(!isFinite(min)) return "—";
+      if(min < 60) return `${min.toFixed(1)} min`;
+      return `${(min/60).toFixed(2)} h`;
+    }
+    function pct(x){ return `${(100*x).toFixed(0)}%`; }
+    function mean(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+    function max(arr){ return arr.length ? Math.max(...arr) : 0; }
+
+    function simulate(p){
+      const rng = new RNG(p.seed);
+      const meanInterarrival = 60 / p.arrivalRate;
+      let clock = 0;
+      const interarrival = () => rng.lognormalWithMeanCv(meanInterarrival, p.demandVariability);
+      let nextArrival = interarrival();
+      let nextId = 1;
+
+      const q1 = [];
+      const buffer = [];
+      const completed = [];
+      const events = [];
+      const snapshots = [];
+      const series = [];
+
+      const A = { busy:false, blocked:false, job:null, start:0, finish:Infinity, busyTime:0, blockStart:0, blockTime:0 };
+      const B = { busy:false, job:null, start:0, finish:Infinity, busyTime:0 };
+
+      let accepted = 0, lost = 0, arrivals = 0;
+      let areaWip = 0, areaQ1 = 0, areaBuffer = 0, lastClock = 0;
+      let maxQ1 = 0, maxBuffer = 0, maxWip = 0;
+      let eventSafety = 0;
+
+      function totalWip(){ return q1.length + buffer.length + (A.busy || A.blocked ? 1 : 0) + (B.busy ? 1 : 0); }
+      function updateAreas(toTime){
+        const dt = Math.max(0, toTime - lastClock);
+        areaWip += totalWip() * dt;
+        areaQ1 += q1.length * dt;
+        areaBuffer += buffer.length * dt;
+        lastClock = toTime;
+      }
+      function procA(){ return rng.lognormalWithMeanCv(p.procA, p.variabilityA); }
+      function procB(){ return rng.lognormalWithMeanCv(p.procB, p.variabilityB); }
+      function log(type, text){
+        events.push({time: clock, type, text});
+      }
+      function snapshot(type, text){
+        const wip = totalWip();
+        maxQ1 = Math.max(maxQ1, q1.length);
+        maxBuffer = Math.max(maxBuffer, buffer.length);
+        maxWip = Math.max(maxWip, wip);
+        const snap = {
+          time: clock,
+          type,
+          text,
+          q1: q1.map(j => j.id),
+          buffer: buffer.map(j => j.id),
+          A: {
+            state: A.blocked ? "blocked" : A.busy ? "busy" : "idle",
+            job: A.job ? A.job.id : null,
+            finish: A.finish
+          },
+          B: {
+            state: B.busy ? "busy" : "idle",
+            job: B.job ? B.job.id : null,
+            finish: B.finish
+          },
+          completedCount: completed.length,
+          accepted,
+          lost,
+          wip,
+          q1Len: q1.length,
+          bufferLen: buffer.length
+        };
+        snapshots.push(snap);
+        series.push({ time:clock, wip, q1:q1.length, buffer:buffer.length, completed:completed.length, accepted, lost });
+      }
+      function startA(){
+        if(!A.busy && !A.blocked && q1.length > 0){
+          const job = q1.shift();
+          A.busy = true;
+          A.job = job;
+          A.start = clock;
+          A.finish = clock + procA();
+          log("A inicia", `La estación A inicia la orden #${job.id}.`);
+        }
+      }
+      function startB(job){
+        B.busy = true;
+        B.job = job;
+        B.start = clock;
+        B.finish = clock + procB();
+        log("B inicia", `La estación B inicia la orden #${job.id}.`);
+      }
+      function tryStartBFromBuffer(){
+        if(!B.busy && buffer.length > 0){
+          startB(buffer.shift());
+        }
+      }
+      function unblockAAfterB(){
+        if(A.blocked){
+          A.blockTime += clock - A.blockStart;
+          const job = A.job;
+          A.blocked = false;
+          A.job = null;
+          A.finish = Infinity;
+          if(!B.busy && buffer.length === 0){
+            log("Desbloqueo", `A se desbloquea y la orden #${job.id} pasa directo a B.`);
+            startB(job);
+          } else if(buffer.length < p.bufferCap){
+            buffer.push(job);
+            log("Desbloqueo", `A se desbloquea y la orden #${job.id} entra al buffer.`);
+          } else {
+            A.blocked = true;
+            A.job = job;
+            A.blockStart = clock;
+          }
+          startA();
+        }
+      }
+
+      snapshot("Inicio", "Estado inicial del sistema.");
+
+      while(clock <= p.horizonMinutes && eventSafety++ < 100000){
+        const nextA = A.busy ? A.finish : Infinity;
+        const nextB = B.busy ? B.finish : Infinity;
+        const nextTime = Math.min(nextArrival, nextA, nextB);
+        if(!isFinite(nextTime) || nextTime > p.horizonMinutes) break;
+        updateAreas(nextTime);
+        clock = nextTime;
+
+        if(nextArrival <= nextA && nextArrival <= nextB){
+          arrivals++;
+          const job = { id: nextId++, arrival: clock };
+          if(q1.length < p.queueCap){
+            q1.push(job);
+            accepted++;
+            log("Llegada", `Llega la orden #${job.id} y entra a la cola inicial.`);
+            startA();
+          } else {
+            lost++;
+            log("Pérdida", `Llega la orden #${job.id}, pero se pierde por cola inicial llena.`);
+          }
+          nextArrival = clock + interarrival();
+          snapshot("Llegada", events[events.length-1]?.text || "Llegada");
+        }
+        else if(nextA <= nextB){
+          const job = A.job;
+          A.busyTime += clock - A.start;
+          A.busy = false;
+          A.job = null;
+          A.finish = Infinity;
+          log("A termina", `La estación A termina la orden #${job.id}.`);
+          if(!B.busy && buffer.length === 0){
+            startB(job);
+          } else if(buffer.length < p.bufferCap){
+            buffer.push(job);
+            log("Buffer", `La orden #${job.id} espera en el buffer intermedio.`);
+          } else {
+            A.blocked = true;
+            A.job = job;
+            A.blockStart = clock;
+            log("Bloqueo", `A queda bloqueada: no hay lugar en el buffer para la orden #${job.id}.`);
+          }
+          if(!A.blocked) startA();
+          snapshot("A termina", events[events.length-1]?.text || "A termina");
+        }
+        else {
+          const job = B.job;
+          B.busyTime += clock - B.start;
+          B.busy = false;
+          B.job = null;
+          B.finish = Infinity;
+          completed.push({ id: job.id, arrival: job.arrival, completion: clock, lead: clock - job.arrival });
+          log("B termina", `La orden #${job.id} sale como producto terminado.`);
+          tryStartBFromBuffer();
+          unblockAAfterB();
+          tryStartBFromBuffer();
+          startA();
+          snapshot("B termina", events[events.length-1]?.text || "B termina");
+        }
+      }
+      updateAreas(p.horizonMinutes);
+
+      const leadTimes = completed.map(j => j.lead);
+      const horizonH = p.horizonMinutes / 60;
+      const utilA = A.busyTime / p.horizonMinutes;
+      const utilB = B.busyTime / p.horizonMinutes;
+      const blockA = A.blockTime / p.horizonMinutes;
+      const avgWip = areaWip / p.horizonMinutes;
+      const avgQ1 = areaQ1 / p.horizonMinutes;
+      const avgBuffer = areaBuffer / p.horizonMinutes;
+      const throughput = completed.length / horizonH;
+      const bottleneck = utilA + blockA > utilB + .05 ? "Estación A / buffer" : utilB > utilA + .05 ? "Estación B" : "Sistema balanceado";
+
+      return {
+        params: p,
+        events,
+        snapshots,
+        series,
+        completed,
+        leadTimes,
+        summary: {
+          arrivals,
+          accepted,
+          lost,
+          completed: completed.length,
+          throughput,
+          avgLead: mean(leadTimes),
+          maxLead: max(leadTimes),
+          avgWip,
+          avgQ1,
+          avgBuffer,
+          maxQ1,
+          maxBuffer,
+          maxWip,
+          utilA,
+          utilB,
+          blockA,
+          lostRate: arrivals ? lost / arrivals : 0,
+          completionRate: accepted ? completed.length / accepted : 0,
+          bottleneck
+        }
+      };
+    }
+
+    function renderKpis(result){
+      const s = result.summary;
+      $("kpiThroughput").textContent = s.throughput.toFixed(1);
+      $("kpiThroughputSub").textContent = `${s.completed} terminadas / ${(result.params.horizonMinutes/60).toFixed(0)} h`;
+      $("kpiLead").textContent = s.completed ? fmtMin(s.avgLead) : "—";
+      $("kpiWip").textContent = s.avgWip.toFixed(1);
+      $("kpiLost").textContent = `${s.lost}`;
+      $("kpiLost").className = s.lostRate > .10 ? "danger-text" : s.lostRate > .02 ? "warn-text" : "good-text";
+    }
+
+    function renderSnapshot(index){
+      if(!app.result) return;
+      const snaps = app.result.snapshots;
+      if(!snaps.length) return;
+      app.frameIndex = Math.max(0, Math.min(index, snaps.length - 1));
+      const snap = snaps[app.frameIndex];
+      $("clockLabel").textContent = fmtTime(snap.time);
+      $("eventLabel").textContent = `· ${snap.type}`;
+      $("timeline").max = snaps.length - 1;
+      $("timeline").value = app.frameIndex;
+      $("timelineLeft").textContent = `Evento ${app.frameIndex} · ${fmtTime(snap.time)}`;
+      $("timelineRight").textContent = `${snaps.length - 1} eventos`;
+
+      renderJobs($("queueBox"), snap.q1, "");
+      renderJobs($("bufferBox"), snap.buffer, "");
+      $("queueTag").textContent = `${snap.q1Len}/${app.result.params.queueCap}`;
+      $("bufferTag").textContent = `${snap.bufferLen}/${app.result.params.bufferCap}`;
+      renderMachine("A", snap.A);
+      renderMachine("B", snap.B);
+      renderEventLog(app.frameIndex);
+    }
+
+    function renderJobs(container, ids, className){
+      container.innerHTML = "";
+      const maxVisible = 44;
+      ids.slice(0, maxVisible).forEach(id => {
+        const d = document.createElement("div");
+        d.className = `job ${className}`;
+        d.title = `Orden #${id}`;
+        d.textContent = id > 99 ? "•" : id;
+        container.appendChild(d);
+      });
+      if(ids.length > maxVisible){
+        const more = document.createElement("div");
+        more.className = "tag";
+        more.textContent = `+${ids.length - maxVisible}`;
+        container.appendChild(more);
+      }
+    }
+
+    function renderMachine(letter, state){
+      const machine = $(`machine${letter}`);
+      const status = $(`status${letter}`);
+      const pill = $(`pill${letter}`);
+      const detail = $(`detail${letter}`);
+      machine.className = `machine ${state.state}`;
+      pill.className = `status-pill ${state.state}`;
+      if(state.state === "busy"){
+        status.textContent = `Procesando #${state.job}`;
+        pill.textContent = "BUSY";
+        detail.textContent = isFinite(state.finish) ? `Termina aprox. en ${fmtTime(state.finish)}` : "Procesando";
+      } else if(state.state === "blocked"){
+        status.textContent = `Bloqueada con #${state.job}`;
+        pill.textContent = "BLOCKED";
+        detail.textContent = "No puede descargar: buffer lleno";
+      } else {
+        status.textContent = "Ociosa";
+        pill.textContent = "IDLE";
+        detail.textContent = "Esperando trabajo";
+      }
+    }
+
+    function renderEventLog(index){
+      const log = $("eventLog");
+      const events = app.result.events;
+      const snap = app.result.snapshots[index];
+      const nearby = events.filter(e => e.time <= snap.time + 1e-9).slice(-11).reverse();
+      log.innerHTML = nearby.map(e => `
+        <div class="event-row">
+          <div class="event-time">${fmtTime(e.time)}</div>
+          <div class="event-text"><span class="event-type">${e.type}</span>${e.text}</div>
+        </div>`).join("") || `<div class="event-row"><div class="event-time">00:00</div><div class="event-text">Todavía no hay eventos.</div></div>`;
+    }
+
+    function setupCanvas(canvas){
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(220, Math.floor(rect.height * dpr));
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    function clearChart(ctx, w, h){
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = "rgba(255,255,255,0.02)";
+      ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.lineWidth = 1;
+      for(let i=1; i<5; i++){
+        const y = 24 + (h-54) * i/5;
+        ctx.beginPath(); ctx.moveTo(44,y); ctx.lineTo(w-16,y); ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(238,242,255,0.76)";
+      ctx.font = "12px ui-monospace, monospace";
+    }
+
+    function drawAxes(ctx, w, h, xLabel, yMax){
+      ctx.strokeStyle = "rgba(255,255,255,0.24)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(44,16); ctx.lineTo(44,h-38); ctx.lineTo(w-16,h-38); ctx.stroke();
+      ctx.fillStyle = "rgba(167,176,201,.95)";
+      ctx.font = "11px ui-monospace, monospace";
+      ctx.fillText("0", 24, h-34);
+      ctx.fillText(String(Math.ceil(yMax)), 17, 24);
+      ctx.fillText(xLabel, w-86, h-14);
+    }
+
+    function drawLineChart(canvas, series, keys, labels){
+      const {ctx,w,h} = setupCanvas(canvas);
+      clearChart(ctx,w,h);
+      if(!series.length){ return; }
+      const xMax = Math.max(...series.map(d=>d.time), 1);
+      const yMax = Math.max(1, ...series.flatMap(d => keys.map(k => d[k] || 0))) * 1.12;
+      const x = t => 44 + (w-64) * (t / xMax);
+      const y = v => (h-38) - (h-58) * (v / yMax);
+      drawAxes(ctx,w,h,"tiempo", yMax);
+      const colors = ["#74d3ae", "#7cc7ff", "#ffd166"];
+      keys.forEach((key, idx) => {
+        ctx.strokeStyle = colors[idx % colors.length];
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        series.forEach((d,i)=>{
+          const px = x(d.time), py = y(d[key] || 0);
+          if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        });
+        ctx.stroke();
+      });
+      labels.forEach((lab, idx) => {
+        const lx = 54 + idx * 115;
+        ctx.fillStyle = colors[idx % colors.length];
+        ctx.fillRect(lx, h-27, 11, 11);
+        ctx.fillStyle = "rgba(238,242,255,.82)";
+        ctx.font = "12px ui-sans-serif, system-ui";
+        ctx.fillText(lab, lx+16, h-17);
+      });
+    }
+
+    function drawUtilChart(canvas, s){
+      const {ctx,w,h} = setupCanvas(canvas);
+      clearChart(ctx,w,h);
+      const data = [
+        ["Uso A", s.utilA],
+        ["Uso B", s.utilB],
+        ["Bloq. A", s.blockA],
+        ["Pérdidas", s.lostRate]
+      ];
+      const left = 48, top = 30, barH = 30, gap = 22, maxW = w - 95;
+      ctx.font = "12px ui-sans-serif, system-ui";
+      data.forEach((d,i)=>{
+        const y = top + i*(barH+gap);
+        ctx.fillStyle = "rgba(167,176,201,.95)";
+        ctx.fillText(d[0], left, y-8);
+        ctx.fillStyle = "rgba(255,255,255,.10)";
+        roundRect(ctx, left, y, maxW, barH, 10); ctx.fill();
+        const valW = Math.min(maxW, maxW * d[1]);
+        const color = i===0 ? "#74d3ae" : i===1 ? "#7cc7ff" : i===2 ? "#ffd166" : "#ff6b6b";
+        ctx.fillStyle = color;
+        roundRect(ctx, left, y, valW, barH, 10); ctx.fill();
+        ctx.fillStyle = "rgba(238,242,255,.95)";
+        ctx.font = "bold 12px ui-monospace, monospace";
+        ctx.fillText(pct(d[1]), left + maxW - 45, y + 20);
+      });
+    }
+
+    function drawHistogram(canvas, values){
+      const {ctx,w,h} = setupCanvas(canvas);
+      clearChart(ctx,w,h);
+      if(!values.length){
+        ctx.fillStyle = "rgba(167,176,201,.9)";
+        ctx.fillText("Sin unidades terminadas", 52, 45);
+        return;
+      }
+      const bins = 10;
+      const mn = Math.min(...values), mx = Math.max(...values);
+      const span = Math.max(1, mx - mn);
+      const counts = Array(bins).fill(0);
+      values.forEach(v => {
+        const idx = Math.min(bins-1, Math.floor(((v-mn)/span)*bins));
+        counts[idx]++;
+      });
+      const cmax = Math.max(...counts, 1);
+      const left = 48, bottom = h - 40, chartW = w - 70, chartH = h - 62;
+      ctx.strokeStyle = "rgba(255,255,255,0.24)";
+      ctx.beginPath(); ctx.moveTo(left,18); ctx.lineTo(left,bottom); ctx.lineTo(w-16,bottom); ctx.stroke();
+      counts.forEach((c,i)=>{
+        const bw = chartW / bins - 5;
+        const x = left + i * chartW / bins + 2;
+        const bh = chartH * c / cmax;
+        ctx.fillStyle = "rgba(124,199,255,.78)";
+        roundRect(ctx, x, bottom-bh, bw, bh, 8); ctx.fill();
+      });
+      ctx.fillStyle = "rgba(167,176,201,.95)";
+      ctx.font = "11px ui-monospace, monospace";
+      ctx.fillText(`${mn.toFixed(0)} min`, left, h-16);
+      ctx.fillText(`${mx.toFixed(0)} min`, w-75, h-16);
+    }
+
+    function roundRect(ctx, x, y, width, height, radius){
+      const r = Math.min(radius, Math.abs(width)/2, Math.abs(height)/2);
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+width, y, x+width, y+height, r);
+      ctx.arcTo(x+width, y+height, x, y+height, r);
+      ctx.arcTo(x, y+height, x, y, r);
+      ctx.arcTo(x, y, x+width, y, r);
+      ctx.closePath();
+    }
+
+    function renderCharts(result){
+      drawLineChart($("chartWip"), result.series, ["wip","q1","buffer"], ["WIP", "Cola", "Buffer"]);
+      drawLineChart($("chartThroughput"), result.series, ["accepted","completed","lost"], ["Aceptadas", "Terminadas", "Perdidas"]);
+      drawUtilChart($("chartUtil"), result.summary);
+      drawHistogram($("chartLead"), result.leadTimes);
+    }
+
+    function renderInsights(result){
+      const s = result.summary, p = result.params;
+      const cards = [];
+      const capA = 60 / p.procA;
+      const capB = 60 / p.procB;
+      const theoreticalBottleneck = capA < capB ? "A" : capB < capA ? "B" : "ambas estaciones";
+
+      cards.push({
+        icon: "🎯",
+        title: `Restricción probable: ${s.bottleneck}`,
+        text: `Capacidad media aproximada: A ≈ ${capA.toFixed(1)} u/h, B ≈ ${capB.toFixed(1)} u/h. Por capacidad nominal, la restricción esperada es ${theoreticalBottleneck}; la simulación además muestra utilización, bloqueo y variabilidad.`
+      });
+      if(s.avgLead > Math.max(p.procA+p.procB, 1) * 3){
+        cards.push({icon:"⏳", title:"El lead time está dominado por esperas", text:`El tiempo puro de proceso medio sería ${(p.procA+p.procB).toFixed(1)} min, pero el lead time promedio simulado fue ${fmtMin(s.avgLead)}. La diferencia aparece por colas y variabilidad.`});
+      } else {
+        cards.push({icon:"✅", title:"El sistema fluye con poca espera relativa", text:`El lead time promedio no se aleja demasiado del tiempo de proceso medio. Esto sugiere baja congestión para los parámetros actuales.`});
+      }
+      if(s.blockA > .05){
+        cards.push({icon:"🧱", title:"Hay bloqueo aguas arriba", text:`A estuvo bloqueada ${pct(s.blockA)} del tiempo. Aumentar capacidad de B o ampliar buffer puede liberar flujo; aumentar A probablemente no resuelva el problema.`});
+      } else {
+        cards.push({icon:"🌊", title:"El buffer no parece limitar demasiado", text:`El bloqueo de A es bajo (${pct(s.blockA)}). En este escenario, más buffer podría tener poco impacto si la restricción está en capacidad de proceso.`});
+      }
+      if(s.lostRate > .05){
+        cards.push({icon:"🚨", title:"Se pierden órdenes por saturación", text:`La tasa de pérdida fue ${pct(s.lostRate)}. Gerencialmente, esto puede traducirse en ventas perdidas o clientes rechazados. Conviene analizar capacidad, citas o tamaño de cola.`});
+      } else {
+        cards.push({icon:"📦", title:"Pocas órdenes perdidas", text:`La cola inicial fue suficiente para absorber la mayor parte de la variabilidad: solo se perdió ${pct(s.lostRate)} de las llegadas.`});
+      }
+      cards.push({icon:"📈", title:"Lectura ejecutiva", text:`El sistema completó ${s.completed} unidades en ${(p.horizonMinutes/60).toFixed(0)} h, con throughput de ${s.throughput.toFixed(1)} u/h y WIP promedio de ${s.avgWip.toFixed(1)}. Compará escenarios antes de decidir inversión.`});
+
+      $("insights").innerHTML = cards.map(c => `
+        <div class="insight"><div class="insight-icon">${c.icon}</div><div><b>${c.title}</b><span>${c.text}</span></div></div>
+      `).join("");
+    }
+
+    function runSimulation(){
+      stopPlayback();
+      updateControlLabels();
+      app.result = simulate(params());
+      renderKpis(app.result);
+      renderCharts(app.result);
+      renderInsights(app.result);
+      renderSnapshot(app.result.snapshots.length - 1);
+      $("btnPlay").textContent = "Reproducir";
+    }
+
+    function stopPlayback(){
+      if(app.playTimer){ clearInterval(app.playTimer); app.playTimer = null; }
+      $("btnPlay").textContent = "Reproducir";
+    }
+    function togglePlayback(){
+      if(!app.result) return;
+      if(app.playTimer){ stopPlayback(); return; }
+      if(app.frameIndex >= app.result.snapshots.length - 1) renderSnapshot(0);
+      $("btnPlay").textContent = "Pausar";
+      app.playTimer = setInterval(()=>{
+        if(app.frameIndex >= app.result.snapshots.length - 1){ stopPlayback(); return; }
+        renderSnapshot(app.frameIndex + 1);
+      }, 140);
+    }
+
+    function saveScenario(){
+      if(!app.result) return;
+      const s = app.result.summary, p = app.result.params;
+      app.scenarioCount += 1;
+      app.scenarios.push({
+        name: `Escenario ${app.scenarioCount}`,
+        demand: `${p.arrivalRate} u/h`,
+        a: `${p.procA.toFixed(1)} min`,
+        b: `${p.procB.toFixed(1)} min`,
+        buffer: String(p.bufferCap),
+        throughput: `${s.throughput.toFixed(1)} u/h`,
+        lead: s.completed ? fmtMin(s.avgLead) : "—",
+        wip: s.avgWip.toFixed(1),
+        lost: `${s.lost} (${pct(s.lostRate)})`,
+        bottleneck: s.bottleneck
+      });
+      renderScenarioTable();
+    }
+    function renderScenarioTable(){
+      $("scenarioEmpty").style.display = app.scenarios.length ? "none" : "block";
+      $("scenarioTableWrap").style.display = app.scenarios.length ? "block" : "none";
+      $("scenarioBody").innerHTML = app.scenarios.map(sc => `
+        <tr><td>${sc.name}</td><td>${sc.demand}</td><td>${sc.a}</td><td>${sc.b}</td><td>${sc.buffer}</td><td>${sc.throughput}</td><td>${sc.lead}</td><td>${sc.wip}</td><td>${sc.lost}</td><td>${sc.bottleneck}</td></tr>
+      `).join("");
+      $("btnDownloadCsv").disabled = app.scenarios.length === 0;
+    }
+
+    function csvCell(value){
+      const text = String(value ?? "");
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+
+    function downloadScenariosCsv(){
+      if(!app.scenarios.length) return;
+      const headers = ["Escenario", "Demanda", "A", "B", "Buffer", "Throughput", "Lead time", "WIP", "Perdidas", "Restricción"];
+      const rows = app.scenarios.map(sc => [sc.name, sc.demand, sc.a, sc.b, sc.buffer, sc.throughput, sc.lead, sc.wip, sc.lost, sc.bottleneck]);
+      const csv = [headers, ...rows].map(row => row.map(csvCell).join(",")).join("\n");
+      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "comparacion_escenarios.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function setPreset(kind){
+      if(kind === "balanced"){
+        controls.arrivalRate.value = 13;
+        controls.variabilityDemand.value = 1.00;
+        controls.procA.value = 4.0;
+        controls.variabilityA.value = 0.35;
+        controls.procB.value = 4.4;
+        controls.variabilityB.value = 0.35;
+        controls.queueCap.value = 28;
+        controls.bufferCap.value = 10;
+        controls.horizon.value = 8;
+        controls.seed.value = 2026;
+      } else if(kind === "bottleneck"){
+        controls.arrivalRate.value = 21;
+        controls.variabilityDemand.value = 1.00;
+        controls.procA.value = 3.4;
+        controls.variabilityA.value = 0.80;
+        controls.procB.value = 6.5;
+        controls.variabilityB.value = 0.80;
+        controls.queueCap.value = 22;
+        controls.bufferCap.value = 4;
+        controls.horizon.value = 8;
+        controls.seed.value = 2026;
+      }
+      updateControlLabels();
+      runSimulation();
+    }
+
+    Object.values(controls).forEach(el => el.addEventListener("input", updateControlLabels));
+    $("btnRun").addEventListener("click", runSimulation);
+    $("btnRunTop").addEventListener("click", runSimulation);
+    $("btnPresetBalanced").addEventListener("click", () => setPreset("balanced"));
+    $("btnPresetBottleneck").addEventListener("click", () => setPreset("bottleneck"));
+    $("btnSaveScenario").addEventListener("click", saveScenario);
+    $("btnDownloadCsv").addEventListener("click", downloadScenariosCsv);
+    $("btnClearScenarios").addEventListener("click", () => { app.scenarios = []; app.scenarioCount = 0; renderScenarioTable(); });
+    $("btnPrev").addEventListener("click", () => { stopPlayback(); renderSnapshot(app.frameIndex - 1); });
+    $("btnNext").addEventListener("click", () => { stopPlayback(); renderSnapshot(app.frameIndex + 1); });
+    $("btnPlay").addEventListener("click", togglePlayback);
+    $("timeline").addEventListener("input", e => { stopPlayback(); renderSnapshot(Number(e.target.value)); });
+    window.addEventListener("resize", () => { if(app.result) renderCharts(app.result); });
+
+    updateControlLabels();
+    runSimulation();
+  </script>
+</body>
+</html>
