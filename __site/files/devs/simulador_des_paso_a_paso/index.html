@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulación por eventos discretos — paso a paso</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-2: #172047;
+      --panel: #0f1428;
+      --panel-soft: #101936;
+      --ink: #e7ecf3;
+      --muted: #9aa4b2;
+      --line: #1e2646;
+      --border: #1f2a4f;
+      --accent: #8ec5ff;
+      --accent-2: #78a6ff;
+      --accent-soft: rgba(142,197,255,0.13);
+      --ok: #21c07a;
+      --warn: #ffb454;
+      --danger: #ef476f;
+      --purple: #c39bff;
+      --ind: #8ec5ff;
+      --cond: #ffd166;
+      --shadow: 0 14px 36px rgba(0,0,0,0.28);
+      --input-bg: #0d1631;
+      --radius: 18px;
+      --soft-top: rgba(255,255,255,0.03);
+      --soft-bottom: rgba(0,0,0,0.04);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 720px at 18% -10%, var(--bg-2), var(--bg) 54%);
+    }
+    .wrap { max-width: 1680px; margin: 0 auto; padding: 24px 16px 48px; }
+    .footer{ margin-top:20px; color:var(--muted); text-align:center; font-size:.86rem; }
+    .hero, .panel, .stat, .note-box, .diagram-box, .event-card, .mini-card, .flow-node, .seed-card {
+      background: linear-gradient(180deg, var(--soft-top), var(--soft-bottom)), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .hero {
+      background: linear-gradient(140deg, rgba(120,166,255,0.18), rgba(33,192,122,0.04) 42%, rgba(255,180,84,0.06)), var(--bg);
+      padding: 26px 26px 22px;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -50px;
+      top: -50px;
+      width: 210px;
+      height: 210px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+    }
+    .hero h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 2.7vw, 2.8rem); letter-spacing: -0.04em; }
+    .hero p { margin: 0; color: var(--muted); max-width: 1150px; line-height: 1.48; font-size: 1.02rem; }
+    .hero .hero-tags { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+    .panel .hd, .event-card .hd, .seed-card .hd {
+      padding: 16px 18px 11px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0));
+    }
+    .panel .hd h2, .panel .hd h3, .event-card .hd h3, .seed-card .hd h3 { margin: 0 0 5px; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .panel .hd p, .event-card .hd p, .seed-card .hd p { margin: 0; color: var(--muted); line-height: 1.38; font-size: 0.92rem; }
+    .body { padding: 16px 18px 18px; }
+    .stack { display: grid; gap: 18px; }
+    .main-grid { display: grid; grid-template-columns: 390px minmax(0,1fr); gap: 18px; align-items: start; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    .four-col { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+    .field { display: grid; gap: 6px; }
+    label { color: var(--muted); font-weight: 800; font-size: 0.87rem; }
+    input, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      color: var(--ink);
+      font-size: 0.96rem;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(142,197,255,0.12); }
+    input[type="range"] { padding: 0; }
+    .hint, .small, .muted { color: var(--muted); font-size: 0.82rem; line-height: 1.35; }
+    .mono { font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; }
+    .actions, .play-actions, .badge-row, .legend { display:flex; flex-wrap:wrap; gap: 10px; align-items: center; }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 900;
+      font-size: 0.93rem;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: #08111f; box-shadow: 0 10px 20px rgba(120,166,255,0.22); }
+    .btn-secondary, .btn-ghost { background: #0f1734; color: var(--ink); border: 1px solid var(--border); }
+    .btn-ghost { color: var(--accent); }
+    .badge, .tag {
+      display:inline-flex;
+      align-items:center;
+      gap: 7px;
+      border: 1px solid var(--border);
+      background: #101935;
+      color: var(--ink);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 850;
+    }
+    .tag-blue { color: var(--ind); border-color: rgba(142,197,255,0.25); background: rgba(142,197,255,0.08); }
+    .tag-yellow { color: var(--cond); border-color: rgba(255,209,102,0.25); background: rgba(255,209,102,0.08); }
+    .tag-green { color: var(--ok); border-color: rgba(33,192,122,0.25); background: rgba(33,192,122,0.08); }
+    .tag-purple { color: var(--purple); border-color: rgba(195,155,255,0.25); background: rgba(195,155,255,0.08); }
+    .tag-danger { color: #ff93ae; border-color: rgba(239,71,111,0.25); background: rgba(239,71,111,0.08); }
+    .note-box {
+      padding: 13px 14px;
+      background: linear-gradient(180deg, rgba(142,197,255,0.08), rgba(0,0,0,0.02)), var(--panel-soft);
+      line-height: 1.45;
+      color: var(--ink);
+      font-size: 0.9rem;
+    }
+    .note-box strong { color: var(--accent); }
+    .mini-card, .stat { padding: 13px 14px; }
+    .stat h4, .mini-card h4 { margin: 0 0 7px; color: var(--muted); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .stat .value { font-size: 1.25rem; font-weight: 950; letter-spacing: -0.03em; }
+    .stat .sub { margin-top: 4px; color: var(--muted); font-size: 0.8rem; line-height: 1.3; }
+    .toc { position: sticky; top: 14px; }
+    .toc a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-size: 0.91rem;
+    }
+    .toc a:hover { color: var(--ink); border-color: var(--border); background: rgba(255,255,255,0.03); }
+    .step-list { counter-reset: item; display:grid; gap:10px; }
+    .step-item {
+      display:grid;
+      grid-template-columns: 32px 1fr;
+      gap:10px;
+      align-items:start;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:rgba(255,255,255,0.02);
+    }
+    .step-item::before {
+      counter-increment:item;
+      content:counter(item);
+      width:28px; height:28px;
+      display:grid; place-items:center;
+      border-radius:999px;
+      background:var(--accent-soft);
+      color:var(--accent);
+      font-weight:950;
+    }
+    .step-item strong { display:block; margin-bottom:3px; }
+    .step-item span { color:var(--muted); font-size:0.86rem; line-height:1.35; }
+    .flow { display:grid; grid-template-columns: 1fr 52px 1fr 52px 1fr 52px 1fr; gap: 10px; align-items: stretch; }
+    .flow-node { min-height: 132px; padding: 14px; box-shadow: none; display:grid; align-content: start; gap:8px; }
+    .flow-node.active { outline: 2px solid var(--accent); box-shadow: 0 0 0 5px rgba(142,197,255,0.10); }
+    .flow-node.warn { outline: 2px solid var(--warn); box-shadow: 0 0 0 5px rgba(255,180,84,0.09); }
+    .flow-node.ok { outline: 2px solid var(--ok); box-shadow: 0 0 0 5px rgba(33,192,122,0.09); }
+    .arrow {
+      min-height: 132px;
+      display:grid;
+      place-items:center;
+      color: var(--muted);
+      font-size: 1.5rem;
+      font-weight: 900;
+    }
+    .node-title { display:flex; justify-content:space-between; gap:10px; align-items:center; font-weight:950; }
+    .chips { display:flex; gap:7px; flex-wrap:wrap; min-height:37px; align-content:flex-start; }
+    .chip {
+      min-width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#12204a;
+      border:1px solid #22315d;
+      color: var(--ink);
+      font-size:0.78rem;
+      font-weight:950;
+      padding: 0 8px;
+    }
+    .chip.server { background: rgba(255,209,102,0.12); border-color: rgba(255,209,102,0.28); color: var(--warn); }
+    .chip.done { background: rgba(33,192,122,0.10); border-color: rgba(33,192,122,0.28); color: var(--ok); }
+    .calendar-layout { display:grid; grid-template-columns: minmax(0,1.12fr) minmax(360px,0.88fr); gap:14px; align-items:start; }
+    .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:14px; }
+    table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+    th, td { padding: 9px 10px; border-bottom:1px solid var(--border); text-align:left; vertical-align: top; }
+    th { color:var(--muted); font-size:0.77rem; text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:0; }
+    tbody tr.next-event { background: rgba(142,197,255,0.09); }
+    tbody tr.current-event { background: rgba(255,180,84,0.08); }
+    .pill {
+      display:inline-flex; align-items:center; gap:6px; padding:4px 8px;
+      border-radius:999px; font-weight:900; font-size:0.76rem; border:1px solid var(--border);
+    }
+    .pill.ind { color:var(--ind); background:rgba(142,197,255,0.08); border-color:rgba(142,197,255,0.22); }
+    .pill.cond { color:var(--cond); background:rgba(255,209,102,0.08); border-color:rgba(255,209,102,0.22); }
+    .decision-box {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,180,84,0.07), rgba(255,255,255,0.02)), var(--panel-soft);
+    }
+    .decision-box h4 { margin: 0 0 8px; }
+    .decision-box p { margin: 0 0 10px; color: var(--muted); line-height:1.4; }
+    .decision-path { display:grid; gap:8px; }
+    .path-line { padding: 9px 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.025); font-size:0.9rem; line-height:1.35; }
+    .path-line strong { color:var(--ink); }
+    .slider-line { display:grid; grid-template-columns: 1fr auto; gap: 12px; align-items:center; }
+    canvas { width:100%; background: rgba(12,18,38,0.85); border:1px solid var(--border); border-radius:14px; }
+    .chart-card { display:grid; gap:8px; }
+    .chart-card h4 { margin:0; font-size:0.95rem; }
+    .chart-card p { margin:0; color:var(--muted); font-size:0.82rem; }
+    .seed-grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+    .seed-card { box-shadow:none; }
+    .seed-kpis { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; }
+    .seed-kpi { padding:10px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,0.02); }
+    .seed-kpi .v { font-weight:950; font-size:1.05rem; }
+    .seed-kpi .k { color:var(--muted); font-size:0.78rem; margin-top:2px; }
+    .footer-note { color: var(--muted); font-size:0.82rem; line-height:1.35; margin-top:10px; }
+    .soft-list { margin:0; padding-left:20px; color:var(--muted); line-height:1.48; }
+    .soft-list strong { color:var(--ink); }
+    .print-note { display:none; }
+    @media (max-width: 1280px) {
+      .main-grid, .calendar-layout, .two-col, .seed-grid { grid-template-columns: 1fr; }
+      .toc { position: static; }
+      .four-col, .three-col { grid-template-columns: 1fr 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .arrow { min-height: 24px; transform: rotate(90deg); }
+    }
+    @media (max-width: 760px) {
+      .wrap { padding: 14px 10px 32px; }
+      .hero { padding: 20px 18px; }
+      .four-col, .three-col { grid-template-columns: 1fr; }
+      .slider-line { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; color: #111827; }
+      .hero, .panel, .stat, .note-box, .flow-node, .event-card, .mini-card, .seed-card { box-shadow: none; border-color: #d1d5db; background: white; color: #111827; }
+      .muted, .small, .hint, .panel .hd p, .hero p { color: #4b5563; }
+      button, input, select, .play-actions, .actions, .toc { display:none !important; }
+      .print-note { display:block; color:#4b5563; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Simulación por eventos discretos, paso a paso</h1>
+      <p>
+        Una guía interactiva para entender cómo avanza una simulación: el reloj salta de evento en evento,
+        la lista de eventos futuros se ordena por tiempo, algunas decisiones dependen del estado del sistema
+        y la semilla controla la secuencia de números aleatorios.
+      </p>
+      <div class="hero-tags">
+        <span class="tag tag-blue">Eventos independientes</span>
+        <span class="tag tag-yellow">Eventos condicionales</span>
+        <span class="tag tag-green">Colas y servicio</span>
+        <span class="tag tag-purple">Semilla aleatoria</span>
+      </div>
+    </section>
+
+    <div class="main-grid">
+      <aside class="panel toc" id="toc">
+        <div class="hd">
+          <h2>Índice</h2>
+          <p>Recorrido sugerido.</p>
+        </div>
+        <div class="body">
+          <a href="#idea">1. Idea central</a>
+          <a href="#modelo">2. Modelo simple</a>
+          <a href="#configuracion">3. Configuración</a>
+          <a href="#reloj">4. Reloj, eventos y estado</a>
+          <a href="#calendario">5. Calendario de eventos</a>
+          <a href="#aleatoriedad">6. Semilla y números aleatorios</a>
+          <a href="#actividad">7. Actividad para alumnos</a>
+          <div class="note-box" style="margin-top:14px;">
+            <strong>Mensaje clave:</strong><br />
+            En simulación por eventos discretos no se avanza minuto a minuto. El reloj salta al próximo evento relevante.
+          </div>
+        </div>
+      </aside>
+
+      <main class="stack">
+        <section class="panel" id="idea">
+          <div class="hd">
+            <h2>1. Idea central: ¿qué está simulando esta página?</h2>
+            <p>Un sistema de atención simple, como un mostrador, una caja o una mesa de soporte.</p>
+          </div>
+          <div class="body stack">
+            <div class="three-col">
+              <div class="mini-card">
+                <h4>Entidad</h4>
+                <p class="muted">Cada cliente que llega al sistema. Tiene un momento de arribo, puede esperar, ser atendido y salir.</p>
+              </div>
+              <div class="mini-card">
+                <h4>Recurso</h4>
+                <p class="muted">Un único servidor. Puede estar libre u ocupado. Si está ocupado, los nuevos clientes esperan en cola.</p>
+              </div>
+              <div class="mini-card">
+                <h4>Eventos</h4>
+                <p class="muted">Son cambios instantáneos del sistema: llega un cliente o termina una atención.</p>
+              </div>
+            </div>
+            <div class="note-box">
+              <strong>Interpretación para negocios:</strong> este modelo permite estudiar cómo la variabilidad en la demanda y en el tiempo de atención afecta la espera, la utilización del recurso y el nivel de servicio. Es pequeño a propósito: sirve para entender la lógica antes de pasar a modelos más realistas.
+            </div>
+            <div class="two-col">
+              <div class="mini-card">
+                <h4>Evento independiente</h4>
+                <p class="muted">Un arribo viene desde afuera del sistema. En el modelo, puede ocurrir aunque el servidor esté libre u ocupado.</p>
+                <span class="pill ind">Arribo de cliente</span>
+              </div>
+              <div class="mini-card">
+                <h4>Evento condicional</h4>
+                <p class="muted">Una salida solo puede existir si antes alguien empezó a ser atendido. Depende del estado interno del sistema.</p>
+                <span class="pill cond">Fin de atención</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="modelo">
+          <div class="hd">
+            <h2>2. Modelo conceptual</h2>
+            <p>El flujo se lee de izquierda a derecha. Los chips representan clientes.</p>
+          </div>
+          <div class="body stack">
+            <div class="flow">
+              <div class="flow-node" id="nodeSource">
+                <div class="node-title">Demanda <span class="pill ind">independiente</span></div>
+                <div class="muted">Genera el próximo arribo usando un número aleatorio.</div>
+                <div class="chips" id="sourceChips"></div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="flow-node" id="nodeQueue">
+                <div class="node-title">Cola <span class="badge"><span id="queueSizeNode">0</span></span></div>
+                <div class="muted">Clientes que llegaron, pero todavía no empezaron su atención.</div>
+                <div class="chips" id="queueChips"></div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="flow-node" id="nodeServer">
+                <div class="node-title">Servidor <span class="pill cond">condicional</span></div>
+                <div class="muted" id="serverTextNode">Libre.</div>
+                <div class="chips" id="serverChips"></div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="flow-node" id="nodeExit">
+                <div class="node-title">Salida <span class="badge"><span id="doneSizeNode">0</span></span></div>
+                <div class="muted">Clientes que ya completaron el proceso.</div>
+                <div class="chips" id="doneChips"></div>
+              </div>
+            </div>
+            <div class="note-box">
+              <strong>Regla del modelo:</strong> cuando llega un cliente, se mira el estado del servidor. Si está libre, empieza atención inmediatamente y se programa un fin de atención. Si está ocupado, el cliente entra en cola. Cuando termina una atención, si la cola tiene clientes, empieza el siguiente; si no, el servidor queda libre.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="configuracion">
+          <div class="hd">
+            <h2>3. Configuración del experimento</h2>
+            <p>Cambiá medias, variabilidad y semilla. Luego volvé a simular.</p>
+          </div>
+          <div class="body stack">
+            <div class="four-col">
+              <div class="field">
+                <label for="seed">Semilla</label>
+                <input id="seed" type="number" step="1" value="12345" />
+                <div class="hint">Misma semilla + mismos parámetros = misma trayectoria.</div>
+              </div>
+              <div class="field">
+                <label for="maxCustomers">Cantidad de clientes</label>
+                <input id="maxCustomers" type="number" min="5" max="120" step="1" value="30" />
+                <div class="hint">Número máximo de arribos simulados.</div>
+              </div>
+              <div class="field">
+                <label for="meanArrival">Media entre arribos</label>
+                <input id="meanArrival" type="number" min="0.1" step="0.1" value="2.0" />
+                <div class="hint">En unidades de tiempo. Menor valor = llega más gente.</div>
+              </div>
+              <div class="field">
+                <label for="meanService">Media de atención</label>
+                <input id="meanService" type="number" min="0.1" step="0.1" value="1.6" />
+                <div class="hint">Mayor valor = cada cliente ocupa más tiempo el recurso.</div>
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="arrivalVar">Variabilidad de arribos</label>
+                <select id="arrivalVar">
+                  <option value="deterministic">Sin variabilidad: todos iguales</option>
+                  <option value="low">Baja: alrededor de la media</option>
+                  <option value="medium">Media: algunos cortos, algunos largos</option>
+                  <option value="high" selected>Alta: exponencial</option>
+                </select>
+                <div class="hint">Controla cuánto fluctúa el tiempo entre clientes.</div>
+              </div>
+              <div class="field">
+                <label for="serviceVar">Variabilidad de atención</label>
+                <select id="serviceVar">
+                  <option value="deterministic">Sin variabilidad: todos iguales</option>
+                  <option value="low" selected>Baja: alrededor de la media</option>
+                  <option value="medium">Media: algunos cortos, algunos largos</option>
+                  <option value="high">Alta: exponencial</option>
+                </select>
+                <div class="hint">Controla cuánto fluctúa cada atención.</div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn-primary" id="runBtn">Simular de nuevo</button>
+              <button class="btn-secondary" id="presetStableBtn">Ejemplo estable</button>
+              <button class="btn-secondary" id="presetCongestedBtn">Ejemplo congestionado</button>
+              <button class="btn-secondary" id="presetVariabilityBtn">Misma media, más variabilidad</button>
+            </div>
+            <div class="note-box" id="loadNote"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="reloj">
+          <div class="hd">
+            <h2>4. Reloj, evento actual y estado del sistema</h2>
+            <p>Usá los botones para avanzar. El reloj salta al próximo evento, no avanza en intervalos fijos.</p>
+          </div>
+          <div class="body stack">
+            <div class="play-actions">
+              <button class="btn-primary" id="playBtn">▶ Reproducir</button>
+              <button class="btn-secondary" id="pauseBtn">❚❚ Pausar</button>
+              <button class="btn-ghost" id="stepBtn">Paso a paso</button>
+              <button class="btn-ghost" id="backBtn">← Volver un evento</button>
+              <button class="btn-ghost" id="resetBtn">Reiniciar</button>
+              <div class="field" style="min-width:180px; margin-left:auto;">
+                <label for="speed">Velocidad</label>
+                <select id="speed">
+                  <option value="1200">Lenta</option>
+                  <option value="750" selected>Normal</option>
+                  <option value="350">Rápida</option>
+                </select>
+              </div>
+            </div>
+            <div class="slider-line">
+              <input id="timeline" type="range" min="0" max="0" value="0" />
+              <div class="small">Evento <span id="timelineIndex" class="mono">0</span> / <span id="timelineTotal" class="mono">0</span></div>
+            </div>
+            <div class="badge-row">
+              <span class="badge">Reloj: <span id="clockText" class="mono">0.000</span></span>
+              <span class="badge">Evento actual: <span id="eventText" class="mono">Inicialización</span></span>
+              <span class="badge">Servidor: <span id="serverStatus" class="mono">Libre</span></span>
+              <span class="badge">Cola: <span id="queueText" class="mono">0</span></span>
+              <span class="badge">Completados: <span id="doneText" class="mono">0</span></span>
+            </div>
+            <div class="four-col">
+              <div class="stat"><h4>Espera promedio</h4><div class="value" id="avgWait">—</div><div class="sub">Solo clientes completados.</div></div>
+              <div class="stat"><h4>Tiempo en sistema</h4><div class="value" id="avgSystem">—</div><div class="sub">Desde arribo hasta salida.</div></div>
+              <div class="stat"><h4>Utilización</h4><div class="value" id="utilization">—</div><div class="sub">Tiempo ocupado / reloj actual.</div></div>
+              <div class="stat"><h4>Cola máxima</h4><div class="value" id="maxQueue">—</div><div class="sub">Máximo observado hasta ahora.</div></div>
+            </div>
+            <div class="calendar-layout">
+              <div class="event-card">
+                <div class="hd">
+                  <h3>Qué acaba de ocurrir</h3>
+                  <p>La decisión se explica en términos de estado y condiciones.</p>
+                </div>
+                <div class="body">
+                  <div class="decision-box" id="decisionBox"></div>
+                </div>
+              </div>
+              <div class="event-card">
+                <div class="hd">
+                  <h3>Gráficos de la trayectoria</h3>
+                  <p>Se actualizan hasta el evento seleccionado.</p>
+                </div>
+                <div class="body stack">
+                  <div class="chart-card">
+                    <h4>Cola y cantidad en sistema</h4>
+                    <p>Línea celeste: cola. Línea amarilla: clientes en el sistema.</p>
+                    <canvas id="queueChart" width="700" height="260"></canvas>
+                  </div>
+                  <div class="chart-card">
+                    <h4>Servidor ocupado/libre</h4>
+                    <p>1 = ocupado, 0 = libre.</p>
+                    <canvas id="serverChart" width="700" height="160"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="calendario">
+          <div class="hd">
+            <h2>5. Calendario de eventos futuros y secuencia ejecutada</h2>
+            <p>La simulación siempre toma el evento futuro con menor tiempo programado.</p>
+          </div>
+          <div class="body stack">
+            <div class="two-col">
+              <div>
+                <h3 style="margin:0 0 10px;">Lista de eventos futuros</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Orden</th><th>t programado</th><th>Evento</th><th>Tipo</th><th>Por qué existe</th></tr>
+                    </thead>
+                    <tbody id="futureEventsBody"></tbody>
+                  </table>
+                </div>
+                <div class="footer-note">La primera fila es el próximo evento que ejecutaría el simulador.</div>
+              </div>
+              <div>
+                <h3 style="margin:0 0 10px;">Eventos ya ejecutados</h3>
+                <div class="table-wrap" style="max-height:360px; overflow:auto;">
+                  <table>
+                    <thead>
+                      <tr><th>#</th><th>t</th><th>Evento</th><th>Cliente</th><th>Decisión principal</th></tr>
+                    </thead>
+                    <tbody id="executedEventsBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="note-box">
+              <strong>Observación didáctica:</strong> el arribo es independiente porque la demanda externa no “pregunta” si el sistema está listo. En cambio, el fin de atención es condicional: si no hay cliente siendo atendido, no puede haber fin de atención. Además, cuando termina una atención, el próximo fin de atención solo se programa si hay alguien esperando o si alguien entra a servicio.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="aleatoriedad">
+          <div class="hd">
+            <h2>6. Semilla y números aleatorios</h2>
+            <p>La semilla es nuestro método para simular el azar y volverlo reproducible.</p>
+          </div>
+          <div class="body stack">
+            <div class="note-box">
+              <strong>Qué significa la semilla:</strong> una computadora no genera azar “puro” sino que genera una secuencia pseudoaleatoria. La semilla define el punto de inicio de esa secuencia. Por eso, con la misma semilla y los mismos parámetros, el modelo repite exactamente los mismos arribos y tiempos de atención.
+            </div>
+            <div class="two-col">
+              <div>
+                <h3 style="margin:0 0 10px;">Números aleatorios usados hasta este evento</h3>
+                <div class="table-wrap" style="max-height:320px; overflow:auto;">
+                  <table>
+                    <thead><tr><th>#</th><th>Uso</th><th>U(0,1)</th><th>Tiempo generado</th></tr></thead>
+                    <tbody id="randomBody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <h3 style="margin:0 0 10px;">Comparación rápida de semillas</h3>
+                <div class="seed-grid">
+                  <div class="field">
+                    <label for="seedA">Semilla A</label>
+                    <input id="seedA" type="number" value="12345" />
+                  </div>
+                  <div class="field">
+                    <label for="seedB">Semilla B</label>
+                    <input id="seedB" type="number" value="12346" />
+                  </div>
+                </div>
+                <div class="actions" style="margin-top:10px;">
+                  <button class="btn-secondary" id="compareSeedsBtn">Comparar semillas</button>
+                  <button class="btn-ghost" id="sameSeedBtn">Usar misma semilla</button>
+                  <button class="btn-ghost" id="plusOneSeedBtn">Semilla + 1</button>
+                </div>
+                <div id="seedComparison" class="stack" style="margin-top:12px;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="actividad">
+          <div class="hd">
+            <h2>7. Actividad de repaso sugerida</h2>
+            <p>Hace la siguiente actividad para repasar conceptos.</p>
+          </div>
+          <div class="body stack">
+            <div class="step-list">
+              <div class="step-item"><div><strong>Reproducir una corrida base.</strong><span>Usen la semilla 12345 y describan, en palabras, qué pasa en los primeros 8 eventos.</span></div></div>
+              <div class="step-item"><div><strong>Cambiar solo la semilla.</strong><span>Mantengan todos los parámetros iguales y comparen resultados. ¿Cambia la conclusión? ¿Por qué?</span></div></div>
+              <div class="step-item"><div><strong>Aumentar la variabilidad.</strong><span>Mantengan las mismas medias, pero pasen arribos o atención a alta variabilidad. Observen espera, cola máxima y utilización.</span></div></div>
+              <div class="step-item"><div><strong>Conectar con una decisión.</strong><span>Supongan que la espera promedio máxima aceptable es 3 unidades de tiempo. ¿El sistema actual alcanza? ¿Qué cambiarían?</span></div></div>
+            </div>
+            <div class="note-box">
+              <strong>Cierre gerencial:</strong> una sola corrida no demuestra una verdad definitiva. Muestra una trayectoria posible. Para decidir mejor, conviene comparar escenarios con varias semillas y mirar patrones: espera promedio, cola máxima, utilización y nivel de servicio.
+            </div>
+          </div>
+        </section>
+        <div class="footer"><a href="https://www.egbaquela.com.ar">Enrique Gabriel Baquela</a></div>
+      </main>
+      
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmt = (x, d = 3) => Number.isFinite(x) ? Number(x).toFixed(d) : '—';
+    const fmtInt = (x) => Number.isFinite(x) ? String(Math.round(x)) : '—';
+    const fmtPct = (x, d = 1) => Number.isFinite(x) ? `${(100*x).toFixed(d)}%` : '—';
+    const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function() {
+        a |= 0;
+        a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function sampleTime(mean, variability, rng, useLabel, randomLog) {
+      const m = Math.max(0.0001, Number(mean));
+      if (variability === 'deterministic') {
+        randomLog.push({ use: useLabel, u: null, value: m, note: 'sin sorteo' });
+        return m;
+      }
+      const u = clamp(rng(), 1e-12, 1 - 1e-12);
+      let value;
+      let note;
+      if (variability === 'low') {
+        value = m * (0.75 + 0.50 * u);
+        note = 'baja variabilidad';
+      } else if (variability === 'medium') {
+        value = m * (0.40 + 1.20 * u);
+        note = 'variabilidad media';
+      } else {
+        value = -m * Math.log(1 - u);
+        note = 'alta variabilidad exponencial';
+      }
+      randomLog.push({ use: useLabel, u, value, note });
+      return Math.max(0.0001, value);
+    }
+
+    function variabilityLabel(v) {
+      return {
+        deterministic: 'sin variabilidad',
+        low: 'baja',
+        medium: 'media',
+        high: 'alta/exponencial'
+      }[v] || v;
+    }
+
+    function eventLabel(type) {
+      return type === 'arrival' ? 'Arribo' : 'Fin de atención';
+    }
+
+    function eventTypePill(type) {
+      return type === 'arrival'
+        ? '<span class="pill ind">independiente</span>'
+        : '<span class="pill cond">condicional</span>';
+    }
+
+    function cloneEventList(list) {
+      return list.map(e => ({ ...e }));
+    }
+
+    function snapshotFromState(state, lastEvent) {
+      const completed = state.completed.map(c => ({ ...c }));
+      const waits = completed.map(c => c.wait);
+      const systems = completed.map(c => c.timeInSystem);
+      const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0) / arr.length : NaN;
+      return {
+        clock: state.clock,
+        queue: [...state.queue],
+        serverBusy: state.serverBusy,
+        serverCustomer: state.serverCustomer ? { ...state.serverCustomer } : null,
+        completed,
+        futureEvents: cloneEventList(state.futureEvents).sort(compareEvents),
+        executedEvents: state.executedEvents.map(e => ({ ...e })),
+        randomLog: state.randomLog.map((r, idx) => ({ n: idx + 1, ...r })),
+        lastEvent,
+        stats: {
+          completed: completed.length,
+          avgWait: avg(waits),
+          avgSystem: avg(systems),
+          utilization: state.clock > 0 ? state.busyArea / state.clock : 0,
+          maxQueue: state.maxQueue,
+          avgQueueTimeWeighted: state.clock > 0 ? state.queueArea / state.clock : 0,
+          avgSystemTimeWeighted: state.clock > 0 ? state.systemArea / state.clock : 0,
+          throughput: state.clock > 0 ? completed.length / state.clock : 0
+        }
+      };
+    }
+
+    function compareEvents(a, b) {
+      if (Math.abs(a.time - b.time) > 1e-10) return a.time - b.time;
+      const pa = a.type === 'departure' ? 0 : 1;
+      const pb = b.type === 'departure' ? 0 : 1;
+      if (pa !== pb) return pa - pb;
+      return (a.customerId || 0) - (b.customerId || 0);
+    }
+
+    function simulate(config) {
+      const rng = mulberry32(Number(config.seed));
+      const state = {
+        clock: 0,
+        queue: [],
+        serverBusy: false,
+        serverCustomer: null,
+        completed: [],
+        futureEvents: [],
+        executedEvents: [],
+        randomLog: [],
+        nextCustomerId: 1,
+        arrivalsScheduled: 0,
+        maxQueue: 0,
+        queueArea: 0,
+        systemArea: 0,
+        busyArea: 0
+      };
+
+      function scheduleArrival(now, reason) {
+        if (state.arrivalsScheduled >= config.maxCustomers) return null;
+        const cid = state.nextCustomerId++;
+        state.arrivalsScheduled += 1;
+        const ia = sampleTime(config.meanArrival, config.arrivalVar, rng, `tiempo hasta arribo C${cid}`, state.randomLog);
+        const ev = { type: 'arrival', time: now + ia, customerId: cid, interarrival: ia, reason: reason || 'demanda externa' };
+        state.futureEvents.push(ev);
+        state.futureEvents.sort(compareEvents);
+        return ev;
+      }
+
+      function scheduleDeparture(now, customerId, serviceStart, origin) {
+        const st = sampleTime(config.meanService, config.serviceVar, rng, `tiempo de atención C${customerId}`, state.randomLog);
+        const ev = { type: 'departure', time: now + st, customerId, serviceTime: st, serviceStart, reason: origin || 'cliente en servicio' };
+        state.futureEvents.push(ev);
+        state.futureEvents.sort(compareEvents);
+        return ev;
+      }
+
+      function advanceClock(newTime) {
+        const dt = Math.max(0, newTime - state.clock);
+        const inQueue = state.queue.length;
+        const inService = state.serverBusy ? 1 : 0;
+        state.queueArea += inQueue * dt;
+        state.systemArea += (inQueue + inService) * dt;
+        state.busyArea += inService * dt;
+        state.clock = newTime;
+      }
+
+      scheduleArrival(0, 'primer arribo generado al iniciar la simulación');
+
+      const initialEvent = {
+        type: 'init',
+        label: 'Inicialización',
+        explanation: 'Se inicializa el reloj en 0 y se genera el primer arribo futuro. Todavía no hay clientes en cola ni en servicio.',
+        decision: 'La lista de eventos futuros contiene el primer arribo independiente.',
+        branches: [
+          'Reloj = 0.',
+          'Servidor libre.',
+          'Se sortea el tiempo hasta el primer arribo y se lo agrega al calendario.'
+        ]
+      };
+      const snapshots = [snapshotFromState(state, initialEvent)];
+
+      const maxEvents = config.maxCustomers * 3 + 20;
+      let guard = 0;
+      while (state.futureEvents.length && guard < maxEvents) {
+        guard += 1;
+        state.futureEvents.sort(compareEvents);
+        const ev = state.futureEvents.shift();
+        advanceClock(ev.time);
+
+        let lastEvent;
+        if (ev.type === 'arrival') {
+          const beforeBusy = state.serverBusy;
+          const beforeQueue = state.queue.length;
+          scheduleArrival(state.clock, `siguiente arribo generado después de C${ev.customerId}`);
+
+          if (!beforeBusy) {
+            state.serverBusy = true;
+            state.serverCustomer = { id: ev.customerId, arrivalTime: state.clock, serviceStart: state.clock };
+            const dep = scheduleDeparture(state.clock, ev.customerId, state.clock, `C${ev.customerId} inició atención`);
+            lastEvent = {
+              type: 'arrival',
+              label: `Arribo de C${ev.customerId}`,
+              customerId: ev.customerId,
+              time: state.clock,
+              category: 'independiente',
+              explanation: `Llegó el cliente C${ev.customerId}. Como el servidor estaba libre, no esperó y empezó atención inmediatamente.`,
+              decision: 'Condición evaluada: ¿el servidor está libre? Sí → iniciar servicio y programar fin de atención.',
+              branches: [
+                'Evento independiente: el arribo ocurre desde afuera del sistema.',
+                'Se programa el próximo arribo, si todavía faltan clientes por generar.',
+                `Servidor libre: C${ev.customerId} pasa directo a atención.`,
+                `Se sortea un tiempo de atención de ${fmt(dep.serviceTime)} y se programa su fin en t = ${fmt(dep.time)}.`
+              ],
+              queueBefore: beforeQueue,
+              queueAfter: state.queue.length
+            };
+          } else {
+            state.queue.push({ id: ev.customerId, arrivalTime: state.clock });
+            state.maxQueue = Math.max(state.maxQueue, state.queue.length);
+            lastEvent = {
+              type: 'arrival',
+              label: `Arribo de C${ev.customerId}`,
+              customerId: ev.customerId,
+              time: state.clock,
+              category: 'independiente',
+              explanation: `Llegó el cliente C${ev.customerId}. Como el servidor estaba ocupado, entró en cola.`,
+              decision: 'Condición evaluada: ¿el servidor está libre? No → el cliente espera en cola.',
+              branches: [
+                'Evento independiente: el arribo ocurre aunque el sistema esté ocupado.',
+                'Se programa el próximo arribo, si todavía faltan clientes por generar.',
+                `Servidor ocupado: C${ev.customerId} se agrega al final de la cola.`,
+                `La cola pasa de ${beforeQueue} a ${state.queue.length}.`
+              ],
+              queueBefore: beforeQueue,
+              queueAfter: state.queue.length
+            };
+          }
+        } else if (ev.type === 'departure') {
+          const current = state.serverCustomer;
+          const arrivalTime = current && current.id === ev.customerId ? current.arrivalTime : state.clock;
+          const serviceStart = current && current.id === ev.customerId ? current.serviceStart : ev.serviceStart;
+          const wait = serviceStart - arrivalTime;
+          const timeInSystem = state.clock - arrivalTime;
+          state.completed.push({ id: ev.customerId, arrivalTime, serviceStart, departureTime: state.clock, wait, serviceTime: ev.serviceTime, timeInSystem });
+
+          const beforeQueue = state.queue.length;
+          if (state.queue.length > 0) {
+            const next = state.queue.shift();
+            state.serverBusy = true;
+            state.serverCustomer = { id: next.id, arrivalTime: next.arrivalTime, serviceStart: state.clock };
+            const dep = scheduleDeparture(state.clock, next.id, state.clock, `C${next.id} salió de la cola e inició atención`);
+            lastEvent = {
+              type: 'departure',
+              label: `Fin de atención de C${ev.customerId}`,
+              customerId: ev.customerId,
+              time: state.clock,
+              category: 'condicional',
+              explanation: `Terminó la atención de C${ev.customerId}. Como había cola, C${next.id} empezó atención inmediatamente.`,
+              decision: 'Condición evaluada: ¿hay alguien esperando en cola? Sí → tomar el primero de la cola y programar su fin de atención.',
+              branches: [
+                'Evento condicional: solo podía ocurrir porque había un cliente en servicio.',
+                `C${ev.customerId} sale del sistema. Su espera fue ${fmt(wait)} y su tiempo total fue ${fmt(timeInSystem)}.`,
+                `La cola tenía ${beforeQueue} cliente(s): C${next.id} pasa al servidor.`,
+                `Se sortea un tiempo de atención de ${fmt(dep.serviceTime)} y se programa su fin en t = ${fmt(dep.time)}.`
+              ],
+              queueBefore: beforeQueue,
+              queueAfter: state.queue.length
+            };
+          } else {
+            state.serverBusy = false;
+            state.serverCustomer = null;
+            lastEvent = {
+              type: 'departure',
+              label: `Fin de atención de C${ev.customerId}`,
+              customerId: ev.customerId,
+              time: state.clock,
+              category: 'condicional',
+              explanation: `Terminó la atención de C${ev.customerId}. Como no había cola, el servidor quedó libre.`,
+              decision: 'Condición evaluada: ¿hay alguien esperando en cola? No → el servidor queda ocioso.',
+              branches: [
+                'Evento condicional: solo podía ocurrir porque había un cliente en servicio.',
+                `C${ev.customerId} sale del sistema. Su espera fue ${fmt(wait)} y su tiempo total fue ${fmt(timeInSystem)}.`,
+                'No había clientes esperando.',
+                'El servidor queda libre hasta el próximo arribo.'
+              ],
+              queueBefore: beforeQueue,
+              queueAfter: state.queue.length
+            };
+          }
+        }
+
+        state.executedEvents.push({
+          n: state.executedEvents.length + 1,
+          time: state.clock,
+          type: ev.type,
+          customerId: ev.customerId,
+          label: eventLabel(ev.type),
+          decision: lastEvent ? lastEvent.decision : ''
+        });
+        state.maxQueue = Math.max(state.maxQueue, state.queue.length);
+        snapshots.push(snapshotFromState(state, lastEvent));
+      }
+      return snapshots;
+    }
+
+    const app = {
+      snapshots: [],
+      idx: 0,
+      timer: null,
+      config: null
+    };
+
+    function readConfig() {
+      return {
+        seed: parseInt($('seed').value || '12345', 10),
+        maxCustomers: clamp(parseInt($('maxCustomers').value || '30', 10), 5, 120),
+        meanArrival: Math.max(0.1, parseFloat($('meanArrival').value || '2.0')),
+        meanService: Math.max(0.1, parseFloat($('meanService').value || '1.6')),
+        arrivalVar: $('arrivalVar').value,
+        serviceVar: $('serviceVar').value
+      };
+    }
+
+    function runSimulation() {
+      pause();
+      app.config = readConfig();
+      $('maxCustomers').value = app.config.maxCustomers;
+      app.snapshots = simulate(app.config);
+      app.idx = 0;
+      $('timeline').min = 0;
+      $('timeline').max = Math.max(0, app.snapshots.length - 1);
+      $('timeline').value = 0;
+      $('timelineTotal').textContent = String(Math.max(0, app.snapshots.length - 1));
+      updateLoadNote();
+      render();
+      seedInputsFromMain(false);
+      compareSeeds();
+    }
+
+    function updateLoadNote() {
+      const c = app.config || readConfig();
+      const arrivalRate = 1 / c.meanArrival;
+      const serviceRate = 1 / c.meanService;
+      const rho = c.meanService / c.meanArrival;
+      const klass = rho < 0.75 ? 'tag-green' : rho < 0.95 ? 'tag-yellow' : 'tag-danger';
+      $('loadNote').innerHTML = `
+        <strong>Carga nominal aproximada:</strong>
+        si en promedio llega 1 cliente cada <span class="mono">${fmt(c.meanArrival,2)}</span> unidades y atenderlo toma <span class="mono">${fmt(c.meanService,2)}</span>,
+        la utilización esperada aproximada del servidor es <span class="tag ${klass}">ρ ≈ ${fmtPct(rho,1)}</span>.
+        Cuando ρ se acerca a 100%, pequeñas fluctuaciones pueden generar colas largas.
+        <br><span class="muted">Arribos: ${variabilityLabel(c.arrivalVar)}. Atención: ${variabilityLabel(c.serviceVar)}.</span>
+      `;
+    }
+
+    function setPreset(kind) {
+      if (kind === 'stable') {
+        $('meanArrival').value = '2.2';
+        $('meanService').value = '1.2';
+        $('arrivalVar').value = 'medium';
+        $('serviceVar').value = 'low';
+      } else if (kind === 'congested') {
+        $('meanArrival').value = '1.6';
+        $('meanService').value = '1.55';
+        $('arrivalVar').value = 'high';
+        $('serviceVar').value = 'medium';
+      } else if (kind === 'variability') {
+        $('meanArrival').value = '2.0';
+        $('meanService').value = '1.6';
+        $('arrivalVar').value = 'high';
+        $('serviceVar').value = 'high';
+      }
+      runSimulation();
+    }
+
+    function currentSnapshot() {
+      return app.snapshots[Math.max(0, Math.min(app.idx, app.snapshots.length - 1))];
+    }
+
+    function render() {
+      const s = currentSnapshot();
+      if (!s) return;
+      $('timeline').value = app.idx;
+      $('timelineIndex').textContent = String(app.idx);
+      $('clockText').textContent = fmt(s.clock);
+      $('eventText').textContent = s.lastEvent ? s.lastEvent.label : '—';
+      $('serverStatus').textContent = s.serverBusy ? `Ocupado con C${s.serverCustomer.id}` : 'Libre';
+      $('queueText').textContent = String(s.queue.length);
+      $('doneText').textContent = String(s.completed.length);
+      $('avgWait').textContent = Number.isFinite(s.stats.avgWait) ? fmt(s.stats.avgWait) : '—';
+      $('avgSystem').textContent = Number.isFinite(s.stats.avgSystem) ? fmt(s.stats.avgSystem) : '—';
+      $('utilization').textContent = fmtPct(s.stats.utilization);
+      $('maxQueue').textContent = String(s.stats.maxQueue);
+
+      renderFlow(s);
+      renderDecision(s);
+      renderFutureEvents(s);
+      renderExecutedEvents(s);
+      renderRandomLog(s);
+      renderCharts();
+    }
+
+    function renderFlow(s) {
+      const last = s.lastEvent || {};
+      const active = { source:false, queue:false, server:false, exit:false };
+      if (last.type === 'arrival') {
+        active.source = true;
+        if (last.queueAfter > last.queueBefore) active.queue = true; else active.server = true;
+      } else if (last.type === 'departure') {
+        active.exit = true;
+        if (s.serverBusy && last.queueBefore > 0) active.server = true;
+      }
+      const setActive = (id, flag, cls) => {
+        const el = $(id);
+        el.classList.remove('active','warn','ok');
+        if (flag) el.classList.add(cls || 'active');
+      };
+      setActive('nodeSource', active.source, 'active');
+      setActive('nodeQueue', active.queue, 'warn');
+      setActive('nodeServer', active.server, 'warn');
+      setActive('nodeExit', active.exit, 'ok');
+
+      $('queueSizeNode').textContent = String(s.queue.length);
+      $('doneSizeNode').textContent = String(s.completed.length);
+      $('sourceChips').innerHTML = s.futureEvents.filter(e => e.type === 'arrival').slice(0, 4).map(e => `<span class="chip">C${e.customerId}</span>`).join('') || '<span class="muted">Sin arribos pendientes</span>';
+      $('queueChips').innerHTML = s.queue.slice(0, 18).map(c => `<span class="chip">C${c.id}</span>`).join('') || '<span class="muted">Vacía</span>';
+      $('serverChips').innerHTML = s.serverBusy ? `<span class="chip server">C${s.serverCustomer.id}</span>` : '<span class="muted">Libre</span>';
+      $('doneChips').innerHTML = s.completed.slice(-10).map(c => `<span class="chip done">C${c.id}</span>`).join('') || '<span class="muted">Nadie salió todavía</span>';
+      $('serverTextNode').textContent = s.serverBusy ? `Atendiendo a C${s.serverCustomer.id}.` : 'Libre.';
+    }
+
+    function renderDecision(s) {
+      const ev = s.lastEvent;
+      const category = ev.category === 'condicional' ? '<span class="pill cond">condicional</span>' : ev.category === 'independiente' ? '<span class="pill ind">independiente</span>' : '<span class="pill ind">inicio</span>';
+      const lines = (ev.branches || []).map(b => `<div class="path-line">${escapeHtml(b)}</div>`).join('');
+      $('decisionBox').innerHTML = `
+        <h4>${escapeHtml(ev.label)} ${category}</h4>
+        <p>${escapeHtml(ev.explanation || '')}</p>
+        <div class="path-line"><strong>Decisión principal:</strong> ${escapeHtml(ev.decision || '')}</div>
+        <div class="decision-path" style="margin-top:10px;">${lines}</div>
+      `;
+    }
+
+    function renderFutureEvents(s) {
+      const rows = s.futureEvents.slice(0, 12).map((e, idx) => {
+        const why = e.type === 'arrival'
+          ? 'Demanda externa: se genera independientemente del estado del servidor.'
+          : 'Existe porque un cliente está o estuvo en servicio.';
+        return `<tr class="${idx === 0 ? 'next-event' : ''}">
+          <td>${idx + 1}</td>
+          <td class="mono">${fmt(e.time)}</td>
+          <td>${eventLabel(e.type)} C${e.customerId}</td>
+          <td>${eventTypePill(e.type)}</td>
+          <td>${escapeHtml(why)}</td>
+        </tr>`;
+      }).join('');
+      $('futureEventsBody').innerHTML = rows || '<tr><td colspan="5" class="muted">No quedan eventos futuros.</td></tr>';
+    }
+
+    function renderExecutedEvents(s) {
+      const rows = s.executedEvents.map(e => `<tr class="${e.n === app.idx ? 'current-event' : ''}">
+        <td>${e.n}</td>
+        <td class="mono">${fmt(e.time)}</td>
+        <td>${escapeHtml(e.label)}</td>
+        <td>C${e.customerId}</td>
+        <td>${escapeHtml(shortDecision(e.decision))}</td>
+      </tr>`).join('');
+      $('executedEventsBody').innerHTML = rows || '<tr><td colspan="5" class="muted">Todavía no se ejecutó ningún evento.</td></tr>';
+    }
+
+    function shortDecision(txt) {
+      if (!txt) return '—';
+      return txt.length > 110 ? txt.slice(0, 107) + '...' : txt;
+    }
+
+    function renderRandomLog(s) {
+      const rows = s.randomLog.slice(-18).map(r => `<tr>
+        <td>${r.n}</td>
+        <td>${escapeHtml(r.use)}<br><span class="muted">${escapeHtml(r.note || '')}</span></td>
+        <td class="mono">${r.u == null ? '—' : fmt(r.u, 5)}</td>
+        <td class="mono">${fmt(r.value)}</td>
+      </tr>`).join('');
+      $('randomBody').innerHTML = rows || '<tr><td colspan="4" class="muted">Todavía no se usaron números aleatorios.</td></tr>';
+    }
+
+    function trajectoryUntil(idx) {
+      const arr = app.snapshots.slice(0, idx + 1);
+      return arr.map(s => ({
+        t: s.clock,
+        q: s.queue.length,
+        L: s.queue.length + (s.serverBusy ? 1 : 0),
+        busy: s.serverBusy ? 1 : 0
+      }));
+    }
+
+    function renderCharts() {
+      const data = trajectoryUntil(app.idx);
+      drawLineChart($('queueChart'), data, [
+        { key: 'q', label: 'Cola', color: '#8ec5ff' },
+        { key: 'L', label: 'Sistema', color: '#ffd166' }
+      ], { yMin: 0, yMaxPad: 1, stepped: true });
+      drawLineChart($('serverChart'), data, [
+        { key: 'busy', label: 'Ocupado', color: '#21c07a' }
+      ], { yMin: 0, yMax: 1, stepped: true });
+    }
+
+    function drawLineChart(canvas, data, series, opts = {}) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = '#0c1226';
+      ctx.fillRect(0,0,w,h);
+      const pad = { l: 48, r: 18, t: 18, b: 34 };
+      const xMin = 0;
+      const xMax = Math.max(1, ...data.map(d => d.t));
+      const vals = [];
+      data.forEach(d => series.forEach(s => vals.push(d[s.key])));
+      const yMin = opts.yMin ?? Math.min(0, ...vals);
+      const yMaxRaw = opts.yMax ?? Math.max(1, ...vals);
+      const yMax = Math.max(yMin + 1e-6, yMaxRaw + (opts.yMaxPad ?? 0));
+      const X = x => pad.l + (x - xMin) / (xMax - xMin) * (w - pad.l - pad.r);
+      const Y = y => h - pad.b - (y - yMin) / (yMax - yMin) * (h - pad.t - pad.b);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = 'rgba(231,236,243,0.55)';
+      ctx.font = '12px system-ui, sans-serif';
+      for (let i=0; i<=4; i++) {
+        const yy = pad.t + i * (h - pad.t - pad.b) / 4;
+        ctx.beginPath(); ctx.moveTo(pad.l, yy); ctx.lineTo(w - pad.r, yy); ctx.stroke();
+        const val = yMax - i * (yMax - yMin) / 4;
+        ctx.fillText(fmt(val, opts.yMax === 1 ? 1 : 0), 8, yy + 4);
+      }
+      for (let i=0; i<=4; i++) {
+        const xx = pad.l + i * (w - pad.l - pad.r) / 4;
+        ctx.beginPath(); ctx.moveTo(xx, pad.t); ctx.lineTo(xx, h - pad.b); ctx.stroke();
+        const val = xMin + i * (xMax - xMin) / 4;
+        ctx.fillText(fmt(val, 1), xx - 10, h - 10);
+      }
+
+      series.forEach((s, si) => {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        if (data.length === 0) return;
+        ctx.moveTo(X(data[0].t), Y(data[0][s.key]));
+        for (let i=1; i<data.length; i++) {
+          if (opts.stepped) {
+            ctx.lineTo(X(data[i].t), Y(data[i-1][s.key]));
+            ctx.lineTo(X(data[i].t), Y(data[i][s.key]));
+          } else {
+            ctx.lineTo(X(data[i].t), Y(data[i][s.key]));
+          }
+        }
+        ctx.stroke();
+        ctx.fillStyle = s.color;
+        ctx.fillText(s.label, pad.l + 8 + si * 100, 16);
+      });
+    }
+
+    function stepForward() {
+      if (app.idx < app.snapshots.length - 1) {
+        app.idx += 1;
+        render();
+      } else {
+        pause();
+      }
+    }
+    function stepBack() {
+      if (app.idx > 0) {
+        app.idx -= 1;
+        render();
+      }
+    }
+    function reset() {
+      pause();
+      app.idx = 0;
+      render();
+    }
+    function play() {
+      pause();
+      app.timer = setInterval(stepForward, Number($('speed').value));
+    }
+    function pause() {
+      if (app.timer) clearInterval(app.timer);
+      app.timer = null;
+    }
+
+    function seedInputsFromMain(forceBoth = false) {
+      const main = $('seed').value || '12345';
+      if (forceBoth || !$('seedA').value) $('seedA').value = main;
+      if (forceBoth || !$('seedB').value) $('seedB').value = String(Number(main) + 1);
+    }
+
+    function compareSeeds() {
+      const base = readConfig();
+      const seedA = parseInt($('seedA').value || base.seed, 10);
+      const seedB = parseInt($('seedB').value || (base.seed + 1), 10);
+      const cA = { ...base, seed: seedA, maxCustomers: Math.min(base.maxCustomers, 35) };
+      const cB = { ...base, seed: seedB, maxCustomers: Math.min(base.maxCustomers, 35) };
+      const a = simulate(cA);
+      const b = simulate(cB);
+      const lastA = a[a.length - 1];
+      const lastB = b[b.length - 1];
+      const same = JSON.stringify(projectTrajectory(a)) === JSON.stringify(projectTrajectory(b));
+      $('seedComparison').innerHTML = `
+        <div class="note-box">
+          ${same
+            ? '<strong>Resultado:</strong> las trayectorias son iguales porque las semillas y los parámetros son iguales.'
+            : '<strong>Resultado:</strong> las trayectorias difieren porque cambió la secuencia pseudoaleatoria.'}
+        </div>
+        <div class="seed-grid">
+          ${seedCardHtml('A', seedA, lastA)}
+          ${seedCardHtml('B', seedB, lastB)}
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Métrica</th><th>Semilla A</th><th>Semilla B</th></tr></thead>
+            <tbody>
+              <tr><td>Clientes completados</td><td>${lastA.stats.completed}</td><td>${lastB.stats.completed}</td></tr>
+              <tr><td>Espera promedio</td><td>${fmt(lastA.stats.avgWait)}</td><td>${fmt(lastB.stats.avgWait)}</td></tr>
+              <tr><td>Tiempo promedio en sistema</td><td>${fmt(lastA.stats.avgSystem)}</td><td>${fmt(lastB.stats.avgSystem)}</td></tr>
+              <tr><td>Utilización</td><td>${fmtPct(lastA.stats.utilization)}</td><td>${fmtPct(lastB.stats.utilization)}</td></tr>
+              <tr><td>Cola máxima</td><td>${lastA.stats.maxQueue}</td><td>${lastB.stats.maxQueue}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function projectTrajectory(snaps) {
+      return snaps.map(s => [Number(s.clock.toFixed(5)), s.queue.length, s.serverBusy ? 1 : 0, s.completed.length]);
+    }
+
+    function seedCardHtml(label, seed, snap) {
+      const first = snap.randomLog.filter(r => r.u != null).slice(0, 5).map(r => fmt(r.value, 2)).join(' · ') || '—';
+      return `<div class="seed-card">
+        <div class="hd"><h3>Semilla ${label}: <span class="mono">${seed}</span></h3><p>Primeros tiempos generados: ${first}</p></div>
+        <div class="body seed-kpis">
+          <div class="seed-kpi"><div class="v">${fmt(snap.stats.avgWait)}</div><div class="k">espera promedio</div></div>
+          <div class="seed-kpi"><div class="v">${snap.stats.maxQueue}</div><div class="k">cola máxima</div></div>
+          <div class="seed-kpi"><div class="v">${fmtPct(snap.stats.utilization)}</div><div class="k">utilización</div></div>
+          <div class="seed-kpi"><div class="v">${fmt(snap.clock)}</div><div class="k">tiempo final</div></div>
+        </div>
+      </div>`;
+    }
+
+    function escapeHtml(txt) {
+      return String(txt ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    $('runBtn').addEventListener('click', runSimulation);
+    $('presetStableBtn').addEventListener('click', () => setPreset('stable'));
+    $('presetCongestedBtn').addEventListener('click', () => setPreset('congested'));
+    $('presetVariabilityBtn').addEventListener('click', () => setPreset('variability'));
+    $('playBtn').addEventListener('click', play);
+    $('pauseBtn').addEventListener('click', pause);
+    $('stepBtn').addEventListener('click', stepForward);
+    $('backBtn').addEventListener('click', stepBack);
+    $('resetBtn').addEventListener('click', reset);
+    $('timeline').addEventListener('input', (e) => { app.idx = Number(e.target.value); render(); });
+    $('speed').addEventListener('change', () => { if (app.timer) play(); });
+    $('compareSeedsBtn').addEventListener('click', compareSeeds);
+    $('sameSeedBtn').addEventListener('click', () => { $('seedB').value = $('seedA').value; compareSeeds(); });
+    $('plusOneSeedBtn').addEventListener('click', () => { $('seedB').value = String(Number($('seedA').value || 0) + 1); compareSeeds(); });
+    ['seed','maxCustomers','meanArrival','meanService','arrivalVar','serviceVar'].forEach(id => {
+      $(id).addEventListener('change', updateLoadNote);
+    });
+
+    runSimulation();
+  </script>
+</body>
+</html>
