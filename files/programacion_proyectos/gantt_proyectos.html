@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planificador Gantt manual — CPM, PERT y precedencias</title>
+  <style>
+    :root{
+      --bg:#f7efe4;
+      --bg-2:#fbf6ee;
+      --panel:#fffaf3;
+      --panel-2:#fffdf8;
+      --ink:#2f2a24;
+      --muted:#6d6258;
+      --line:#e4d3bd;
+      --line-2:#d7c3aa;
+      --brand:#9f5f2d;
+      --brand-2:#c4783b;
+      --brand-dark:#6e3f1b;
+      --accent:#2d7a78;
+      --accent-soft:#dff4f1;
+      --danger:#b33a2b;
+      --danger-soft:#ffe7e1;
+      --warn:#a66b00;
+      --warn-soft:#fff3d5;
+      --ok:#246b42;
+      --ok-soft:#e4f5e9;
+      --critical:#7047a5;
+      --critical-soft:#efe8fa;
+      --shadow:0 16px 42px rgba(75,45,15,.11);
+      --radius:20px;
+      --day-width:42px;
+      --label-width:245px;
+      --row-height:58px;
+      --font:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *{box-sizing:border-box}
+
+    html{scroll-behavior:smooth}
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 18% 2%, rgba(239,183,103,.28), transparent 28%),
+        radial-gradient(circle at 96% 0%, rgba(45,122,120,.16), transparent 26%),
+        linear-gradient(180deg, var(--bg), #f5eadc 58%, #efe2d1);
+      min-height:100vh;
+    }
+
+    a{color:inherit}
+
+    .page{
+      max-width:1500px;
+      margin:0 auto;
+      padding:28px 24px 52px;
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(159,95,45,.22);
+      background:linear-gradient(135deg, rgba(255,250,243,.98), rgba(245,231,212,.95));
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:34px;
+      margin-bottom:22px;
+    }
+
+    .hero:after{
+      content:"";
+      position:absolute;
+      width:360px;
+      height:360px;
+      right:-90px;
+      top:-140px;
+      background:radial-gradient(circle, rgba(196,120,59,.25), transparent 68%);
+      pointer-events:none;
+    }
+
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(45,122,120,.24);
+      background:rgba(223,244,241,.72);
+      color:#1e6461;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:.85rem;
+      font-weight:750;
+      letter-spacing:.01em;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(2.1rem, 4vw, 4.15rem);
+      line-height:1.02;
+      letter-spacing:-.055em;
+      color:#2a2119;
+      max-width:980px;
+    }
+
+    .lead{
+      margin:18px 0 0;
+      max-width:980px;
+      font-size:1.08rem;
+      line-height:1.55;
+      color:var(--muted);
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:20px;
+      position:relative;
+      z-index:1;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 11px;
+      border-radius:999px;
+      border:1px solid rgba(159,95,45,.21);
+      background:rgba(255,255,255,.58);
+      color:#4c3a2a;
+      font-size:.88rem;
+      font-weight:650;
+      white-space:nowrap;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(330px, 430px) 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .stack{display:grid; gap:16px}
+
+    .card{
+      background:rgba(255,250,243,.94);
+      border:1px solid rgba(159,95,45,.22);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-header{
+      padding:18px 20px 14px;
+      border-bottom:1px solid rgba(159,95,45,.15);
+      background:linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,250,243,.45));
+    }
+
+    .card-header h2,
+    .card-header h3{
+      margin:0;
+      font-size:1.05rem;
+      letter-spacing:-.02em;
+    }
+
+    .card-header p{
+      margin:6px 0 0;
+      color:var(--muted);
+      line-height:1.35;
+      font-size:.92rem;
+    }
+
+    .card-body{padding:18px 20px 20px}
+
+    label{
+      display:block;
+      font-size:.83rem;
+      color:#5d5146;
+      font-weight:760;
+      margin:0 0 7px;
+    }
+
+    .field{margin-bottom:14px}
+
+    input, textarea, select, button{
+      font:inherit;
+    }
+
+    input[type="text"], input[type="number"], textarea, select{
+      width:100%;
+      border:1px solid rgba(159,95,45,.26);
+      border-radius:14px;
+      background:rgba(255,255,255,.82);
+      padding:11px 12px;
+      color:var(--ink);
+      outline:none;
+      transition:.16s border, .16s box-shadow, .16s background;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus{
+      border-color:rgba(45,122,120,.62);
+      box-shadow:0 0 0 4px rgba(45,122,120,.11);
+      background:#fff;
+    }
+
+    .two-cols{
+      display:grid;
+      grid-template-columns:1.35fr .65fr;
+      gap:12px;
+    }
+
+    .hint{
+      margin-top:7px;
+      color:var(--muted);
+      font-size:.82rem;
+      line-height:1.35;
+    }
+
+    .pred-picker{
+      max-height:158px;
+      overflow:auto;
+      border:1px solid rgba(159,95,45,.16);
+      border-radius:16px;
+      background:rgba(255,255,255,.48);
+      padding:8px;
+    }
+
+    .pred-empty{
+      color:var(--muted);
+      padding:10px;
+      font-size:.9rem;
+    }
+
+    .pred-option{
+      display:flex;
+      gap:9px;
+      align-items:flex-start;
+      padding:9px 8px;
+      border-radius:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .pred-option:hover{background:#fff1df}
+
+    .pred-option input{margin-top:2px}
+
+    .pred-option small{
+      display:block;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    button{
+      border:0;
+      cursor:pointer;
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:800;
+      color:#fff;
+      background:linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow:0 8px 22px rgba(159,95,45,.18);
+      transition:.14s transform, .14s box-shadow, .14s filter, .14s background;
+    }
+
+    button:hover{transform:translateY(-1px); box-shadow:0 12px 25px rgba(159,95,45,.25)}
+    button:active{transform:translateY(0)}
+    button:disabled{filter:grayscale(.7); opacity:.55; cursor:not-allowed; transform:none; box-shadow:none}
+
+    .btn-secondary{
+      background:linear-gradient(135deg, #2d7a78, #459c98);
+    }
+
+    .btn-ghost{
+      color:#5b4430;
+      background:rgba(255,255,255,.7);
+      border:1px solid rgba(159,95,45,.24);
+      box-shadow:none;
+    }
+
+    .btn-danger{
+      background:linear-gradient(135deg, #a93528, #d25a45);
+    }
+
+    .btn-small{
+      padding:6px 10px;
+      font-size:.78rem;
+      box-shadow:none;
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .toolbar-left,.toolbar-right{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+    .mini-field{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border:1px solid rgba(159,95,45,.18);
+      background:rgba(255,255,255,.58);
+      border-radius:999px;
+    }
+
+    .mini-field label{margin:0; font-size:.78rem; color:var(--muted)}
+    .mini-field input{width:74px; padding:6px 8px; border-radius:10px; font-size:.85rem}
+
+    .tasks-table-wrap{overflow:auto; max-height:440px}
+
+    table{
+      border-collapse:separate;
+      border-spacing:0;
+      width:100%;
+      font-size:.9rem;
+    }
+
+    th, td{
+      padding:10px 9px;
+      border-bottom:1px solid rgba(159,95,45,.12);
+      vertical-align:top;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#fff5e7;
+      color:#594532;
+      text-align:left;
+      font-size:.78rem;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+    }
+
+    .id-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:36px;
+      border-radius:999px;
+      padding:3px 8px;
+      background:#efe0cc;
+      color:#6b431d;
+      font-weight:850;
+      font-size:.79rem;
+    }
+
+    .tag-list{display:flex; flex-wrap:wrap; gap:5px}
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      border-radius:999px;
+      padding:4px 8px;
+      background:#f2e5d3;
+      color:#5b4937;
+      font-size:.76rem;
+      font-weight:750;
+      white-space:nowrap;
+    }
+
+    .tag.ok{background:var(--ok-soft); color:var(--ok)}
+    .tag.warn{background:var(--warn-soft); color:var(--warn)}
+    .tag.danger{background:var(--danger-soft); color:var(--danger)}
+    .tag.critical{background:var(--critical-soft); color:var(--critical)}
+    .tag.neutral{background:#ece7df; color:#62584d}
+
+    .status-line{
+      min-height:22px;
+      margin-top:12px;
+      font-size:.88rem;
+      color:var(--muted);
+    }
+
+    .status-line.error{color:var(--danger); font-weight:750}
+    .status-line.ok{color:var(--ok); font-weight:750}
+
+    .empty-state{
+      padding:20px;
+      border:1px dashed rgba(159,95,45,.28);
+      border-radius:16px;
+      color:var(--muted);
+      background:rgba(255,255,255,.42);
+      line-height:1.45;
+    }
+
+    .metrics{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(140px, 1fr));
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .metric{
+      border:1px solid rgba(159,95,45,.16);
+      border-radius:18px;
+      background:rgba(255,255,255,.56);
+      padding:12px 14px;
+    }
+
+    .metric b{
+      display:block;
+      font-size:1.4rem;
+      letter-spacing:-.04em;
+      color:#33281e;
+    }
+
+    .metric span{
+      display:block;
+      color:var(--muted);
+      font-size:.8rem;
+      margin-top:3px;
+    }
+
+    .backlog{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      min-height:74px;
+      padding:12px;
+      border:1px dashed rgba(45,122,120,.35);
+      background:rgba(223,244,241,.52);
+      border-radius:18px;
+      margin-bottom:14px;
+    }
+
+    .backlog-title{
+      font-weight:850;
+      color:#23615e;
+      margin-right:4px;
+    }
+
+    .task-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid rgba(45,122,120,.25);
+      box-shadow:0 6px 16px rgba(45,122,120,.08);
+      font-size:.88rem;
+      font-weight:780;
+      cursor:grab;
+      user-select:none;
+    }
+
+    .task-chip:active{cursor:grabbing}
+
+    .task-chip .dur{
+      color:var(--muted);
+      font-weight:750;
+    }
+
+    .validation-panel{
+      display:none;
+      border-radius:18px;
+      padding:14px 16px;
+      margin:14px 0;
+      line-height:1.42;
+      border:1px solid rgba(159,95,45,.18);
+    }
+
+    .validation-panel.show{display:block}
+    .validation-panel.ok{background:var(--ok-soft); border-color:rgba(36,107,66,.25)}
+    .validation-panel.warn{background:var(--warn-soft); border-color:rgba(166,107,0,.25)}
+    .validation-panel.danger{background:var(--danger-soft); border-color:rgba(179,58,43,.25)}
+
+    .validation-panel h3{
+      margin:0 0 8px;
+      font-size:1rem;
+    }
+
+    .validation-panel ul{
+      margin:8px 0 0 18px;
+      padding:0;
+    }
+
+    .validation-panel li{margin:4px 0}
+
+    .gantt-shell{
+      border:1px solid rgba(159,95,45,.20);
+      border-radius:20px;
+      background:var(--panel-2);
+      overflow:hidden;
+    }
+
+    .gantt-help{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 14px;
+      border-bottom:1px solid rgba(159,95,45,.14);
+      background:#fff5e8;
+      color:#6b5848;
+      font-size:.84rem;
+      line-height:1.35;
+    }
+
+    .gantt-scroller{
+      position:relative;
+      overflow:auto;
+      max-height:690px;
+      min-height:260px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.5) 0, rgba(255,255,255,.5) var(--label-width), transparent var(--label-width)),
+        linear-gradient(180deg, #fffaf3, #fffdf8);
+    }
+
+    .gantt-inner{
+      min-width:calc(var(--label-width) + var(--timeline-width));
+    }
+
+    .gantt-header,
+    .gantt-row{
+      display:grid;
+      grid-template-columns:var(--label-width) var(--timeline-width);
+      min-width:calc(var(--label-width) + var(--timeline-width));
+    }
+
+    .gantt-header{
+      position:sticky;
+      top:0;
+      z-index:8;
+      height:44px;
+      background:#fff3df;
+      border-bottom:1px solid rgba(159,95,45,.20);
+    }
+
+    .corner,
+    .row-label{
+      position:sticky;
+      left:0;
+      z-index:5;
+      background:rgba(255,245,231,.98);
+      border-right:1px solid rgba(159,95,45,.18);
+    }
+
+    .corner{
+      display:flex;
+      align-items:center;
+      padding:0 14px;
+      font-weight:900;
+      color:#6c4c2f;
+    }
+
+    .timeline{
+      position:relative;
+      display:grid;
+      grid-template-columns:repeat(var(--horizon, 40), var(--day-width));
+      height:44px;
+    }
+
+    .day-cell{
+      border-right:1px solid rgba(159,95,45,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:.75rem;
+      color:#795f48;
+      font-weight:800;
+    }
+
+    .day-cell.weekend{
+      background:rgba(159,95,45,.055);
+    }
+
+    .gantt-row{
+      min-height:var(--row-height);
+      border-bottom:1px solid rgba(159,95,45,.10);
+    }
+
+    .row-label{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      padding:9px 12px;
+      min-height:var(--row-height);
+    }
+
+    .row-label.invalid{background:linear-gradient(90deg, var(--danger-soft), #fff5e8)}
+    .row-label.valid{background:linear-gradient(90deg, var(--ok-soft), #fff5e8)}
+    .row-label.critical{box-shadow:inset 4px 0 0 var(--critical)}
+
+    .row-label strong{
+      display:block;
+      font-size:.88rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:150px;
+    }
+
+    .row-label small{
+      display:block;
+      color:var(--muted);
+      margin-top:2px;
+      font-size:.75rem;
+    }
+
+    .row-track{
+      position:relative;
+      min-height:var(--row-height);
+      background-image:
+        linear-gradient(90deg, rgba(159,95,45,.11) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.00), rgba(255,255,255,.00));
+      background-size:var(--day-width) 100%, 100% 100%;
+    }
+
+    .row-track.drag-over{
+      outline:2px solid rgba(45,122,120,.45);
+      outline-offset:-2px;
+      background-color:rgba(223,244,241,.35);
+    }
+
+    .gantt-bar{
+      position:absolute;
+      top:11px;
+      height:36px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:0 12px;
+      background:linear-gradient(135deg, #2d7a78, #5eaaa5);
+      color:white;
+      box-shadow:0 7px 16px rgba(45,122,120,.21);
+      border:1px solid rgba(255,255,255,.36);
+      cursor:grab;
+      user-select:none;
+      overflow:hidden;
+      white-space:nowrap;
+      min-width:36px;
+    }
+
+    .gantt-bar:active{cursor:grabbing}
+    .gantt-bar.invalid{background:linear-gradient(135deg, #a93528, #db654e); box-shadow:0 7px 16px rgba(169,53,40,.22)}
+    .gantt-bar.critical{background:linear-gradient(135deg, #7047a5, #9f73d1); box-shadow:0 7px 16px rgba(112,71,165,.21)}
+
+    .gantt-bar .bar-id{
+      background:rgba(255,255,255,.20);
+      border-radius:999px;
+      padding:2px 7px;
+      font-size:.74rem;
+      font-weight:900;
+    }
+
+    .gantt-bar .bar-text{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-size:.82rem;
+      font-weight:850;
+    }
+
+    .gantt-bar .bar-meta{
+      opacity:.86;
+      font-size:.73rem;
+      font-weight:750;
+    }
+
+    .drop-message{
+      padding:54px 20px;
+      color:var(--muted);
+      text-align:center;
+      line-height:1.45;
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+      color:var(--muted);
+      font-size:.82rem;
+    }
+
+    .legend span{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .swatch{
+      width:14px;
+      height:14px;
+      border-radius:4px;
+      display:inline-block;
+      background:#2d7a78;
+    }
+
+    .swatch.invalid{background:#b33a2b}
+    .swatch.critical{background:#7047a5}
+    .swatch.ok-row{background:#dff4e7; border:1px solid #91caa5}
+
+    .details-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .mini-card{
+      border:1px solid rgba(159,95,45,.16);
+      border-radius:16px;
+      background:rgba(255,255,255,.54);
+      padding:12px 14px;
+    }
+
+    .mini-card h4{
+      margin:0 0 8px;
+      font-size:.92rem;
+    }
+
+    .mini-card p,.mini-card li{
+      color:var(--muted);
+      font-size:.86rem;
+      line-height:1.4;
+    }
+
+    .mini-card ul{margin:0; padding-left:18px}
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:22px;
+      transform:translateX(-50%) translateY(20px);
+      background:#2f2a24;
+      color:#fff;
+      padding:11px 15px;
+      border-radius:999px;
+      box-shadow:0 15px 35px rgba(0,0,0,.25);
+      opacity:0;
+      pointer-events:none;
+      transition:.2s transform, .2s opacity;
+      z-index:999;
+      max-width:min(860px, calc(100vw - 36px));
+      text-align:center;
+      font-size:.9rem;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .footer{
+      margin-top:26px;
+      text-align:center;
+      color:#806c5a;
+      font-size:.86rem;
+    }
+
+    @media (max-width:1120px){
+      .layout{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2, minmax(140px,1fr))}
+      .details-grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width:720px){
+      .page{padding:18px 12px 36px}
+      .hero{padding:24px 20px}
+      .two-cols{grid-template-columns:1fr}
+      .metrics{grid-template-columns:1fr}
+      :root{--label-width:205px; --day-width:38px}
+      .toolbar{align-items:stretch}
+      .toolbar-left,.toolbar-right{width:100%}
+      .btn-row button,.toolbar button{flex:1}
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="kicker">Gestión de proyectos · CPM / PERT · Gantt manual</div>
+      <h1>Planificador didáctico de tareas, precedencias y Gantt</h1>
+      <p class="lead">
+        Cargá tareas con duración y relaciones de precedencia. Luego arrastralas al diagrama de Gantt para construir un cronograma manual. El botón de validación comprueba si cada tarea empieza después de que terminen todas sus predecesoras.
+      </p>
+      <div class="chips" aria-label="Conceptos principales">
+        <span class="chip">Camino crítico</span>
+        <span class="chip">Restricciones de precedencia</span>
+        <span class="chip">Validación visual</span>
+        <span class="chip">Gantt con scroll</span>
+        <span class="chip">Autoacomodar por CPM</span>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="stack">
+        <article class="card">
+          <div class="card-header">
+            <h2 id="taskFormTitle">1. Definir tareas</h2>
+            <p>Ingresá nombre, duración y predecesoras. Las tareas reciben un ID automático para evitar ambigüedades.</p>
+          </div>
+          <div class="card-body">
+            <form id="taskForm" autocomplete="off">
+              <div class="two-cols">
+                <div class="field">
+                  <label for="taskName">Nombre de la tarea</label>
+                  <input id="taskName" type="text" placeholder="Ej.: Diseñar prototipo" required />
+                </div>
+                <div class="field">
+                  <label for="taskDuration">Duración</label>
+                  <input id="taskDuration" type="number" min="1" step="1" value="3" required />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Precedencias</label>
+                <div id="predecessorPicker" class="pred-picker" aria-live="polite"></div>
+                <div class="hint">Marcá las tareas que deben finalizar antes de que esta pueda comenzar. Podés editar las precedencias después.</div>
+              </div>
+
+              <div class="btn-row">
+                <button id="submitTaskBtn" type="submit">Agregar tarea</button>
+                <button id="cancelEditBtn" class="btn-ghost" type="button" style="display:none">Cancelar edición</button>
+                <button id="demoBtn" class="btn-secondary" type="button">Cargar ejemplo</button>
+                <button id="clearBtn" class="btn-ghost" type="button">Borrar todo</button>
+              </div>
+              <div id="formStatus" class="status-line" aria-live="polite"></div>
+            </form>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <h3>Lista de tareas</h3>
+            <p>Usá la tabla para revisar el modelo del proyecto antes de programar.</p>
+          </div>
+          <div class="card-body">
+            <div class="tasks-table-wrap">
+              <table aria-label="Tareas cargadas">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tarea</th>
+                    <th>Dur.</th>
+                    <th>Prec.</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tasksTableBody"></tbody>
+              </table>
+            </div>
+            <div id="tasksEmpty" class="empty-state">Todavía no hay tareas. Cargá la primera o usá el ejemplo para probar la herramienta.</div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <h3>Lectura didáctica</h3>
+            <p>Qué está validando la herramienta.</p>
+          </div>
+          <div class="card-body">
+            <div class="details-grid" style="grid-template-columns:1fr; margin-top:0">
+              <div class="mini-card">
+                <h4>Regla de precedencia</h4>
+                <p>Para cada arco <strong>A → B</strong>, el inicio de B debe ser mayor o igual que el fin de A. Es decir: <strong>inicio(B) ≥ inicio(A) + duración(A)</strong>.</p>
+              </div>
+              <div class="mini-card">
+                <h4>Uso en clase</h4>
+                <ul>
+                  <li>Primero intentá armar el Gantt manualmente.</li>
+                  <li>Luego validá y corregí las violaciones.</li>
+                  <li>Finalmente compará con el cronograma temprano calculado por CPM.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+      </aside>
+
+      <section class="stack">
+        <article class="card">
+          <div class="card-header">
+            <h2>2. Arrastrar tareas al Gantt</h2>
+            <p>Las tareas no programadas aparecen como fichas. Arrastralas a la fila correspondiente y soltá en el día de inicio deseado.</p>
+          </div>
+          <div class="card-body">
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <button id="validateBtn" class="btn-secondary" type="button">Validar precedencias</button>
+                <!--<button id="autoScheduleBtn" type="button">Autoacomodar temprano</button>-->
+                <button id="clearScheduleBtn" class="btn-ghost" type="button">Limpiar Gantt</button>
+              </div>
+              <div class="toolbar-right">
+                <div class="mini-field">
+                  <label for="horizonInput">Horizonte</label>
+                  <input id="horizonInput" type="number" min="5" max="365" step="1" value="40" />
+                </div>
+                <button id="zoomOutBtn" class="btn-ghost btn-small" type="button">− zoom</button>
+                <button id="zoomInBtn" class="btn-ghost btn-small" type="button">+ zoom</button>
+              </div>
+            </div>
+
+            <div class="metrics" aria-label="Indicadores del cronograma">
+              <div class="metric"><b id="metricTasks">0</b><span>Tareas</span></div>
+              <div class="metric"><b id="metricScheduled">0</b><span>Programadas</span></div>
+              <div class="metric"><b id="metricMakespan">—</b><span>Duración del proyecto</span></div>
+              <div class="metric"><b id="metricViolations">—</b><span>Violaciones</span></div>
+            </div>
+
+            <div id="backlog" class="backlog" aria-label="Tareas no programadas"></div>
+
+            <div id="validationPanel" class="validation-panel" aria-live="polite"></div>
+
+            <div class="gantt-shell">
+              <div class="gantt-help">
+                <span><strong>Cómo usar:</strong> arrastrá una ficha o una barra y soltala sobre una fila del Gantt. La posición horizontal define el inicio.</span>
+                <span><strong>Tip:</strong> usá shift horizontal con el scroll para proyectos largos.</span>
+              </div>
+              <div id="ganttScroller" class="gantt-scroller">
+                <div id="ganttInner" class="gantt-inner"></div>
+              </div>
+            </div>
+
+            <div class="legend">
+              <span><i class="swatch"></i> Tarea programada</span>
+              <span><i class="swatch invalid"></i> Tarea con violación</span>
+              <span><i class="swatch critical"></i> Tarea crítica según CPM</span>
+              <span><i class="swatch ok-row"></i> Fila validada</span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <div class="footer">Herramienta autocontenida para trabajar precedencias y cronogramas manuales en gestión de proyectos.</div>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ================================================================
+    // Planificador Gantt autocontenido
+    // ---------------------------------------------------------------
+    // Modelo interno:
+    // - Cada tarea tiene id, nombre, duración, predecesoras y start.
+    // - start === null significa que todavía no fue arrastrada al Gantt.
+    // - Las precedencias se guardan como IDs de tareas.
+    // ================================================================
+
+    const state = {
+      tasks: [],
+      nextId: 1,
+      editingId: null,
+      horizon: 40,
+      dayWidth: 42,
+      lastValidation: null,
+      criticalInfo: null
+    };
+
+    const els = {
+      taskForm: document.getElementById('taskForm'),
+      taskFormTitle: document.getElementById('taskFormTitle'),
+      taskName: document.getElementById('taskName'),
+      taskDuration: document.getElementById('taskDuration'),
+      predecessorPicker: document.getElementById('predecessorPicker'),
+      submitTaskBtn: document.getElementById('submitTaskBtn'),
+      cancelEditBtn: document.getElementById('cancelEditBtn'),
+      demoBtn: document.getElementById('demoBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      formStatus: document.getElementById('formStatus'),
+      tasksTableBody: document.getElementById('tasksTableBody'),
+      tasksEmpty: document.getElementById('tasksEmpty'),
+      backlog: document.getElementById('backlog'),
+      validateBtn: document.getElementById('validateBtn'),
+      autoScheduleBtn: document.getElementById('autoScheduleBtn'),
+      clearScheduleBtn: document.getElementById('clearScheduleBtn'),
+      horizonInput: document.getElementById('horizonInput'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      metricTasks: document.getElementById('metricTasks'),
+      metricScheduled: document.getElementById('metricScheduled'),
+      metricMakespan: document.getElementById('metricMakespan'),
+      metricViolations: document.getElementById('metricViolations'),
+      validationPanel: document.getElementById('validationPanel'),
+      ganttScroller: document.getElementById('ganttScroller'),
+      ganttInner: document.getElementById('ganttInner'),
+      toast: document.getElementById('toast')
+    };
+
+    function taskById(id){
+      return state.tasks.find(t => t.id === id);
+    }
+
+    function escapeHtml(text){
+      return String(text).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
+    function showToast(message){
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => els.toast.classList.remove('show'), 2800);
+    }
+
+    function setFormStatus(message, type=''){
+      els.formStatus.textContent = message || '';
+      els.formStatus.className = 'status-line' + (type ? ' ' + type : '');
+    }
+
+    function getSelectedPredecessors(){
+      return Array.from(els.predecessorPicker.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(input => input.value);
+    }
+
+    function setSelectedPredecessors(ids){
+      const selected = new Set(ids || []);
+      els.predecessorPicker.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        input.checked = selected.has(input.value);
+      });
+    }
+
+    function renderPredecessorPicker(){
+      const selectable = state.tasks.filter(t => t.id !== state.editingId);
+      if(selectable.length === 0){
+        els.predecessorPicker.innerHTML = '<div class="pred-empty">No hay tareas previas para seleccionar.</div>';
+        return;
+      }
+
+      els.predecessorPicker.innerHTML = selectable.map(t => `
+        <label class="pred-option">
+          <input type="checkbox" value="${t.id}">
+          <span><strong>${t.id}</strong> · ${escapeHtml(t.name)}<small>${t.duration} u.t.${t.start !== null ? ' · inicio ' + t.start : ''}</small></span>
+        </label>
+      `).join('');
+    }
+
+    function createsCycle(candidateId, predecessorIds){
+      const graph = new Map();
+      for(const t of state.tasks){
+        graph.set(t.id, [...t.predecessors]);
+      }
+      graph.set(candidateId, [...predecessorIds]);
+
+      const visiting = new Set();
+      const visited = new Set();
+
+      function dfs(id){
+        if(visiting.has(id)) return true;
+        if(visited.has(id)) return false;
+        visiting.add(id);
+        const preds = graph.get(id) || [];
+        for(const p of preds){
+          if(graph.has(p) && dfs(p)) return true;
+        }
+        visiting.delete(id);
+        visited.add(id);
+        return false;
+      }
+
+      for(const id of graph.keys()){
+        if(dfs(id)) return true;
+      }
+      return false;
+    }
+
+    function resetForm(){
+      state.editingId = null;
+      els.taskFormTitle.textContent = '1. Definir tareas';
+      els.submitTaskBtn.textContent = 'Agregar tarea';
+      els.cancelEditBtn.style.display = 'none';
+      els.taskName.value = '';
+      els.taskDuration.value = 3;
+      renderPredecessorPicker();
+      setFormStatus('');
+      els.taskName.focus();
+    }
+
+    function addOrUpdateTask(event){
+      event.preventDefault();
+      const name = els.taskName.value.trim();
+      const duration = Number.parseInt(els.taskDuration.value, 10);
+      const predecessors = getSelectedPredecessors();
+
+      if(!name){
+        setFormStatus('Ingresá un nombre de tarea.', 'error');
+        return;
+      }
+      if(!Number.isFinite(duration) || duration < 1){
+        setFormStatus('La duración debe ser un entero positivo.', 'error');
+        return;
+      }
+
+      if(state.editingId){
+        if(createsCycle(state.editingId, predecessors)){
+          setFormStatus('La edición generaría un ciclo de precedencias. Revisá las tareas seleccionadas.', 'error');
+          return;
+        }
+        const task = taskById(state.editingId);
+        task.name = name;
+        task.duration = duration;
+        task.predecessors = predecessors;
+        state.criticalInfo = null;
+        state.lastValidation = null;
+        setFormStatus(`Tarea ${task.id} actualizada.`, 'ok');
+        resetForm();
+        renderAll();
+        return;
+      }
+
+      const id = 'T' + state.nextId++;
+      if(createsCycle(id, predecessors)){
+        setFormStatus('La tarea generaría un ciclo de precedencias.', 'error');
+        return;
+      }
+      state.tasks.push({ id, name, duration, predecessors, start:null });
+      state.criticalInfo = null;
+      state.lastValidation = null;
+      setFormStatus(`Tarea ${id} agregada.`, 'ok');
+      els.taskName.value = '';
+      els.taskDuration.value = 3;
+      renderAll();
+      els.taskName.focus();
+    }
+
+    function editTask(id){
+      const task = taskById(id);
+      if(!task) return;
+      state.editingId = id;
+      els.taskFormTitle.textContent = `Editando ${id}`;
+      els.submitTaskBtn.textContent = 'Guardar cambios';
+      els.cancelEditBtn.style.display = 'inline-flex';
+      els.taskName.value = task.name;
+      els.taskDuration.value = task.duration;
+      renderPredecessorPicker();
+      setSelectedPredecessors(task.predecessors);
+      setFormStatus('Modificá los datos y guardá los cambios.', '');
+      els.taskName.focus();
+    }
+
+    function deleteTask(id){
+      const task = taskById(id);
+      if(!task) return;
+      if(!confirm(`¿Borrar ${id} · ${task.name}? También se quitará como predecesora de otras tareas.`)) return;
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      for(const t of state.tasks){
+        t.predecessors = t.predecessors.filter(p => p !== id);
+      }
+      if(state.editingId === id) resetForm();
+      state.criticalInfo = null;
+      state.lastValidation = null;
+      renderAll();
+      showToast(`Se borró ${id}.`);
+    }
+
+    function unscheduleTask(id){
+      const task = taskById(id);
+      if(!task) return;
+      task.start = null;
+      state.lastValidation = null;
+      renderAll();
+      showToast(`${id} volvió a tareas pendientes.`);
+    }
+
+    function ensureHorizonFits(){
+      let maxEnd = 0;
+      for(const t of state.tasks){
+        if(t.start !== null) maxEnd = Math.max(maxEnd, t.start + t.duration);
+      }
+      const minHorizon = Math.max(5, maxEnd + 4, Number.parseInt(els.horizonInput.value,10) || state.horizon);
+      state.horizon = Math.min(365, minHorizon);
+      els.horizonInput.value = state.horizon;
+    }
+
+    function scheduleTask(id, start){
+      const task = taskById(id);
+      if(!task) return;
+      const maxStart = Math.max(0, state.horizon - task.duration);
+      task.start = Math.max(0, Math.min(maxStart, Math.round(start)));
+      state.lastValidation = null;
+      renderAll();
+    }
+
+    function topologicalSort(){
+      const ids = state.tasks.map(t => t.id);
+      const idSet = new Set(ids);
+      const indegree = new Map(ids.map(id => [id, 0]));
+      const successors = new Map(ids.map(id => [id, []]));
+      const missing = [];
+
+      for(const t of state.tasks){
+        for(const p of t.predecessors){
+          if(!idSet.has(p)){
+            missing.push({task:t.id, pred:p});
+            continue;
+          }
+          indegree.set(t.id, indegree.get(t.id) + 1);
+          successors.get(p).push(t.id);
+        }
+      }
+
+      if(missing.length){
+        return {ok:false, reason:'missing', missing};
+      }
+
+      const queue = ids.filter(id => indegree.get(id) === 0).sort(naturalTaskCompare);
+      const order = [];
+
+      while(queue.length){
+        const id = queue.shift();
+        order.push(id);
+        for(const s of successors.get(id)){
+          indegree.set(s, indegree.get(s) - 1);
+          if(indegree.get(s) === 0){
+            queue.push(s);
+            queue.sort(naturalTaskCompare);
+          }
+        }
+      }
+
+      if(order.length !== ids.length){
+        return {ok:false, reason:'cycle'};
+      }
+      return {ok:true, order, successors};
+    }
+
+    function naturalTaskCompare(a,b){
+      const na = Number(a.replace(/^T/,''));
+      const nb = Number(b.replace(/^T/,''));
+      return na - nb;
+    }
+
+    function computeCPM(){
+      const topo = topologicalSort();
+      if(!topo.ok) return topo;
+
+      const es = new Map();
+      const ef = new Map();
+      for(const id of topo.order){
+        const task = taskById(id);
+        const earliest = task.predecessors.reduce((max, p) => Math.max(max, ef.get(p) || 0), 0);
+        es.set(id, earliest);
+        ef.set(id, earliest + task.duration);
+      }
+
+      const projectDuration = Math.max(0, ...Array.from(ef.values()));
+      const lf = new Map();
+      const ls = new Map();
+      const reversed = [...topo.order].reverse();
+      for(const id of reversed){
+        const task = taskById(id);
+        const succs = topo.successors.get(id) || [];
+        const latestFinish = succs.length === 0
+          ? projectDuration
+          : Math.min(...succs.map(s => ls.get(s)));
+        lf.set(id, latestFinish);
+        ls.set(id, latestFinish - task.duration);
+      }
+
+      const slack = new Map();
+      const critical = new Set();
+      for(const id of topo.order){
+        const holgura = (ls.get(id) || 0) - (es.get(id) || 0);
+        slack.set(id, holgura);
+        if(Math.abs(holgura) < 1e-9) critical.add(id);
+      }
+
+      return {ok:true, order:topo.order, successors:topo.successors, es, ef, ls, lf, slack, critical, projectDuration};
+    }
+
+    function autoSchedule(){
+      if(state.tasks.length === 0){
+        showToast('Primero cargá tareas.');
+        return;
+      }
+      const cpm = computeCPM();
+      if(!cpm.ok){
+        showCPMError(cpm);
+        return;
+      }
+      for(const t of state.tasks){
+        t.start = cpm.es.get(t.id);
+      }
+      state.criticalInfo = cpm;
+      state.lastValidation = validateSchedule(false);
+      state.horizon = Math.min(365, Math.max(state.horizon, cpm.projectDuration + 5));
+      els.horizonInput.value = state.horizon;
+      renderAll();
+      showValidationPanel(state.lastValidation, true);
+      showToast('Cronograma temprano generado con CPM. Las tareas críticas quedaron resaltadas.');
+    }
+
+    function showCPMError(cpm){
+      if(cpm.reason === 'cycle'){
+        showToast('No se puede calcular CPM porque hay un ciclo de precedencias.');
+      }else if(cpm.reason === 'missing'){
+        showToast('No se puede calcular CPM porque hay precedencias inexistentes.');
+      }else{
+        showToast('No se pudo calcular CPM.');
+      }
+    }
+
+    function validateSchedule(renderPanel=true){
+      const violations = [];
+      const warnings = [];
+      const checkedRelations = [];
+      const unscheduled = state.tasks.filter(t => t.start === null).map(t => t.id);
+
+      const topo = topologicalSort();
+      if(!topo.ok){
+        if(topo.reason === 'cycle'){
+          violations.push({type:'cycle', message:'El grafo de precedencias contiene un ciclo. No existe cronograma factible hasta corregirlo.'});
+        }
+        if(topo.reason === 'missing'){
+          for(const m of topo.missing){
+            violations.push({type:'missing', task:m.task, pred:m.pred, message:`${m.task} tiene una predecesora inexistente: ${m.pred}.`});
+          }
+        }
+      }
+
+      for(const t of state.tasks){
+        if(t.start === null){
+          warnings.push({type:'unscheduled', task:t.id, message:`${t.id} todavía no fue programada.`});
+        }
+        for(const predId of t.predecessors){
+          const pred = taskById(predId);
+          if(!pred) continue;
+          const relation = {task:t.id, pred:predId, ok:false};
+          if(t.start === null || pred.start === null){
+            relation.status = 'incomplete';
+            checkedRelations.push(relation);
+            continue;
+          }
+          const predEnd = pred.start + pred.duration;
+          relation.predEnd = predEnd;
+          relation.taskStart = t.start;
+          relation.ok = t.start >= predEnd;
+          relation.status = relation.ok ? 'ok' : 'violation';
+          checkedRelations.push(relation);
+          if(!relation.ok){
+            violations.push({
+              type:'precedence',
+              task:t.id,
+              pred:predId,
+              message:`${t.id} empieza en ${t.start}, pero ${predId} termina en ${predEnd}. Debería empezar en ${predEnd} o después.`
+            });
+          }
+        }
+      }
+
+      const result = {violations, warnings, checkedRelations, unscheduled};
+      state.lastValidation = result;
+      if(renderPanel) showValidationPanel(result);
+      return result;
+    }
+
+    function showValidationPanel(result, fromAuto=false){
+      els.validationPanel.className = 'validation-panel show';
+      if(result.violations.length > 0){
+        els.validationPanel.classList.add('danger');
+        const items = result.violations.slice(0, 12).map(v => `<li>${escapeHtml(v.message)}</li>`).join('');
+        const extra = result.violations.length > 12 ? `<li>...y ${result.violations.length - 12} violaciones más.</li>` : '';
+        els.validationPanel.innerHTML = `
+          <h3>Hay restricciones de precedencia incumplidas</h3>
+          <p>Revisá las barras marcadas en rojo y mové las tareas hacia la derecha hasta respetar todos los finales de sus predecesoras.</p>
+          <ul>${items}${extra}</ul>
+        `;
+      }else if(result.warnings.length > 0){
+        els.validationPanel.classList.add('warn');
+        const items = result.warnings.slice(0, 12).map(w => `<li>${escapeHtml(w.message)}</li>`).join('');
+        const extra = result.warnings.length > 12 ? `<li>...y ${result.warnings.length - 12} tareas más sin programar.</li>` : '';
+        els.validationPanel.innerHTML = `
+          <h3>No hay violaciones entre tareas programadas, pero faltan tareas</h3>
+          <p>Para validar el proyecto completo, arrastrá todas las tareas al Gantt.</p>
+          <ul>${items}${extra}</ul>
+        `;
+      }else{
+        els.validationPanel.classList.add('ok');
+        els.validationPanel.innerHTML = `
+          <h3>${fromAuto ? 'Cronograma temprano CPM factible' : 'Cronograma factible'}</h3>
+          <p>Todas las tareas están programadas y cada una comienza después de que finalizan sus predecesoras.</p>
+        `;
+      }
+      renderAll(false);
+    }
+
+    function relationHasViolation(taskId){
+      if(!state.lastValidation) return false;
+      return state.lastValidation.violations.some(v => v.task === taskId || v.pred === taskId);
+    }
+
+    function relationFullyValid(taskId){
+      if(!state.lastValidation) return false;
+      const related = state.lastValidation.checkedRelations.filter(r => r.task === taskId || r.pred === taskId);
+      if(related.length === 0) return state.tasks.length > 0 && taskById(taskId)?.start !== null;
+      return related.every(r => r.status === 'ok');
+    }
+
+    function isCritical(taskId){
+      return state.criticalInfo && state.criticalInfo.critical && state.criticalInfo.critical.has(taskId);
+    }
+
+    function renderAll(renderValidation=true){
+      ensureHorizonFits();
+      renderPredecessorPicker();
+      if(state.editingId){
+        const current = taskById(state.editingId);
+        if(current) setSelectedPredecessors(current.predecessors);
+      }
+      renderTasksTable();
+      renderBacklog();
+      renderGantt();
+      renderMetrics();
+      if(!state.lastValidation){
+        els.validationPanel.className = 'validation-panel';
+        els.validationPanel.innerHTML = '';
+      }else if(renderValidation){
+        showValidationPanel(state.lastValidation);
+      }
+    }
+
+    function renderTasksTable(){
+      els.tasksTableBody.innerHTML = state.tasks.map(t => {
+        const preds = t.predecessors.length
+          ? `<div class="tag-list">${t.predecessors.map(p => `<span class="tag">${p}</span>`).join('')}</div>`
+          : '<span class="tag neutral">Sin prec.</span>';
+        const status = t.start === null ? '<span class="tag warn">Pendiente</span>' : `<span class="tag ok">Inicio ${t.start}</span>`;
+        const critical = isCritical(t.id) ? '<span class="tag critical">Crítica</span>' : '';
+        return `
+          <tr>
+            <td><span class="id-pill">${t.id}</span></td>
+            <td><strong>${escapeHtml(t.name)}</strong><div class="tag-list" style="margin-top:6px">${status}${critical}</div></td>
+            <td>${t.duration}</td>
+            <td>${preds}</td>
+            <td>
+              <div class="btn-row" style="gap:6px">
+                <button class="btn-ghost btn-small" type="button" onclick="editTask('${t.id}')">Editar</button>
+                <button class="btn-ghost btn-small" type="button" onclick="unscheduleTask('${t.id}')">Quitar</button>
+                <button class="btn-danger btn-small" type="button" onclick="deleteTask('${t.id}')">Borrar</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      els.tasksEmpty.style.display = state.tasks.length ? 'none' : 'block';
+    }
+
+    function renderBacklog(){
+      const pending = state.tasks.filter(t => t.start === null);
+      if(state.tasks.length === 0){
+        els.backlog.innerHTML = '<span class="backlog-title">Pendientes:</span><span class="hint" style="margin:0">Cargá tareas para comenzar.</span>';
+        return;
+      }
+      if(pending.length === 0){
+        els.backlog.innerHTML = '<span class="backlog-title">Pendientes:</span><span class="tag ok">Todas las tareas están en el Gantt</span>';
+        return;
+      }
+      els.backlog.innerHTML = '<span class="backlog-title">Pendientes:</span>' + pending.map(t => `
+        <span class="task-chip" draggable="true" data-task-id="${t.id}" title="Arrastrar al Gantt">
+          <span class="id-pill">${t.id}</span>
+          <span>${escapeHtml(t.name)}</span>
+          <span class="dur">${t.duration} u.t.</span>
+        </span>
+      `).join('');
+      els.backlog.querySelectorAll('.task-chip').forEach(chip => {
+        chip.addEventListener('dragstart', handleDragStart);
+      });
+    }
+
+    function renderGantt(){
+      document.documentElement.style.setProperty('--horizon', state.horizon);
+      document.documentElement.style.setProperty('--day-width', state.dayWidth + 'px');
+      document.documentElement.style.setProperty('--timeline-width', (state.horizon * state.dayWidth) + 'px');
+      els.ganttInner.style.setProperty('--horizon', state.horizon);
+      els.ganttInner.style.setProperty('--day-width', state.dayWidth + 'px');
+      els.ganttInner.style.setProperty('--timeline-width', (state.horizon * state.dayWidth) + 'px');
+
+      if(state.tasks.length === 0){
+        els.ganttInner.innerHTML = `
+          <div class="gantt-header">
+            <div class="corner">Tarea</div>
+            <div class="timeline">${renderDays()}</div>
+          </div>
+          <div class="drop-message">El Gantt aparecerá cuando cargues tareas.</div>
+        `;
+        return;
+      }
+
+      els.ganttInner.innerHTML = `
+        <div class="gantt-header">
+          <div class="corner">Tarea</div>
+          <div class="timeline">${renderDays()}</div>
+        </div>
+        ${state.tasks.map(renderGanttRow).join('')}
+      `;
+
+      els.ganttInner.querySelectorAll('.row-track').forEach(track => {
+        track.addEventListener('dragover', handleDragOver);
+        track.addEventListener('dragleave', handleDragLeave);
+        track.addEventListener('drop', handleDropOnTrack);
+      });
+      els.ganttInner.querySelectorAll('.gantt-bar').forEach(bar => {
+        bar.addEventListener('dragstart', handleDragStart);
+        bar.addEventListener('dragend', () => document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')));
+      });
+    }
+
+    function renderDays(){
+      let html = '';
+      for(let d=0; d<state.horizon; d++){
+        const weekend = d % 7 === 5 || d % 7 === 6 ? ' weekend' : '';
+        html += `<div class="day-cell${weekend}">${d}</div>`;
+      }
+      return html;
+    }
+
+    function renderGanttRow(t){
+      const invalid = relationHasViolation(t.id);
+      const valid = relationFullyValid(t.id);
+      const critical = isCritical(t.id);
+      const labelClasses = ['row-label'];
+      if(invalid) labelClasses.push('invalid');
+      else if(valid) labelClasses.push('valid');
+      if(critical) labelClasses.push('critical');
+
+      const predText = t.predecessors.length ? 'Prec.: ' + t.predecessors.join(', ') : 'Sin precedencias';
+      const bar = t.start !== null ? renderBar(t, invalid, critical) : '';
+      return `
+        <div class="gantt-row" data-row-task-id="${t.id}">
+          <div class="${labelClasses.join(' ')}">
+            <span class="id-pill">${t.id}</span>
+            <span><strong title="${escapeHtml(t.name)}">${escapeHtml(t.name)}</strong><small>${t.duration} u.t. · ${predText}</small></span>
+          </div>
+          <div class="row-track" data-row-task-id="${t.id}">${bar}</div>
+        </div>
+      `;
+    }
+
+    function renderBar(t, invalid, critical){
+      const left = t.start * state.dayWidth;
+      const width = Math.max(34, t.duration * state.dayWidth - 6);
+      const classes = ['gantt-bar'];
+      if(invalid) classes.push('invalid');
+      if(critical) classes.push('critical');
+      return `
+        <div class="${classes.join(' ')}" draggable="true" data-task-id="${t.id}" style="left:${left + 3}px; width:${width}px" title="${escapeHtml(t.name)} · inicio ${t.start} · fin ${t.start + t.duration}">
+          <span class="bar-id">${t.id}</span>
+          <span class="bar-text">${escapeHtml(t.name)}</span>
+          <span class="bar-meta">${t.start}→${t.start + t.duration}</span>
+        </div>
+      `;
+    }
+
+    function renderMetrics(){
+      const scheduled = state.tasks.filter(t => t.start !== null).length;
+      const makespan = state.tasks.length && scheduled
+        ? Math.max(...state.tasks.filter(t => t.start !== null).map(t => t.start + t.duration))
+        : null;
+      const violations = state.lastValidation ? state.lastValidation.violations.length : null;
+
+      els.metricTasks.textContent = state.tasks.length;
+      els.metricScheduled.textContent = `${scheduled}/${state.tasks.length}`;
+      els.metricMakespan.textContent = makespan === null ? '—' : makespan;
+      els.metricViolations.textContent = violations === null ? '—' : violations;
+    }
+
+    function handleDragStart(event){
+      const taskId = event.currentTarget.dataset.taskId;
+      event.dataTransfer.setData('text/plain', taskId);
+      event.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(event){
+      event.preventDefault();
+      event.currentTarget.classList.add('drag-over');
+      event.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragLeave(event){
+      event.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDropOnTrack(event){
+      event.preventDefault();
+      const track = event.currentTarget;
+      track.classList.remove('drag-over');
+      const taskId = event.dataTransfer.getData('text/plain');
+      if(!taskId) return;
+      const task = taskById(taskId);
+      if(!task) return;
+
+      const rect = track.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const start = Math.round(x / state.dayWidth);
+      scheduleTask(taskId, start);
+    }
+
+    function clearSchedule(){
+      for(const t of state.tasks) t.start = null;
+      state.lastValidation = null;
+      state.criticalInfo = null;
+      els.validationPanel.className = 'validation-panel';
+      els.validationPanel.innerHTML = '';
+      renderAll();
+      showToast('Se limpió el Gantt.');
+    }
+
+    function clearAll(){
+      if(state.tasks.length && !confirm('¿Borrar todas las tareas y el cronograma?')) return;
+      state.tasks = [];
+      state.nextId = 1;
+      state.editingId = null;
+      state.lastValidation = null;
+      state.criticalInfo = null;
+      state.horizon = 40;
+      els.horizonInput.value = 40;
+      els.validationPanel.className = 'validation-panel';
+      els.validationPanel.innerHTML = '';
+      resetForm();
+      renderAll();
+      showToast('Proyecto reiniciado.');
+    }
+
+    function loadDemo(){
+      state.tasks = [
+        {id:'T1', name:'Definir alcance', duration:3, predecessors:[], start:null},
+        {id:'T2', name:'Relevar requerimientos', duration:4, predecessors:['T1'], start:null},
+        {id:'T3', name:'Diseñar solución', duration:5, predecessors:['T2'], start:null},
+        {id:'T4', name:'Comprar insumos', duration:6, predecessors:['T1'], start:null},
+        {id:'T5', name:'Construir prototipo', duration:7, predecessors:['T3','T4'], start:null},
+        {id:'T6', name:'Pruebas internas', duration:4, predecessors:['T5'], start:null},
+        {id:'T7', name:'Ajustes finales', duration:3, predecessors:['T6'], start:null},
+        {id:'T8', name:'Presentación al cliente', duration:2, predecessors:['T7'], start:null}
+      ];
+      state.nextId = 9;
+      state.editingId = null;
+      state.lastValidation = null;
+      state.criticalInfo = null;
+      state.horizon = 36;
+      els.horizonInput.value = 36;
+      els.validationPanel.className = 'validation-panel';
+      els.validationPanel.innerHTML = '';
+      resetForm();
+      renderAll();
+      showToast('Ejemplo cargado. Arrastrá las tareas o usá Autoacomodar temprano.');
+    }
+
+    function updateHorizonFromInput(){
+      const value = Number.parseInt(els.horizonInput.value, 10);
+      if(!Number.isFinite(value) || value < 5){
+        els.horizonInput.value = state.horizon;
+        return;
+      }
+      state.horizon = Math.min(365, value);
+      ensureHorizonFits();
+      renderAll(false);
+    }
+
+    function zoom(delta){
+      state.dayWidth = Math.max(24, Math.min(72, state.dayWidth + delta));
+      renderGantt();
+    }
+
+    // Atajos globales para botones creados por renderizado dinámico.
+    window.editTask = editTask;
+    window.deleteTask = deleteTask;
+    window.unscheduleTask = unscheduleTask;
+
+    els.taskForm.addEventListener('submit', addOrUpdateTask);
+    els.cancelEditBtn.addEventListener('click', resetForm);
+    els.demoBtn.addEventListener('click', loadDemo);
+    els.clearBtn.addEventListener('click', clearAll);
+    els.validateBtn.addEventListener('click', () => {
+      if(state.tasks.length === 0){ showToast('Primero cargá tareas.'); return; }
+      validateSchedule(true);
+      renderAll(false);
+    });
+    els.autoScheduleBtn.addEventListener('click', autoSchedule);
+    els.clearScheduleBtn.addEventListener('click', clearSchedule);
+    els.horizonInput.addEventListener('change', updateHorizonFromInput);
+    els.zoomOutBtn.addEventListener('click', () => zoom(-6));
+    els.zoomInBtn.addEventListener('click', () => zoom(6));
+
+    // Evita que al arrastrar texto o elementos se produzcan comportamientos no deseados.
+    document.addEventListener('dragover', event => {
+      if(event.target.closest('.row-track')) return;
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
