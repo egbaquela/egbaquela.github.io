@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfil de Inteligencias Múltiples | Cuestionario interactivo</title>
+
+  <style>
+    /* ======================================================================
+       HOJA DE ESTILOS AUTOCONTENIDA
+       ----------------------------------------------------------------------
+       Este HTML no depende de Bootstrap, Tailwind, Chart.js ni ninguna otra
+       librería externa. La idea es que pueda abrirse localmente en cualquier
+       navegador moderno sin conexión a Internet y sin exponer datos.
+
+       Convención de clases CSS usada en este archivo:
+
+       1. Variables globales
+          :root
+          Define la paleta cálida, espaciados, radios, sombras y tamaños.
+
+       2. Estructura general
+          .page-shell, .app-header, .app-main, .app-footer
+          Ordenan el layout general de la aplicación.
+
+       3. Componentes reutilizables
+          .card, .button, .form-grid, .field, .badge, .notice
+          Son piezas que se repiten en distintas pantallas.
+
+       4. Navegación y progreso
+          .progress-bar, .step-nav, .step-pill
+          Muestran el avance por las siete inteligencias.
+
+       5. Cuestionario
+          .question-list, .question-card, .scale-grid, .scale-button
+          Definen cómo se muestra cada afirmación y su escala 0-10.
+
+       6. Resultados
+          .results-grid, .score-card, .bar-chart, .bar-item
+          Definen el reporte final y el gráfico de barras.
+
+       7. Utilidades
+          .hidden, .text-muted, .sr-only
+          Clases pequeñas para control visual y accesibilidad.
+       ====================================================================== */
+
+    :root {
+      /* Paleta cálida: tranquilidad, cercanía y confianza profesional. */
+      --color-bg: #f7f1e8;
+      --color-bg-soft: #fffaf3;
+      --color-card: #fffdf8;
+      --color-card-alt: #f3e2cf;
+      --color-primary: #c97c5d;
+      --color-primary-dark: #a95f43;
+      --color-primary-soft: #f4c9b8;
+      --color-accent: #d8b36a;
+      --color-accent-soft: #f4e6bf;
+      --color-text: #5a4636;
+      --color-text-strong: #3d2d22;
+      --color-muted: #826d5e;
+      --color-border: #ead8c5;
+      --color-success: #7a9b76;
+      --color-warning: #b87938;
+      --color-danger: #a84d4d;
+      --color-white: #ffffff;
+
+      /* Escala de espaciado y bordes. */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --radius-sm: 0.6rem;
+      --radius-md: 1rem;
+      --radius-lg: 1.4rem;
+      --radius-xl: 2rem;
+      --shadow-soft: 0 16px 40px rgba(90, 70, 54, 0.12);
+      --shadow-subtle: 0 8px 24px rgba(90, 70, 54, 0.08);
+      --max-width: 1120px;
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-main);
+      background:
+        radial-gradient(circle at top left, rgba(244, 201, 184, 0.45), transparent 28rem),
+        radial-gradient(circle at bottom right, rgba(216, 179, 106, 0.28), transparent 30rem),
+        var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.55;
+    }
+
+    button,
+    input,
+    textarea {
+      font-family: inherit;
+    }
+
+    /* ----------------------------------------------------------------------
+       ESTRUCTURA GENERAL
+       ---------------------------------------------------------------------- */
+
+    .page-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: var(--space-6) var(--space-4) var(--space-3);
+    }
+
+    .header-inner,
+    .app-main,
+    .app-footer-inner {
+      width: min(100%, var(--max-width));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .brand-mark {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--color-primary-soft), var(--color-accent-soft));
+      color: var(--color-text-strong);
+      font-weight: 800;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.2vw, 2rem);
+      color: var(--color-text-strong);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      margin: 0.1rem 0 0;
+      color: var(--color-muted);
+      font-size: 0.95rem;
+    }
+
+    .app-main {
+      flex: 1;
+      padding: var(--space-3) var(--space-4) var(--space-8);
+    }
+
+    .app-footer {
+      padding: var(--space-4);
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ----------------------------------------------------------------------
+       COMPONENTES REUTILIZABLES
+       ---------------------------------------------------------------------- */
+
+    .card {
+      background: rgba(255, 253, 248, 0.94);
+      border: 1px solid rgba(234, 216, 197, 0.95);
+      border-radius: var(--radius-xl);
+      padding: clamp(1rem, 3vw, 2rem);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(8px);
+    }
+
+    .card + .card {
+      margin-top: var(--space-5);
+    }
+
+    .section-title {
+      margin: 0 0 var(--space-2);
+      color: var(--color-text-strong);
+      font-size: clamp(1.4rem, 2.8vw, 2.3rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .section-subtitle {
+      margin: 0 0 var(--space-5);
+      color: var(--color-muted);
+      font-size: 1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      background: var(--color-accent-soft);
+      color: var(--color-text-strong);
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 1px solid rgba(216, 179, 106, 0.45);
+    }
+
+    .notice {
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      background: rgba(244, 230, 191, 0.6);
+      border: 1px solid rgba(216, 179, 106, 0.5);
+      color: var(--color-text);
+    }
+
+    .notice.warning {
+      background: rgba(248, 224, 196, 0.75);
+      border-color: rgba(184, 121, 56, 0.35);
+    }
+
+    .notice.danger {
+      background: rgba(250, 225, 222, 0.82);
+      border-color: rgba(168, 77, 77, 0.35);
+      color: var(--color-danger);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+
+    .button {
+      border: 0;
+      border-radius: 999px;
+      padding: 0.85rem 1.2rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: var(--color-white);
+      background: var(--color-primary);
+      box-shadow: 0 8px 18px rgba(201, 124, 93, 0.24);
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      background: var(--color-primary-dark);
+      box-shadow: 0 12px 24px rgba(201, 124, 93, 0.27);
+    }
+
+    .button:focus-visible,
+    .scale-button:focus-visible,
+    .step-pill:focus-visible {
+      outline: 3px solid rgba(201, 124, 93, 0.32);
+      outline-offset: 3px;
+    }
+
+    .button.secondary {
+      background: var(--color-accent-soft);
+      color: var(--color-text-strong);
+      box-shadow: none;
+      border: 1px solid rgba(216, 179, 106, 0.5);
+    }
+
+    .button.secondary:hover {
+      background: #efdba4;
+    }
+
+    .button.ghost {
+      background: transparent;
+      color: var(--color-primary-dark);
+      box-shadow: none;
+      border: 1px solid var(--color-border);
+    }
+
+    .button.danger {
+      background: var(--color-danger);
+      box-shadow: 0 8px 18px rgba(168, 77, 77, 0.2);
+    }
+
+    .button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: var(--space-2);
+      color: var(--color-text-strong);
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      color: var(--color-text-strong);
+      background: var(--color-bg-soft);
+      font-size: 1rem;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      outline: 3px solid rgba(201, 124, 93, 0.18);
+      border-color: var(--color-primary);
+    }
+
+    .checkbox-line {
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-start;
+      margin-top: var(--space-4);
+      color: var(--color-text);
+    }
+
+    .checkbox-line input {
+      margin-top: 0.25rem;
+      width: 1.15rem;
+      height: 1.15rem;
+      accent-color: var(--color-primary);
+    }
+
+    /* ----------------------------------------------------------------------
+       NAVEGACIÓN Y PROGRESO
+       ---------------------------------------------------------------------- */
+
+    .progress-card {
+      margin-bottom: var(--space-5);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 253, 248, 0.78);
+      border: 1px solid rgba(234, 216, 197, 0.9);
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+      font-weight: 800;
+      color: var(--color-text-strong);
+      flex-wrap: wrap;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 0.7rem;
+      border-radius: 999px;
+      background: var(--color-card-alt);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+      transition: width 0.25s ease;
+    }
+
+    .step-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+
+    .step-pill {
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-soft);
+      color: var(--color-muted);
+      border-radius: 999px;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.82rem;
+    }
+
+    .step-pill.active {
+      background: var(--color-primary);
+      color: var(--color-white);
+      border-color: transparent;
+    }
+
+    .step-pill.complete {
+      background: var(--color-accent-soft);
+      color: var(--color-text-strong);
+      border-color: rgba(216, 179, 106, 0.45);
+    }
+
+    /* ----------------------------------------------------------------------
+       CUESTIONARIO
+       ---------------------------------------------------------------------- */
+
+    .question-list {
+      display: grid;
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+    }
+
+    .question-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      background: rgba(255, 250, 243, 0.8);
+    }
+
+    .question-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .question-number {
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--color-primary-soft);
+      color: var(--color-text-strong);
+      font-weight: 900;
+    }
+
+    .question-text {
+      margin: 0;
+      color: var(--color-text-strong);
+      font-weight: 750;
+    }
+
+    .scale-helper {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-bottom: var(--space-2);
+      font-size: 0.85rem;
+      color: var(--color-muted);
+      font-weight: 700;
+    }
+
+    .scale-grid {
+      display: grid;
+      grid-template-columns: repeat(11, minmax(0, 1fr));
+      gap: 0.35rem;
+    }
+
+    .scale-button {
+      min-height: 2.45rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.7rem;
+      background: var(--color-white);
+      color: var(--color-text-strong);
+      cursor: pointer;
+      font-weight: 900;
+      transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .scale-button:hover {
+      transform: translateY(-1px);
+      border-color: var(--color-primary);
+      background: var(--color-bg-soft);
+    }
+
+    .scale-button.selected {
+      background: var(--color-primary);
+      color: var(--color-white);
+      border-color: transparent;
+      box-shadow: 0 8px 16px rgba(201, 124, 93, 0.2);
+    }
+
+    .section-score-preview {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+      padding: var(--space-4);
+      background: rgba(244, 230, 191, 0.48);
+      border: 1px dashed rgba(216, 179, 106, 0.7);
+      border-radius: var(--radius-lg);
+    }
+
+    .section-score-number {
+      font-size: 1.7rem;
+      font-weight: 950;
+      color: var(--color-primary-dark);
+      letter-spacing: -0.04em;
+    }
+
+    /* ----------------------------------------------------------------------
+       RESULTADOS
+       ---------------------------------------------------------------------- */
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+
+    .score-card {
+      background: rgba(255, 250, 243, 0.85);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      min-height: 7.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .score-card-title {
+      margin: 0;
+      color: var(--color-muted);
+      font-size: 0.85rem;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .score-card-value {
+      margin: var(--space-2) 0 0;
+      font-size: 2rem;
+      color: var(--color-text-strong);
+      font-weight: 950;
+      letter-spacing: -0.05em;
+    }
+
+    .bar-chart {
+      margin-top: var(--space-6);
+      padding: var(--space-4);
+      border-radius: var(--radius-xl);
+      background: rgba(255, 250, 243, 0.9);
+      border: 1px solid var(--color-border);
+      overflow-x: auto;
+    }
+
+    .bar-chart-inner {
+      min-width: 720px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      align-items: end;
+      gap: var(--space-4);
+      height: 320px;
+      padding: var(--space-4) var(--space-3) var(--space-2);
+      border-bottom: 2px solid rgba(90, 70, 54, 0.2);
+      background:
+        linear-gradient(to top, rgba(90, 70, 54, 0.08) 1px, transparent 1px);
+      background-size: 100% 10%;
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      gap: var(--space-2);
+    }
+
+    .bar-value {
+      color: var(--color-primary-dark);
+      font-weight: 950;
+      font-size: 0.95rem;
+    }
+
+    .bar-column-wrap {
+      width: 64%;
+      height: 240px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .bar-column {
+      width: 100%;
+      min-height: 3px;
+      border-radius: 999px 999px 0 0;
+      background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+      box-shadow: 0 8px 18px rgba(201, 124, 93, 0.18);
+      transition: height 0.35s ease;
+    }
+
+    .bar-label {
+      min-height: 2.4rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      text-align: center;
+      font-weight: 900;
+      color: var(--color-text-strong);
+      font-size: 0.8rem;
+      line-height: 1.15;
+    }
+
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+    }
+
+    .summary-item {
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: rgba(244, 230, 191, 0.48);
+      border: 1px solid rgba(216, 179, 106, 0.45);
+    }
+
+    .summary-item h3 {
+      margin: 0 0 var(--space-2);
+      color: var(--color-text-strong);
+      font-size: 1rem;
+    }
+
+    .summary-item p {
+      margin: 0;
+      font-weight: 850;
+      color: var(--color-primary-dark);
+    }
+
+    .review-table-wrap {
+      margin-top: var(--space-5);
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+    }
+
+    table.review-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      background: var(--color-bg-soft);
+    }
+
+    .review-table th,
+    .review-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.9rem;
+    }
+
+    .review-table th {
+      color: var(--color-text-strong);
+      background: var(--color-accent-soft);
+      font-weight: 900;
+    }
+
+    .review-table td:last-child,
+    .review-table th:last-child {
+      text-align: center;
+      font-weight: 900;
+    }
+
+    /* ----------------------------------------------------------------------
+       UTILIDADES Y RESPONSIVE
+       ---------------------------------------------------------------------- */
+
+    .hidden {
+      display: none !important;
+    }
+
+    .text-muted {
+      color: var(--color-muted);
+    }
+
+    .text-small {
+      font-size: 0.9rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      .results-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .summary-box {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .scale-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .app-header,
+      .app-footer,
+      .progress-card,
+      .button-row,
+      .notice.no-print {
+        display: none !important;
+      }
+
+      .card {
+        box-shadow: none;
+        border-color: #ddd;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand-block" aria-label="Encabezado del instrumento">
+          <div class="brand-mark" aria-hidden="true">IM</div>
+          <div>
+            <h1 class="brand-title">Perfil de Inteligencias Múltiples</h1>
+            <p class="brand-subtitle">Cuestionario interactivo autocontenido · Escala 0 a 10</p>
+          </div>
+        </div>
+        <span class="badge" id="versionBadge">Versión</span>
+      </div>
+    </header>
+
+    <!-- El contenido completo de la app se genera dinámicamente dentro de #app. -->
+    <main class="app-main" id="app" aria-live="polite"></main>
+
+    <footer class="app-footer">
+      <div class="app-footer-inner">
+        <p>
+          Aplicación local: las respuestas se procesan en este navegador. No se envían datos a servidores externos.
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ======================================================================
+       DATOS DEL CUESTIONARIO EN JSON EMBEBIDO
+       ----------------------------------------------------------------------
+       Esta es la parte que en una versión futura podría separarse en un
+       archivo externo, por ejemplo: cuestionario.json
+
+       La lógica JavaScript NO depende de que las preguntas estén escritas a
+       mano en el HTML. En vez de eso, lee este JSON y renderiza la interfaz.
+
+       Para agregar un nuevo test en el futuro:
+       1. Crear un nuevo objeto dentro del arreglo "tests".
+       2. Definir sus secciones e ítems.
+       3. Mantener ids únicos para test, secciones e ítems.
+       ====================================================================== -->
+  <script type="application/json" id="questionnaire-data">
+  {
+    "instrument_id": "quiero_ser_quiero_hacer_inteligencias_multiples",
+    "title": "Perfil de Inteligencias Múltiples",
+    "source": "Ps. Flavia Sabrina Vergara",
+    "source_pages": "21-28",
+    "version": "1.0.0",
+    "language": "es-AR",
+    "scale": {
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "min_label": "Nunca",
+      "max_label": "Siempre"
+    },
+    "tests": [
+      {
+        "id": "inteligencias_multiples",
+        "title": "Inteligencias múltiples",
+        "description": "Marcá con un puntaje de 0 a 10 cada afirmación. 0 significa nunca y 10 significa siempre.",
+        "sections": [
+          {
+            "id": "intrapersonal",
+            "code": "INT",
+            "title": "Intrapersonal",
+            "subtitle": "Lo que sucede en mi mente",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "int_01", "text": "Analizo y mejoro mis ideas y proyectos" },
+              { "id": "int_02", "text": "Puedo corregir mis ideas o creencias cuando percibo que son erróneas" },
+              { "id": "int_03", "text": "Sé cuándo puedo arreglarme solo/a y cuándo necesito pedir ayuda" },
+              { "id": "int_04", "text": "Me doy cuenta de las distintas emociones que siento (alegría, afecto, miedo, rabia, tristeza, etc.)" },
+              { "id": "int_05", "text": "Reconozco tanto mis virtudes y aciertos, como mis limitaciones y errores" },
+              { "id": "int_06", "text": "Acepto mi responsabilidad por lo que pienso, siento y hago en vez de culpar a otros" },
+              { "id": "int_07", "text": "Me doy cuenta de lo que me digo a mí mismo (puedo escuchar mis diálogos internos)" },
+              { "id": "int_08", "text": "Cuando me equivoco, aprendo de eso para no repetirlo" },
+              { "id": "int_09", "text": "Cumplo los compromisos que asumo conmigo mismo y con los demás" },
+              { "id": "int_10", "text": "Escucho y aplico las opiniones de los demás sobre mi persona o logros sin por ello reducir mi autoestima" }
+            ]
+          },
+          {
+            "id": "interpersonal",
+            "code": "ITP",
+            "title": "Interpersonal",
+            "subtitle": "Mis relaciones con los demás",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "itp_01", "text": "Al observar las conductas de otras personas, me doy cuenta de las emociones que sienten" },
+              { "id": "itp_02", "text": "Escucho a los demás y llego a aceptarlos aunque no esté de acuerdo con ellos" },
+              { "id": "itp_03", "text": "Puedo reflejar, como si fuera un espejo, lo que otros dicen o expresan con sus gestos y su cuerpo" },
+              { "id": "itp_04", "text": "Obtengo los resultados deseados como líder o conductor/a de grupos" },
+              { "id": "itp_05", "text": "Capto lo negativo y lo positivo de las personas, pero tiendo a reforzar lo positivo en vez de criticarlas" },
+              { "id": "itp_06", "text": "Disfruto estando en compañía de gente que tenga valores e intereses parecidos a los míos" },
+              { "id": "itp_07", "text": "Pido lo que necesito en forma amable, directa y verbal" },
+              { "id": "itp_08", "text": "Puedo negociar y llegar a acuerdos flexiblemente" },
+              { "id": "itp_09", "text": "Apoyo a las personas cuando percibo que realmente lo necesitan" },
+              { "id": "itp_10", "text": "Defiendo mis derechos y me hago respetar, en forma firme y serena" }
+            ]
+          },
+          {
+            "id": "verbal_linguistica",
+            "code": "V/L",
+            "title": "Verbal-lingüística",
+            "subtitle": "Leer, escribir, comunicación",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "vl_01", "text": "Entiendo los diversos textos escritos y puedo comentarlos" },
+              { "id": "vl_02", "text": "Expreso fácilmente por escrito lo que pienso y siento, en forma comprensible para otros" },
+              { "id": "vl_03", "text": "Entiendo y empleo el buen humor, el doble sentido de los chistes y los juegos de palabras" },
+              { "id": "vl_04", "text": "Expreso fácilmente hablando lo que pienso y siento, en forma comprensible para otros" },
+              { "id": "vl_05", "text": "Tengo facilidad para aprender idiomas" },
+              { "id": "vl_06", "text": "Lo que digo coincide con la forma en que lo expreso (gestos, tonos de voz, etc.)" },
+              { "id": "vl_07", "text": "Me interesa el significado preciso de las palabras y las uso de esa manera" },
+              { "id": "vl_08", "text": "Mantengo la fluidez hablando en público" },
+              { "id": "vl_09", "text": "Tengo buena ortografía" },
+              { "id": "vl_10", "text": "Puedo describir verbalmente imágenes, ya sean internas o externas, con precisión" }
+            ]
+          },
+          {
+            "id": "visual_espacial",
+            "code": "V/E",
+            "title": "Visual-espacial",
+            "subtitle": "Imaginar, observar, crear",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "ve_01", "text": "Dibujo y/o pinto en forma creativa" },
+              { "id": "ve_02", "text": "Recuerdo mis sueños en forma clara" },
+              { "id": "ve_03", "text": "Me oriento por mapas con facilidad" },
+              { "id": "ve_04", "text": "Puedo hacer gráficos y diagramas para representar distintos temas" },
+              { "id": "ve_05", "text": "Recuerdo claramente los lugares que vi" },
+              { "id": "ve_06", "text": "Entiendo cómo funcionan los aparatos y máquinas viéndolos y/o imaginándolos por dentro" },
+              { "id": "ve_07", "text": "Distingo los matices de los colores y puedo reproducirlos" },
+              { "id": "ve_08", "text": "Al ver una foto puedo reconstruir la situación en la que fue tomada" },
+              { "id": "ve_09", "text": "Empleo imágenes o escenas internas para hallar soluciones creativas" },
+              { "id": "ve_10", "text": "Tengo buena orientación en el espacio" }
+            ]
+          },
+          {
+            "id": "logico_matematica",
+            "code": "L/M",
+            "title": "Lógico-matemática",
+            "subtitle": "Abstraer, razonar, calcular",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "lm_01", "text": "Cuando ocurre algo, pienso en lo que pudo haberlo provocado" },
+              { "id": "lm_02", "text": "Puedo hacer cálculos y operaciones matemáticas mentalmente y por escrito" },
+              { "id": "lm_03", "text": "Soluciono los problemas en forma racional" },
+              { "id": "lm_04", "text": "Resuelvo acertijos y problemas numéricos" },
+              { "id": "lm_05", "text": "Cuando aprendo algo, lo aplico a situaciones futuras" },
+              { "id": "lm_06", "text": "Puedo asignarle valores numéricos a un tema o problema" },
+              { "id": "lm_07", "text": "Sustento mis ideas con argumentos lógicos y datos verificables" },
+              { "id": "lm_08", "text": "Siempre saqué buenas notas en matemáticas, física o química" },
+              { "id": "lm_09", "text": "Tomo decisiones fijando el estado actual, el estado deseado y buscando distintas opciones para lograrlo" },
+              { "id": "lm_10", "text": "Manejo eficazmente mi presupuesto" }
+            ]
+          },
+          {
+            "id": "musical_ritmica",
+            "code": "M/R",
+            "title": "Musical-rítmica",
+            "subtitle": "Oído, voz, sonido, ritmo",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "mr_01", "text": "Puedo seguir o reproducir distintos ritmos con mi cuerpo o golpeando algún elemento" },
+              { "id": "mr_02", "text": "Diferencio distintos sonidos del ambiente y me doy cuenta de qué los produce (aparatos, relojes, animales)" },
+              { "id": "mr_03", "text": "Recuerdo y puedo tararear, cantar o silbar la música que escucho" },
+              { "id": "mr_04", "text": "Puedo crear melodías o canciones, aunque no sepa escribirlas" },
+              { "id": "mr_05", "text": "Reconozco un tema musical que escuché, a los primeros sones" },
+              { "id": "mr_06", "text": "Me doy cuenta de si un cantante o instrumentista está desafinado" },
+              { "id": "mr_07", "text": "Puedo hacer arreglos musicales combinando instrumentos y voces" },
+              { "id": "mr_08", "text": "Tengo oído armónico (capto cuáles acordes corresponden a una melodía)" },
+              { "id": "mr_09", "text": "Soy capaz de evocar música en mi mente y cambiarla a voluntad (la melodía, ritmo o tonalidad)" },
+              { "id": "mr_10", "text": "Diferencio los tonos de voz de las personas y las emociones que transmiten" }
+            ]
+          },
+          {
+            "id": "corporal_kinestesica",
+            "code": "C/K",
+            "title": "Corporal-kinestésica",
+            "subtitle": "Cuerpo, expresión y movimiento",
+            "scoring": { "type": "sum", "min": 0, "max": 100 },
+            "items": [
+              { "id": "ck_01", "text": "Percibo mis sensaciones físicas" },
+              { "id": "ck_02", "text": "Bailo bien y con gracia" },
+              { "id": "ck_03", "text": "Mis sensaciones físicas me ayudan a percibir situaciones y tomar decisiones" },
+              { "id": "ck_04", "text": "Soy hábil jugando con objetos con las manos o los pies" },
+              { "id": "ck_05", "text": "Expreso lo que siento con mímica y empleando mi cuerpo" },
+              { "id": "ck_06", "text": "Soy efectivo/a en las actividades físicas" },
+              { "id": "ck_07", "text": "Tengo habilidad manual para desarmar y armar objetos, aparatos, máquinas" },
+              { "id": "ck_08", "text": "Identifico y diferencio objetos por el tacto" },
+              { "id": "ck_09", "text": "Puedo mover, contraer o relajar los músculos a voluntad" },
+              { "id": "ck_10", "text": "Manejo bien aparatos y vehículos" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <script>
+    /* ======================================================================
+       LÓGICA DE LA APLICACIÓN
+       ----------------------------------------------------------------------
+       Este bloque contiene todo el JavaScript. Está organizado por secciones:
+
+       A. Carga de datos y configuración global
+       B. Estado interno de la aplicación
+       C. Funciones de persistencia local
+       D. Funciones de renderizado
+       E. Funciones de respuestas y validación
+       F. Cálculo de puntajes y resumen
+       G. Exportación CSV / JSON
+       H. Utilidades generales
+       ====================================================================== */
+
+    /* ----------------------------------------------------------------------
+       A. CARGA DE DATOS Y CONFIGURACIÓN GLOBAL
+       ---------------------------------------------------------------------- */
+
+    /**
+     * Carga los datos del cuestionario desde el JSON embebido en el HTML.
+     * Esta es la función usada en la versión autocontenida.
+     */
+    function loadQuestionnaireData() {
+      const raw = document.getElementById("questionnaire-data").textContent;
+      return JSON.parse(raw);
+    }
+
+    /*
+    // =====================================================================
+    // OPCIÓN FUTURA: cargar cuestionario desde un JSON externo
+    // =====================================================================
+    // Para migrar de HTML autocontenido a HTML + cuestionario.json,
+    // reemplazar la función loadQuestionnaireData() de arriba por esta:
+    //
+    // async function loadQuestionnaireData() {
+    //   const response = await fetch("cuestionario.json");
+    //   if (!response.ok) {
+    //     throw new Error("No se pudo cargar cuestionario.json");
+    //   }
+    //   return await response.json();
+    // }
+    //
+    // Importante:
+    // - Si abrís el HTML directamente como archivo local, algunos navegadores
+    //   bloquean fetch() por restricciones de seguridad.
+    // - Para probarlo localmente, podés iniciar un servidor en la carpeta:
+    //      python -m http.server 8000
+    //   y luego entrar desde el navegador a:
+    //      http://localhost:8000
+    // =====================================================================
+    */
+
+    const DATA = loadQuestionnaireData();
+    const TEST = DATA.tests[0];
+    const SECTIONS = TEST.sections;
+    const STORAGE_KEY = `${DATA.instrument_id}::${DATA.version}::draft`;
+    const app = document.getElementById("app");
+    document.getElementById("versionBadge").textContent = `Versión ${DATA.version}`;
+
+    /* ----------------------------------------------------------------------
+       B. ESTADO INTERNO DE LA APLICACIÓN
+       ----------------------------------------------------------------------
+       state.step:
+         -1 = pantalla de inicio
+          0 a 6 = secciones del cuestionario
+          7 = pantalla de resultados
+
+       state.participant:
+         datos mínimos del participante. Se recomienda usar un código y no
+         necesariamente nombre completo, para preservar privacidad.
+
+       state.answers:
+         objeto con esta forma:
+         {
+           intrapersonal: { int_01: 8, int_02: 5, ... },
+           interpersonal: { itp_01: 9, ... }
+         }
+       ---------------------------------------------------------------------- */
+
+    const state = {
+      step: -1,
+      participant: {
+        code: "",
+        age: "",
+        notes: ""
+      },
+      consent: false,
+      answers: {},
+      started_at: null,
+      completed_at: null,
+      showReviewTable: false
+    };
+
+    // Inicializa state.answers con todas las secciones y todos los ítems en null.
+    function initializeEmptyAnswers() {
+      SECTIONS.forEach(section => {
+        if (!state.answers[section.id]) state.answers[section.id] = {};
+        section.items.forEach(item => {
+          if (typeof state.answers[section.id][item.id] !== "number") {
+            state.answers[section.id][item.id] = null;
+          }
+        });
+      });
+    }
+
+    /* ----------------------------------------------------------------------
+       C. PERSISTENCIA LOCAL
+       ----------------------------------------------------------------------
+       Usamos localStorage para evitar que se pierdan respuestas si el usuario
+       cierra accidentalmente la pestaña. Esto NO envía datos a Internet.
+       Los datos quedan guardados en el navegador/dispositivo utilizado.
+       ---------------------------------------------------------------------- */
+
+    function saveDraft() {
+      const payload = {
+        saved_at: new Date().toISOString(),
+        state
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function loadDraftIfExists() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      try {
+        const payload = JSON.parse(raw);
+        if (!payload || !payload.state) return false;
+        Object.assign(state, payload.state);
+        initializeEmptyAnswers();
+        return true;
+      } catch (error) {
+        console.warn("No se pudo leer el borrador local:", error);
+        return false;
+      }
+    }
+
+    function clearDraft() {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    /* ----------------------------------------------------------------------
+       D. FUNCIONES DE RENDERIZADO
+       ----------------------------------------------------------------------
+       Cada función devuelve una cadena HTML. Al cambiar de pantalla, llamamos
+       a renderApp(), que decide qué pantalla mostrar según state.step.
+       ---------------------------------------------------------------------- */
+
+    function renderApp(options = {}) {
+      /*
+        renderApp() reconstruye la pantalla completa cada vez que cambia el estado.
+
+        Por defecto, cuando se cambia de sección o se vuelve al inicio, conviene
+        llevar al usuario arriba de la página para que vea el comienzo de la nueva
+        pantalla.
+
+        Cuando la actualización es menor, puede convenir preservar la posición
+        actual del scroll. Esto es importante porque reemplazar app.innerHTML puede
+        hacer que algunos navegadores reubiquen la página automáticamente.
+
+        Parámetros:
+          - scrollTop: true  -> desplaza al inicio después de renderizar.
+          - scrollTop: false -> no desplaza al inicio.
+          - preserveScroll: true -> restaura exactamente la posición previa.
+      */
+      const { scrollTop = true, preserveScroll = false } = options;
+      const previousScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+      if (state.step === -1) {
+        app.innerHTML = renderWelcomeScreen();
+      } else if (state.step >= 0 && state.step < SECTIONS.length) {
+        app.innerHTML = renderQuestionnaireScreen(state.step);
+      } else {
+        app.innerHTML = renderResultsScreen();
+      }
+      attachEventListeners();
+
+      if (scrollTop) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (preserveScroll) {
+        restoreScrollPosition(previousScrollY);
+      }
+    }
+
+    function restoreScrollPosition(y) {
+      /*
+        Restaura la posición del scroll sin animación.
+
+        Motivo: el CSS global tiene scroll-behavior: smooth para que la navegación
+        entre secciones sea agradable. Sin embargo, cuando queremos conservar la
+        posición exacta luego de una actualización interna, la animación puede
+        producir saltos visuales. Por eso desactivamos temporalmente el smooth.
+      */
+      const root = document.documentElement;
+      const previousBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo(0, y);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+        root.style.scrollBehavior = previousBehavior;
+      });
+    }
+
+    function renderWelcomeScreen() {
+      const hasDraft = Boolean(localStorage.getItem(STORAGE_KEY));
+      return `
+        <section class="card">
+          <span class="badge">${escapeHtml(DATA.source)}</span>
+          <h2 class="section-title">${escapeHtml(DATA.title)}</h2>
+          <p class="section-subtitle">${escapeHtml(TEST.description)}</p>
+
+          <div class="notice warning no-print">
+            <strong>Uso profesional:</strong> esta herramienta digitaliza el cuestionario para facilitar su administración, registro y exportación. No reemplaza el análisis profesional ni constituye por sí misma un diagnóstico cerrado.
+          </div>
+
+          <form id="participantForm" class="form-grid" autocomplete="off">
+            <div class="field">
+              <label for="participantCode">Nombre o apodo *</label>
+              <input id="participantCode" name="participantCode" type="text" value="${escapeAttr(state.participant.code)}" placeholder="Ej.: P001, iniciales o nombre" required />
+            </div>
+            <div class="field">
+              <label for="participantAge">Edad o curso/año</label>
+              <input id="participantAge" name="participantAge" type="text" value="${escapeAttr(state.participant.age)}" placeholder="Opcional" />
+            </div>
+            <div class="field full">
+              <label for="participantNotes">Observaciones iniciales</label>
+              <textarea id="participantNotes" name="participantNotes" rows="3" placeholder="Opcional: contexto, institución, grupo, etc.">${escapeHtml(state.participant.notes)}</textarea>
+            </div>
+            <div class="field full">
+              <label class="checkbox-line">
+                <input id="consentCheck" type="checkbox" ${state.consent ? "checked" : ""} />
+                <span>Confirmo que entiendo que los datos se procesan localmente en este navegador y que debo exportar el archivo CSV o JSON para conservar los resultados.</span>
+              </label>
+            </div>
+          </form>
+
+          <div id="welcomeError" class="notice danger hidden" role="alert"></div>
+
+          <div class="button-row">
+            <button class="button" id="startButton" type="button">Comenzar cuestionario</button>
+            ${hasDraft ? `<button class="button secondary" id="resumeDraftButton" type="button">Continuar borrador guardado</button>` : ""}
+            ${hasDraft ? `<button class="button ghost" id="discardDraftButton" type="button">Descartar borrador</button>` : ""}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderProgress(currentIndex) {
+      const completedCount = SECTIONS.filter(section => isSectionComplete(section.id)).length;
+      const totalSections = SECTIONS.length;
+      const percent = Math.round((completedCount / totalSections) * 100);
+
+      return `
+        <aside class="progress-card" aria-label="Progreso del cuestionario">
+          <div class="progress-meta">
+            <span>Progreso: ${completedCount}/${totalSections} secciones completas</span>
+            <span>${percent}%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" style="width: ${percent}%"></div>
+          </div>
+          <nav class="step-nav" aria-label="Navegación entre secciones">
+            ${SECTIONS.map((section, index) => {
+              const classes = ["step-pill"];
+              if (index === currentIndex) classes.push("active");
+              if (isSectionComplete(section.id)) classes.push("complete");
+              return `<button type="button" class="${classes.join(" ")}" data-go-step="${index}" title="${escapeAttr(section.title)}">${index + 1}. ${escapeHtml(section.code)}</button>`;
+            }).join("")}
+          </nav>
+        </aside>
+      `;
+    }
+
+    function renderQuestionnaireScreen(sectionIndex) {
+      const section = SECTIONS[sectionIndex];
+      const currentScore = calculateSectionScore(section.id);
+      const answered = countAnsweredInSection(section.id);
+      const total = section.items.length;
+
+      return `
+        ${renderProgress(sectionIndex)}
+        <section class="card">
+          <span class="badge">${sectionIndex + 1} de ${SECTIONS.length} · ${escapeHtml(section.code)}</span>
+          <h2 class="section-title">${escapeHtml(section.title)}</h2>
+          <p class="section-subtitle">${escapeHtml(section.subtitle)} · Escala ${DATA.scale.min} a ${DATA.scale.max}</p>
+
+          <div class="notice">
+            Marcá un valor para cada afirmación. <strong>${DATA.scale.min} = ${escapeHtml(DATA.scale.min_label)}</strong> · <strong>${DATA.scale.max} = ${escapeHtml(DATA.scale.max_label)}</strong>.
+          </div>
+
+          <div class="question-list">
+            ${section.items.map((item, itemIndex) => renderQuestion(section, item, itemIndex)).join("")}
+          </div>
+
+          <div class="section-score-preview">
+            <div>
+              <strong>Subtotal actual de ${escapeHtml(section.title)}</strong><br />
+              <span class="text-muted">Respondidas: ${answered}/${total}</span>
+            </div>
+            <div class="section-score-number">${currentScore} / 100</div>
+          </div>
+
+          <div id="sectionError" class="notice danger hidden" role="alert"></div>
+
+          <div class="button-row">
+            <button class="button secondary" id="prevButton" type="button" ${sectionIndex === 0 ? "disabled" : ""}>Anterior</button>
+            <button class="button" id="nextButton" type="button">${sectionIndex === SECTIONS.length - 1 ? "Ver resultados" : "Siguiente"}</button>
+            <button class="button ghost" id="saveButton" type="button">Guardar avance local</button>
+            <button class="button ghost" id="backHomeButton" type="button">Volver al inicio</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderQuestion(section, item, itemIndex) {
+      const selectedValue = state.answers[section.id][item.id];
+      const buttons = [];
+      for (let value = DATA.scale.min; value <= DATA.scale.max; value += DATA.scale.step) {
+        const selectedClass = selectedValue === value ? "selected" : "";
+        buttons.push(`
+          <button
+            type="button"
+            class="scale-button ${selectedClass}"
+            data-section-id="${escapeAttr(section.id)}"
+            data-item-id="${escapeAttr(item.id)}"
+            data-value="${value}"
+            aria-pressed="${selectedValue === value ? "true" : "false"}">
+            ${value}
+          </button>
+        `);
+      }
+
+      return `
+        <article class="question-card" id="q-${escapeAttr(item.id)}">
+          <div class="question-header">
+            <div class="question-number" aria-hidden="true">${itemIndex + 1}</div>
+            <p class="question-text">${escapeHtml(item.text)}</p>
+          </div>
+          <div class="scale-helper">
+            <span>${DATA.scale.min} · ${escapeHtml(DATA.scale.min_label)}</span>
+            <span>${selectedValue === null ? "Sin responder" : `Respuesta: ${selectedValue}`}</span>
+            <span>${DATA.scale.max} · ${escapeHtml(DATA.scale.max_label)}</span>
+          </div>
+          <div class="scale-grid" role="group" aria-label="Escala de respuesta para: ${escapeAttr(item.text)}">
+            ${buttons.join("")}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderResultsScreen() {
+      state.completed_at = state.completed_at || new Date().toISOString();
+      const scores = calculateAllScores();
+      const summary = getScoreSummary(scores);
+
+      return `
+        ${renderProgress(SECTIONS.length)}
+        <section class="card">
+          <span class="badge">Resultados</span>
+          <h2 class="section-title">Perfil de Inteligencias Múltiples</h2>
+          <p class="section-subtitle">Totales calculados sobre escala 0 a 100 por dimensión.</p>
+
+          <div class="summary-box">
+            <div class="summary-item">
+              <h3>Puntaje más alto</h3>
+              <p>${summary.highest.map(s => `${escapeHtml(s.title)} (${s.score})`).join(", ")}</p>
+            </div>
+            <div class="summary-item">
+              <h3>Puntaje más bajo</h3>
+              <p>${summary.lowest.map(s => `${escapeHtml(s.title)} (${s.score})`).join(", ")}</p>
+            </div>
+          </div>
+
+          <div class="results-grid">
+            ${SECTIONS.map(section => `
+              <article class="score-card">
+                <p class="score-card-title">${escapeHtml(section.code)} · ${escapeHtml(section.title)}</p>
+                <p class="score-card-value">${scores[section.id]}</p>
+              </article>
+            `).join("")}
+          </div>
+
+          ${renderBarChart(scores)}
+
+          <div class="notice warning">
+            <strong>Lectura sugerida:</strong> estos resultados describen un perfil de respuestas. Conviene interpretarlos junto con entrevistas, historia personal, intereses, contexto y otras actividades de orientación.
+          </div>
+
+          <div class="button-row">
+            <button class="button" id="exportCsvButton" type="button">Exportar CSV</button>
+            <button class="button" id="exportJsonButton" type="button">Exportar JSON</button>
+            <button class="button secondary" id="copySummaryButton" type="button">Copiar resumen</button>
+            <button class="button secondary" id="printButton" type="button">Imprimir / Guardar PDF</button>
+            <button class="button ghost" id="toggleReviewButton" type="button">${state.showReviewTable ? "Ocultar respuestas" : "Revisar respuestas"}</button>
+            <button class="button ghost" id="editAnswersButton" type="button">Editar respuestas</button>
+            <button class="button danger" id="resetButton" type="button">Reiniciar</button>
+          </div>
+
+          <div id="exportMessage" class="notice hidden" role="status"></div>
+
+          ${state.showReviewTable ? renderReviewTable() : ""}
+        </section>
+      `;
+    }
+
+    function renderBarChart(scores) {
+      return `
+        <div class="bar-chart" aria-label="Gráfico de barras con puntajes por inteligencia">
+          <div class="bar-chart-inner">
+            ${SECTIONS.map(section => {
+              const value = scores[section.id];
+              const height = Math.max(1, Math.min(100, value));
+              return `
+                <div class="bar-item">
+                  <div class="bar-value">${value}</div>
+                  <div class="bar-column-wrap">
+                    <div class="bar-column" style="height: ${height}%" title="${escapeAttr(section.title)}: ${value}"></div>
+                  </div>
+                  <div class="bar-label">${escapeHtml(section.code)}<br />${escapeHtml(section.title)}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReviewTable() {
+      const rows = [];
+      SECTIONS.forEach(section => {
+        section.items.forEach((item, index) => {
+          rows.push(`
+            <tr>
+              <td>${escapeHtml(section.title)}</td>
+              <td>${index + 1}</td>
+              <td>${escapeHtml(item.text)}</td>
+              <td>${state.answers[section.id][item.id]}</td>
+            </tr>
+          `);
+        });
+      });
+
+      return `
+        <div class="review-table-wrap">
+          <table class="review-table">
+            <thead>
+              <tr>
+                <th>Dimensión</th>
+                <th>Ítem</th>
+                <th>Afirmación</th>
+                <th>Respuesta</th>
+              </tr>
+            </thead>
+            <tbody>${rows.join("")}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    /* ----------------------------------------------------------------------
+       EVENT LISTENERS
+       ----------------------------------------------------------------------
+       Como la app se vuelve a dibujar con innerHTML en cada cambio de pantalla,
+       los listeners deben volver a asociarse después de cada render.
+       ---------------------------------------------------------------------- */
+
+    function attachEventListeners() {
+      const startButton = document.getElementById("startButton");
+      if (startButton) startButton.addEventListener("click", startQuestionnaireFromWelcome);
+
+      const resumeDraftButton = document.getElementById("resumeDraftButton");
+      if (resumeDraftButton) resumeDraftButton.addEventListener("click", () => {
+        loadDraftIfExists();
+        renderApp();
+      });
+
+      const discardDraftButton = document.getElementById("discardDraftButton");
+      if (discardDraftButton) discardDraftButton.addEventListener("click", () => {
+        if (confirm("¿Seguro que querés descartar el borrador guardado en este navegador?")) {
+          clearDraft();
+          resetState(false);
+          renderApp();
+        }
+      });
+
+      document.querySelectorAll("[data-go-step]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.step = Number(button.dataset.goStep);
+          saveDraft();
+          renderApp();
+        });
+      });
+
+      document.querySelectorAll(".scale-button").forEach(button => {
+        button.addEventListener("click", () => {
+          const sectionId = button.dataset.sectionId;
+          const itemId = button.dataset.itemId;
+          const value = Number(button.dataset.value);
+          setAnswer(sectionId, itemId, value);
+        });
+      });
+
+      const prevButton = document.getElementById("prevButton");
+      if (prevButton) prevButton.addEventListener("click", goToPreviousSection);
+
+      const nextButton = document.getElementById("nextButton");
+      if (nextButton) nextButton.addEventListener("click", goToNextSectionOrResults);
+
+      const saveButton = document.getElementById("saveButton");
+      if (saveButton) saveButton.addEventListener("click", () => {
+        saveDraft();
+        alert("Avance guardado localmente en este navegador.");
+      });
+
+      const backHomeButton = document.getElementById("backHomeButton");
+      if (backHomeButton) backHomeButton.addEventListener("click", () => {
+        saveDraft();
+        state.step = -1;
+        renderApp();
+      });
+
+      const exportCsvButton = document.getElementById("exportCsvButton");
+      if (exportCsvButton) exportCsvButton.addEventListener("click", exportCsv);
+
+      const exportJsonButton = document.getElementById("exportJsonButton");
+      if (exportJsonButton) exportJsonButton.addEventListener("click", exportJson);
+
+      const copySummaryButton = document.getElementById("copySummaryButton");
+      if (copySummaryButton) copySummaryButton.addEventListener("click", copySummaryToClipboard);
+
+      const printButton = document.getElementById("printButton");
+      if (printButton) printButton.addEventListener("click", () => window.print());
+
+      const toggleReviewButton = document.getElementById("toggleReviewButton");
+      if (toggleReviewButton) toggleReviewButton.addEventListener("click", () => {
+        state.showReviewTable = !state.showReviewTable;
+        renderApp();
+      });
+
+      const editAnswersButton = document.getElementById("editAnswersButton");
+      if (editAnswersButton) editAnswersButton.addEventListener("click", () => {
+        state.step = 0;
+        renderApp();
+      });
+
+      const resetButton = document.getElementById("resetButton");
+      if (resetButton) resetButton.addEventListener("click", () => {
+        if (confirm("¿Seguro que querés reiniciar el cuestionario y borrar el avance local?")) {
+          clearDraft();
+          resetState(true);
+          renderApp();
+        }
+      });
+    }
+
+    /* ----------------------------------------------------------------------
+       E. RESPUESTAS, NAVEGACIÓN Y VALIDACIÓN
+       ---------------------------------------------------------------------- */
+
+    function startQuestionnaireFromWelcome() {
+      const codeInput = document.getElementById("participantCode");
+      const ageInput = document.getElementById("participantAge");
+      const notesInput = document.getElementById("participantNotes");
+      const consentInput = document.getElementById("consentCheck");
+      const errorBox = document.getElementById("welcomeError");
+
+      state.participant.code = codeInput.value.trim();
+      state.participant.age = ageInput.value.trim();
+      state.participant.notes = notesInput.value.trim();
+      state.consent = consentInput.checked;
+
+      if (!state.participant.code) {
+        showError(errorBox, "Ingresá un código o identificador del participante antes de comenzar.");
+        return;
+      }
+      if (!state.consent) {
+        showError(errorBox, "Debés confirmar que entendés el modo de procesamiento local y exportación de datos.");
+        return;
+      }
+
+      state.started_at = state.started_at || new Date().toISOString();
+      state.step = 0;
+      saveDraft();
+      renderApp();
+    }
+
+    function setAnswer(sectionId, itemId, value) {
+      state.answers[sectionId][itemId] = value;
+      state.completed_at = null; // Si se edita una respuesta, el resultado final debe actualizar fecha.
+      saveDraft();
+
+      /*
+        IMPORTANTE: no llamamos a renderApp() al responder una pregunta.
+
+        En versiones anteriores, cada clic en un número reconstruía todo el HTML
+        de la pantalla. Aunque se desactivara window.scrollTo(top), algunos
+        navegadores igual llevaban la página hacia arriba al reemplazar app.innerHTML.
+
+        Para evitarlo por completo, actualizamos solo las partes afectadas:
+        - botón seleccionado del ítem actual;
+        - texto "Respuesta: X";
+        - subtotal de la sección;
+        - contador de respuestas;
+        - barra de progreso.
+      */
+      updateQuestionAfterAnswer(sectionId, itemId, value);
+      updateSectionScorePreview(sectionId);
+      updateProgressCard();
+    }
+
+
+    function updateQuestionAfterAnswer(sectionId, itemId, value) {
+      /*
+        Actualiza visualmente una sola pregunta sin redibujar la pantalla entera.
+        Esto mantiene estable el scroll y hace que la interacción sea más fluida.
+      */
+      const questionCard = document.getElementById(`q-${itemId}`);
+      if (!questionCard) return;
+
+      questionCard.querySelectorAll(".scale-button").forEach(button => {
+        const isSelected = button.dataset.sectionId === sectionId &&
+          button.dataset.itemId === itemId &&
+          Number(button.dataset.value) === value;
+        button.classList.toggle("selected", isSelected);
+        button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      });
+
+      const helperSpans = questionCard.querySelectorAll(".scale-helper span");
+      if (helperSpans.length >= 2) {
+        helperSpans[1].textContent = `Respuesta: ${value}`;
+      }
+    }
+
+    function updateSectionScorePreview(sectionId) {
+      /*
+        Actualiza el subtotal y el contador de respuestas de la sección actual.
+        Se usa al hacer clic en un puntaje para no depender de renderApp().
+      */
+      const section = SECTIONS.find(s => s.id === sectionId);
+      const preview = document.querySelector(".section-score-preview");
+      if (!section || !preview) return;
+
+      const answered = countAnsweredInSection(sectionId);
+      const total = section.items.length;
+      const score = calculateSectionScore(sectionId);
+
+      const mutedText = preview.querySelector(".text-muted");
+      if (mutedText) mutedText.textContent = `Respondidas: ${answered}/${total}`;
+
+      const scoreNumber = preview.querySelector(".section-score-number");
+      if (scoreNumber) scoreNumber.textContent = `${score} / 100`;
+    }
+
+    function updateProgressCard() {
+      /*
+        Actualiza la tarjeta de progreso sin re-renderizar la pantalla.
+        Mantiene sincronizados el contador, el porcentaje, la barra y las marcas
+        de secciones completas.
+      */
+      const progressCard = document.querySelector(".progress-card");
+      if (!progressCard) return;
+
+      const completedCount = SECTIONS.filter(section => isSectionComplete(section.id)).length;
+      const totalSections = SECTIONS.length;
+      const percent = Math.round((completedCount / totalSections) * 100);
+
+      const metaSpans = progressCard.querySelectorAll(".progress-meta span");
+      if (metaSpans.length >= 2) {
+        metaSpans[0].textContent = `Progreso: ${completedCount}/${totalSections} secciones completas`;
+        metaSpans[1].textContent = `${percent}%`;
+      }
+
+      const fill = progressCard.querySelector(".progress-fill");
+      if (fill) fill.style.width = `${percent}%`;
+
+      progressCard.querySelectorAll("[data-go-step]").forEach(button => {
+        const index = Number(button.dataset.goStep);
+        const section = SECTIONS[index];
+        if (section) {
+          button.classList.toggle("complete", isSectionComplete(section.id));
+        }
+      });
+    }
+
+    function goToPreviousSection() {
+      if (state.step > 0) {
+        state.step -= 1;
+        saveDraft();
+        renderApp();
+      }
+    }
+
+    function goToNextSectionOrResults() {
+      const section = SECTIONS[state.step];
+      const errorBox = document.getElementById("sectionError");
+      const missing = getMissingItems(section.id);
+
+      if (missing.length > 0) {
+        showError(errorBox, `Faltan ${missing.length} respuesta(s) en esta sección. Completalas antes de continuar.`);
+        const firstMissing = document.getElementById(`q-${missing[0].id}`);
+        if (firstMissing) firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      if (state.step < SECTIONS.length - 1) {
+        state.step += 1;
+      } else {
+        const allMissing = getAllMissingItems();
+        if (allMissing.length > 0) {
+          showError(errorBox, `Todavía faltan ${allMissing.length} respuesta(s) en el cuestionario.`);
+          return;
+        }
+        state.step = SECTIONS.length;
+        state.completed_at = new Date().toISOString();
+      }
+      saveDraft();
+      renderApp();
+    }
+
+    function isSectionComplete(sectionId) {
+      return getMissingItems(sectionId).length === 0;
+    }
+
+    function countAnsweredInSection(sectionId) {
+      const section = SECTIONS.find(s => s.id === sectionId);
+      return section.items.filter(item => typeof state.answers[sectionId][item.id] === "number").length;
+    }
+
+    function getMissingItems(sectionId) {
+      const section = SECTIONS.find(s => s.id === sectionId);
+      return section.items.filter(item => typeof state.answers[sectionId][item.id] !== "number");
+    }
+
+    function getAllMissingItems() {
+      return SECTIONS.flatMap(section => getMissingItems(section.id).map(item => ({ section, item })));
+    }
+
+    /* ----------------------------------------------------------------------
+       F. CÁLCULO DE PUNTAJES Y RESUMEN
+       ---------------------------------------------------------------------- */
+
+    function calculateSectionScore(sectionId) {
+      const section = SECTIONS.find(s => s.id === sectionId);
+      return section.items.reduce((acc, item) => {
+        const value = state.answers[sectionId][item.id];
+        return acc + (typeof value === "number" ? value : 0);
+      }, 0);
+    }
+
+    function calculateAllScores() {
+      const scores = {};
+      SECTIONS.forEach(section => {
+        scores[section.id] = calculateSectionScore(section.id);
+      });
+      return scores;
+    }
+
+    function getScoreSummary(scores) {
+      const scoreList = SECTIONS.map(section => ({
+        id: section.id,
+        code: section.code,
+        title: section.title,
+        score: scores[section.id]
+      }));
+
+      const maxScore = Math.max(...scoreList.map(s => s.score));
+      const minScore = Math.min(...scoreList.map(s => s.score));
+
+      return {
+        highest: scoreList.filter(s => s.score === maxScore),
+        lowest: scoreList.filter(s => s.score === minScore),
+        ordered_desc: [...scoreList].sort((a, b) => b.score - a.score)
+      };
+    }
+
+    function buildResultPayload() {
+      const scores = calculateAllScores();
+      const summary = getScoreSummary(scores);
+
+      const answersBySection = {};
+      SECTIONS.forEach(section => {
+        answersBySection[section.id] = {
+          section_id: section.id,
+          code: section.code,
+          title: section.title,
+          subtitle: section.subtitle,
+          score: scores[section.id],
+          items: section.items.map((item, index) => ({
+            item_number: index + 1,
+            item_id: item.id,
+            item_text: item.text,
+            value: state.answers[section.id][item.id]
+          }))
+        };
+      });
+
+      return {
+        instrument: {
+          instrument_id: DATA.instrument_id,
+          title: DATA.title,
+          source: DATA.source,
+          source_pages: DATA.source_pages,
+          version: DATA.version,
+          language: DATA.language,
+          scale: DATA.scale
+        },
+        participant: { ...state.participant },
+        started_at: state.started_at,
+        completed_at: state.completed_at || new Date().toISOString(),
+        scores,
+        summary: {
+          highest: summary.highest,
+          lowest: summary.lowest,
+          ordered_desc: summary.ordered_desc
+        },
+        answers_by_section: answersBySection
+      };
+    }
+
+    /* ----------------------------------------------------------------------
+       G. EXPORTACIÓN CSV / JSON
+       ----------------------------------------------------------------------
+       CSV:
+       - Pensado para abrir en Excel.
+       - Uso separador ";" porque suele funcionar mejor en configuración
+         regional hispanohablante.
+       - Incluye BOM UTF-8 para preservar acentos al abrir con Excel.
+
+       JSON:
+       - Más completo y estructurado.
+       - Incluye metadatos, respuestas, textos de ítems, totales y resumen.
+       ---------------------------------------------------------------------- */
+
+    function exportCsv() {
+      const payload = buildResultPayload();
+      const separator = ";";
+      const flat = flattenPayloadForCsv(payload);
+      const headers = Object.keys(flat);
+      const values = headers.map(header => escapeCsvValue(flat[header], separator));
+      const csv = "\uFEFF" + headers.join(separator) + "\n" + values.join(separator) + "\n";
+      const filename = makeFilename("csv");
+      downloadBlob(csv, filename, "text/csv;charset=utf-8");
+      showExportMessage(`CSV exportado: ${filename}`);
+    }
+
+    function flattenPayloadForCsv(payload) {
+      const flat = {
+        instrument_id: payload.instrument.instrument_id,
+        instrument_title: payload.instrument.title,
+        instrument_version: payload.instrument.version,
+        source_pages: payload.instrument.source_pages,
+        scale_min: payload.instrument.scale.min,
+        scale_max: payload.instrument.scale.max,
+        participant_code: payload.participant.code,
+        participant_age: payload.participant.age,
+        participant_notes: payload.participant.notes,
+        started_at: payload.started_at,
+        completed_at: payload.completed_at
+      };
+
+      // Respuestas individuales por sección e ítem.
+      SECTIONS.forEach(section => {
+        section.items.forEach((item, index) => {
+          const key = `${section.id}_${String(index + 1).padStart(2, "0")}`;
+          flat[key] = state.answers[section.id][item.id];
+        });
+      });
+
+      // Totales por dimensión.
+      Object.entries(payload.scores).forEach(([sectionId, score]) => {
+        flat[`total_${sectionId}`] = score;
+      });
+
+      flat.highest_dimensions = payload.summary.highest.map(s => `${s.title} (${s.score})`).join(" | ");
+      flat.lowest_dimensions = payload.summary.lowest.map(s => `${s.title} (${s.score})`).join(" | ");
+      flat.ordered_profile = payload.summary.ordered_desc.map(s => `${s.title}:${s.score}`).join(" | ");
+
+      return flat;
+    }
+
+    function exportJson() {
+      const payload = buildResultPayload();
+      const json = JSON.stringify(payload, null, 2);
+      const filename = makeFilename("json");
+      downloadBlob(json, filename, "application/json;charset=utf-8");
+      showExportMessage(`JSON exportado: ${filename}`);
+    }
+
+    async function copySummaryToClipboard() {
+      const payload = buildResultPayload();
+      const lines = [];
+      lines.push(`Perfil de Inteligencias Múltiples`);
+      lines.push(`Participante: ${payload.participant.code}`);
+      lines.push(`Fecha: ${formatDateTime(payload.completed_at)}`);
+      lines.push("");
+      lines.push("Totales:");
+      SECTIONS.forEach(section => {
+        lines.push(`- ${section.title} (${section.code}): ${payload.scores[section.id]}/100`);
+      });
+      lines.push("");
+      lines.push(`Puntaje más alto: ${payload.summary.highest.map(s => `${s.title} (${s.score})`).join(", ")}`);
+      lines.push(`Puntaje más bajo: ${payload.summary.lowest.map(s => `${s.title} (${s.score})`).join(", ")}`);
+
+      try {
+        await navigator.clipboard.writeText(lines.join("\n"));
+        showExportMessage("Resumen copiado al portapapeles.");
+      } catch (error) {
+        showExportMessage("No se pudo copiar automáticamente. Usá Exportar CSV o JSON.", true);
+      }
+    }
+
+    /* ----------------------------------------------------------------------
+       H. UTILIDADES GENERALES
+       ---------------------------------------------------------------------- */
+
+    function showError(element, message) {
+      element.textContent = message;
+      element.classList.remove("hidden");
+    }
+
+    function showExportMessage(message, isError = false) {
+      const box = document.getElementById("exportMessage");
+      if (!box) return;
+      box.textContent = message;
+      box.classList.remove("hidden", "danger");
+      if (isError) box.classList.add("danger");
+    }
+
+    function resetState(keepParticipant) {
+      const oldParticipant = { ...state.participant };
+      state.step = -1;
+      state.participant = keepParticipant ? oldParticipant : { code: "", age: "", notes: "" };
+      state.consent = false;
+      state.answers = {};
+      state.started_at = null;
+      state.completed_at = null;
+      state.showReviewTable = false;
+      initializeEmptyAnswers();
+    }
+
+    function makeFilename(extension) {
+      const code = sanitizeFilename(state.participant.code || "participante");
+      const date = new Date().toISOString().slice(0, 19).replaceAll(":", "-");
+      return `perfil_inteligencias_${code}_${date}.${extension}`;
+    }
+
+    function sanitizeFilename(value) {
+      return String(value)
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_-]+/g, "_")
+        .replace(/^_+|_+$/g, "")
+        .slice(0, 60) || "participante";
+    }
+
+    function downloadBlob(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeCsvValue(value, separator) {
+      const stringValue = value === null || value === undefined ? "" : String(value);
+      const mustQuote = stringValue.includes(separator) || stringValue.includes("\n") || stringValue.includes('"');
+      const escaped = stringValue.replaceAll('"', '""');
+      return mustQuote ? `"${escaped}"` : escaped;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    function formatDateTime(isoString) {
+      if (!isoString) return "";
+      const date = new Date(isoString);
+      return date.toLocaleString("es-AR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    // ----------------------------------------------------------------------
+    // INICIO DE LA APLICACIÓN
+    // ----------------------------------------------------------------------
+    initializeEmptyAnswers();
+    loadDraftIfExists();
+    renderApp();
+  </script>
+</body>
+</html>
