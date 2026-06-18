@@ -258,7 +258,7 @@
             </div>
             <div class="model-line" id="modelLine"></div>
             <div class="note-box">
-              <strong>Constructor tipo AnyLogic simplificado:</strong> el flujo es serial y se conectan automáticamente <span class="mono">Source → Queue/Delay₁ → … → Queue/Delayₙ → Sink</span>. Cada etapa representa una cola FIFO más <span class="mono">c</span> servidores paralelos.
+              <strong>Constructor simplificado:</strong> el flujo es serial y se conectan automáticamente <span class="mono">Source → Queue/Server₁ → … → Queue/Serverₙ → Sink</span>. Cada etapa representa una cola FIFO más <span class="mono">c</span> servidores paralelos.
             </div>
           </div>
         </section>
@@ -292,7 +292,7 @@
               <button class="btn-ghost" id="exportTraceBtn">CSV trayectoria</button>
             </div>
             <div class="note-box">
-              <strong>Lectura docente sugerida:</strong> cuando todas las distribuciones son exponenciales, la salida de una etapa M/M/c estable puede tratarse como Poisson, lo que conecta con Burke. Cuando pasamos a G/G/c, la simulación se vuelve el objeto principal de análisis.
+              <strong>Para tener en cuenta:</strong> cuando todas las distribuciones son exponenciales, la salida de una etapa M/M/c estable puede tratarse como Poisson, lo que conecta con Burke. Cuando pasamos a G/G/c, la simulación se vuelve el objeto principal de análisis.
             </div>
           </div>
         </section>
