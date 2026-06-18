@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de colas multietapa M/M/c y G/G/c</title>
+  <style>
+    :root {
+      --bg:#0b1020; --bg-2:#162045; --panel:#0f1428; --panel-soft:#0d1328;
+      --ink:#e7ecf3; --muted:#9aa4b2; --border:#1e2646; --line:#1e2646;
+      --accent:#8ec5ff; --accent-2:#78a6ff; --ok:#21c07a; --warn:#ffb454; --danger:#ef476f;
+      --p0:#8ec5ff; --p1:#ffd166; --p2:#78a6ff; --p3:#21c07a; --p4:#ff9f1c; --p5:#ef476f; --p6:#b28dff;
+      --shadow:0 14px 36px rgba(0,0,0,.28); --radius:18px; --chart-bg:#0c1226; --input-bg:#0d1631;
+      --soft-top:rgba(255,255,255,.025); --soft-bottom:rgba(0,0,0,.04);
+    }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; }
+    body {
+      margin:0; font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink); background:radial-gradient(1200px 700px at 20% -10%,var(--bg-2) 0%,var(--bg) 52%);
+    }
+    .wrap { max-width:1920px; margin:0 auto; padding:24px 16px 46px; }
+    .hero, .panel, .stat, .card, .stage-node, .play-stage, .event-row {
+      background:linear-gradient(180deg,var(--soft-top),var(--soft-bottom)),var(--panel);
+      border:1px solid var(--border); box-shadow:var(--shadow); border-radius:var(--radius); overflow:hidden;
+    }
+    .hero { padding:24px 24px 20px; margin-bottom:18px; position:relative; }
+    .hero::after { content:""; position:absolute; right:-52px; top:-52px; width:210px; height:210px; border-radius:50%; background:rgba(255,255,255,.05); }
+    .hero h1 { margin:0 0 8px; font-size:clamp(1.55rem,2.4vw,2.55rem); letter-spacing:-.035em; }
+    .hero p { margin:0; max-width:1250px; color:var(--muted); line-height:1.46; }
+    .workspace-toolbar {
+      display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;
+      margin:0 0 18px; padding:12px; border:1px solid var(--border); border-radius:18px;
+      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.02)),var(--panel-soft);
+      box-shadow:var(--shadow);
+    }
+    .layout-tabs { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .layout-tab {
+      background:#0f1734; color:var(--ink); border:1px solid var(--border); padding:9px 12px;
+      border-radius:999px; font-size:.84rem; font-weight:1000;
+    }
+    .layout-tab.is-active {
+      background:linear-gradient(180deg,var(--p2),var(--p0)); color:#08111f;
+      box-shadow:0 10px 20px rgba(120,166,255,.18);
+    }
+    .width-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:min(100%,360px); }
+    .width-control label { white-space:nowrap; }
+    .width-control input[type="range"] { flex:1; min-width:170px; }
+    .width-control output { min-width:66px; text-align:right; color:var(--muted); font-size:.82rem; font-weight:900; }
+    .main-grid {
+      --left-pane:760px;
+      display:grid; grid-template-columns:minmax(420px,var(--left-pane)) 12px minmax(0,1fr);
+      gap:0; align-items:start;
+    }
+    .main-grid > aside { grid-column:1; min-width:0; padding-right:18px; }
+    .main-grid > main { grid-column:3; min-width:0; padding-left:18px; }
+    .pane-divider {
+      grid-column:2; align-self:stretch; min-height:72vh; position:relative; z-index:1;
+      border-radius:999px; cursor:col-resize; background:linear-gradient(180deg,rgba(142,197,255,.28),rgba(120,166,255,.08));
+      border:1px solid rgba(142,197,255,.18); box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    .pane-divider::before {
+      content:""; position:absolute; left:50%; top:50%; width:4px; height:48px; transform:translate(-50%,-50%);
+      border-radius:999px; background:rgba(231,236,243,.38); box-shadow:0 -12px 0 rgba(231,236,243,.16), 0 12px 0 rgba(231,236,243,.16);
+    }
+    body.resizing { cursor:col-resize; user-select:none; }
+    .main-grid.layout-model { grid-template-columns:minmax(720px,1.32fr) 12px minmax(390px,.68fr); }
+    .main-grid.layout-results { grid-template-columns:minmax(360px,.43fr) 12px minmax(760px,1.57fr); }
+    .main-grid.layout-split { grid-template-columns:minmax(420px,var(--left-pane)) 12px minmax(0,1fr); }
+    .main-grid.layout-focus { display:grid; grid-template-columns:1fr; }
+    .main-grid.layout-focus > aside { grid-column:1; padding-right:0; }
+    .main-grid.layout-focus > main, .main-grid.layout-focus > .pane-divider { display:none; }
+    .content-stack, .controls, .stack { display:grid; gap:14px; }
+    .panel .hd { padding:16px 18px 10px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)); }
+    .panel .hd h2, .panel .hd h3 { margin:0 0 5px; font-size:1.04rem; letter-spacing:-.02em; }
+    .panel .hd p { margin:0; color:var(--muted); line-height:1.35; font-size:.92rem; }
+    .body { padding:16px 18px 18px; }
+    .row-2, .row-3, .row-4 { display:grid; gap:12px; }
+    .row-2 { grid-template-columns:1fr 1fr; }
+    .row-3 { grid-template-columns:repeat(3,1fr); }
+    .row-4 { grid-template-columns:repeat(4,1fr); }
+    .field { display:grid; gap:6px; }
+    label { color:var(--muted); font-size:.86rem; font-weight:800; }
+    input, select, textarea {
+      width:100%; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+      font-size:.96rem; color:var(--ink); background:var(--input-bg); outline:none;
+      transition:border-color .16s ease,box-shadow .16s ease;
+    }
+    textarea { min-height:76px; resize:vertical; }
+    input:focus, select:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 4px rgba(142,197,255,.12); }
+    input[type="range"] { padding:0; background:transparent; box-shadow:none; }
+    button {
+      appearance:none; border:0; border-radius:12px; padding:10px 14px; font-size:.92rem; font-weight:900;
+      cursor:pointer; transition:transform .14s ease,filter .14s ease,box-shadow .14s ease;
+    }
+    button:hover { transform:translateY(-1px); } button:active { transform:translateY(0); }
+    .btn-primary { background:linear-gradient(180deg,var(--p2),var(--p0)); color:#08111f; box-shadow:0 10px 20px rgba(120,166,255,.22); }
+    .btn-secondary, .btn-ghost { background:#0f1734; color:var(--ink); border:1px solid var(--border); }
+    .btn-danger { background:rgba(239,71,111,.12); color:var(--danger); border:1px solid rgba(239,71,111,.28); }
+    .btn-small { padding:7px 9px; font-size:.78rem; border-radius:10px; }
+    .actions, .badge-row, .toolbox, .play-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .hint, .small, .muted { color:var(--muted); font-size:.8rem; line-height:1.35; }
+    .mono { font-family:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace; }
+    .note-box { border:1px dashed var(--border); background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.02)),var(--panel-soft); border-radius:14px; padding:12px 13px; line-height:1.42; font-size:.86rem; }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:7px 9px; border-radius:999px; border:1px solid var(--border); background:#0f1734; color:var(--ink); font-size:.8rem; font-weight:900; white-space:nowrap; }
+    .badge.ok { color:var(--ok); background:rgba(33,192,122,.10); } .badge.warn { color:var(--warn); background:rgba(255,180,84,.10); } .badge.danger { color:var(--danger); background:rgba(239,71,111,.10); }
+    .status-banner { margin-top:12px; padding:12px 14px; border-radius:14px; font-size:.9rem; font-weight:800; border:1px solid transparent; line-height:1.4; }
+    .status-ok { background:rgba(33,192,122,.10); color:var(--ok); border-color:rgba(33,192,122,.22); }
+    .status-warn { background:rgba(255,180,84,.10); color:var(--warn); border-color:rgba(255,180,84,.22); }
+    .status-danger { background:rgba(239,71,111,.10); color:var(--danger); border-color:rgba(239,71,111,.22); }
+
+    .builder { display:grid; gap:12px; }
+    .builder-panel { position:relative; z-index:1; }
+    .palette-card { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); background:#101938; border-radius:14px; padding:10px 12px; cursor:grab; font-weight:900; }
+    .palette-card:active { cursor:grabbing; }
+    .model-line {
+      min-height:214px; border:1px dashed var(--border); border-radius:18px; background:rgba(255,255,255,.02);
+      display:flex; gap:12px; align-items:center; overflow-x:auto; padding:14px; scroll-snap-type:x proximity;
+      -webkit-overflow-scrolling:touch; overscroll-behavior-inline:contain;
+    }
+    .fixed-node, .stage-node { min-width:150px; display:grid; align-content:center; justify-items:center; text-align:center; padding:14px; position:relative; scroll-snap-align:start; }
+    .fixed-node { border-radius:18px; border:1px solid var(--border); background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01)),#101938; }
+    .node-icon { font-size:1.7rem; line-height:1; margin-bottom:8px; }
+    .node-title { font-weight:1000; letter-spacing:-.02em; }
+    .node-sub { margin-top:5px; color:var(--muted); font-size:.75rem; line-height:1.28; }
+    .stage-node { min-width:210px; cursor:grab; }
+    .layout-model .model-line { min-height:284px; }
+    .layout-focus .model-line { min-height:430px; }
+    .layout-model .stage-node, .layout-focus .stage-node { min-width:240px; }
+    .layout-model .fixed-node, .layout-focus .fixed-node { min-width:180px; }
+    .stage-node.dragging { opacity:.55; outline:2px dashed var(--accent); }
+    .stage-node .node-controls { display:flex; gap:6px; margin-top:8px; }
+    .arrow { align-self:center; color:var(--muted); font-size:1.4rem; font-weight:900; }
+    .drop-hint { min-width:170px; border:1px dashed var(--border); border-radius:16px; display:grid; place-items:center; color:var(--muted); font-weight:800; padding:12px; }
+
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th, td { border-bottom:1px solid #141a33; padding:9px 9px; text-align:left; vertical-align:middle; white-space:nowrap; }
+    thead th { position:sticky; top:0; background:#0d1631; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-size:.72rem; z-index:1; }
+    td input, td select { min-width:92px; padding:8px 9px; font-size:.88rem; }
+    .stage-name-input { min-width:130px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; }
+    .stat { padding:14px 15px; min-height:98px; }
+    .stat .k { color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; font-weight:900; margin-bottom:6px; }
+    .stat .v { font-size:1.55rem; font-weight:1000; letter-spacing:-.04em; margin-bottom:5px; }
+    .stat .s { color:var(--muted); font-size:.8rem; line-height:1.32; }
+    .two-col, .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    .card { padding:12px 14px; }
+    .card h4 { margin:0 0 5px; font-size:.98rem; }
+    .card p { margin:0 0 10px; color:var(--muted); font-size:.82rem; line-height:1.35; }
+    canvas { width:100%; display:block; border-radius:12px; background:var(--chart-bg); border:1px solid var(--border); }
+    .slider-line { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; }
+
+    .play-line { display:grid; gap:10px; margin-top:14px; }
+    .play-stages { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+    .play-stage { min-width:250px; padding:12px; }
+    .play-stage-head { display:flex; justify-content:space-between; gap:8px; align-items:center; font-weight:1000; margin-bottom:10px; }
+    .buffer-bin { min-height:48px; border-radius:14px; border:1px dashed var(--border); background:rgba(255,255,255,.025); padding:7px; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; }
+    .chip { min-width:28px; height:24px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:.7rem; background:linear-gradient(180deg,rgba(255,212,102,.28),rgba(255,159,28,.14)); border:1px solid rgba(255,180,84,.22); color:var(--ink); }
+    .server-mini-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(86px,1fr)); gap:7px; margin-top:10px; }
+    .server-mini { border:1px solid var(--border); background:#101938; border-radius:12px; padding:8px; display:grid; gap:5px; font-size:.78rem; }
+    .server-mini.busy { background:linear-gradient(180deg,rgba(120,166,255,.10),rgba(255,255,255,.02)),var(--panel); }
+    .server-state { font-weight:1000; text-transform:uppercase; letter-spacing:.05em; font-size:.68rem; color:var(--ok); }
+    .server-mini.busy .server-state { color:var(--p0); }
+    .progress { height:7px; border-radius:999px; border:1px solid var(--border); background:#0b132d; overflow:hidden; }
+    .progress > span { display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--p2),var(--p0)); border-radius:inherit; }
+    .event-log { display:grid; gap:8px; }
+    .event-row { padding:10px 11px; border-radius:12px; box-shadow:none; font-size:.83rem; line-height:1.38; background:rgba(255,255,255,.02); }
+    .pillbar { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+
+    @media (max-width:1450px) {
+      .two-col, .chart-grid { grid-template-columns:1fr; }
+      .stats-grid { grid-template-columns:repeat(2,minmax(150px,1fr)); }
+      .main-grid.layout-model { grid-template-columns:minmax(640px,1.15fr) 12px minmax(340px,.85fr); }
+      .main-grid.layout-results { grid-template-columns:minmax(340px,.5fr) 12px minmax(560px,1.5fr); }
+    }
+    @media (max-width:1120px) {
+      .main-grid, .main-grid.layout-model, .main-grid.layout-results, .main-grid.layout-split, .main-grid.layout-focus { grid-template-columns:1fr !important; }
+      .main-grid > aside, .main-grid > main { grid-column:1; padding:0; }
+      .main-grid > main { margin-top:18px; }
+      .pane-divider { display:none; }
+      .builder-panel { position:relative; top:auto; }
+      .width-control { display:none; }
+    }
+    @media (max-width:860px) {
+      .row-2,.row-3,.row-4,.three-col,.stats-grid,.slider-line { grid-template-columns:1fr; }
+      .wrap { padding:16px 10px 30px; }
+      .hero { padding:20px 16px 16px; }
+      .workspace-toolbar { align-items:stretch; }
+      .layout-tabs, .width-control { width:100%; }
+      .layout-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .layout-tab { width:100%; text-align:center; padding:10px 9px; }
+      .model-line, .layout-model .model-line, .layout-focus .model-line { min-height:250px; gap:8px; padding:10px; }
+      .stage-node, .layout-model .stage-node, .layout-focus .stage-node { min-width:178px; padding:12px 10px; }
+      .fixed-node, .layout-model .fixed-node, .layout-focus .fixed-node { min-width:132px; padding:12px 10px; }
+      .arrow { font-size:1.05rem; }
+      .toolbox, .actions, .play-actions, .badge-row, .pillbar { gap:8px; }
+      .toolbox button, .actions button, .play-actions button { flex:1 1 150px; }
+      .badge { white-space:normal; }
+      th, td { padding:8px 7px; }
+      td input, td select { min-width:86px; }
+    }
+    @media (max-width:560px) {
+      .wrap { padding-left:8px; padding-right:8px; }
+      .hero h1 { font-size:1.35rem; }
+      .panel .hd { padding:14px 14px 9px; }
+      .body { padding:14px; }
+      .layout-tabs { grid-template-columns:1fr; }
+      .model-line, .layout-model .model-line, .layout-focus .model-line { min-height:230px; }
+      .stage-node, .layout-model .stage-node, .layout-focus .stage-node { min-width:164px; }
+      .fixed-node, .layout-model .fixed-node, .layout-focus .fixed-node { min-width:118px; }
+      .node-icon { font-size:1.35rem; }
+      .node-title { font-size:.92rem; }
+      .node-sub { font-size:.70rem; }
+      .node-controls { flex-wrap:wrap; justify-content:center; }
+      .stats-grid { grid-template-columns:1fr; }
+      .stat .v { font-size:1.35rem; }
+      canvas { min-height:220px; }
+      .play-stage { min-width:218px; }
+      .server-mini-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Simulador de colas multietapa — M/M/c y G/G/c en serie</h1>
+      <p>
+        Construí una línea de atención o producción con cualquier cantidad de etapas, definí servidores paralelos por etapa, tasa de arribo, distribuciones de servicio y múltiples semillas. El simulador ejecuta eventos discretos, compara corridas, muestra la evolución temporal de colas y WIP, y permite reproducir la trayectoria evento por evento.
+      </p>
+    </section>
+
+    <section class="workspace-toolbar" aria-label="Controles de disposición de pantalla">
+      <div class="layout-tabs" role="tablist" aria-label="Modo de trabajo">
+        <button class="layout-tab" type="button" data-layout="model">Modelado ampliado</button>
+        <button class="layout-tab" type="button" data-layout="split">División ajustable</button>
+        <button class="layout-tab" type="button" data-layout="results">Resultados ampliados</button>
+        <button class="layout-tab" type="button" data-layout="focus">Sólo modelador</button>
+      </div>
+      <div class="width-control">
+        <label for="paneWidthRange">Ancho del modelador</label>
+        <input id="paneWidthRange" type="range" min="420" max="1180" step="10" value="760">
+        <output id="paneWidthText" for="paneWidthRange">760 px</output>
+      </div>
+    </section>
+
+    <div class="main-grid layout-model" id="workspaceGrid">
+      <aside class="content-stack">
+        <section class="panel builder-panel">
+          <div class="hd"><h2>Constructor visual</h2><p>Arrastrá una etapa al lienzo, reordená las estaciones y editá los parámetros en la tabla.</p></div>
+          <div class="body builder">
+            <div class="toolbox">
+              <div class="palette-card" draggable="true" data-palette="stage">⚙️ Etapa / Delay</div>
+              <button class="btn-secondary" id="addStageBtn">Agregar etapa</button>
+              <button class="btn-ghost" id="duplicateLastBtn">Duplicar última</button>
+              <button class="btn-danger" id="resetStagesBtn">Reiniciar línea</button>
+            </div>
+            <div class="model-line" id="modelLine"></div>
+            <div class="note-box">
+              <strong>Constructor tipo AnyLogic simplificado:</strong> el flujo es serial y se conectan automáticamente <span class="mono">Source → Queue/Delay₁ → … → Queue/Delayₙ → Sink</span>. Cada etapa representa una cola FIFO más <span class="mono">c</span> servidores paralelos.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd"><h2>Parámetros generales</h2><p>Podés correr una sola trayectoria o varias semillas para comparar variabilidad.</p></div>
+          <div class="body controls">
+            <div class="row-2">
+              <div class="field"><label for="lambda">Tasa de arribo λ</label><input id="lambda" type="number" min="0.0001" step="0.01" value="0.90"><div class="hint">Clientes por unidad de tiempo.</div></div>
+              <div class="field"><label for="arrivalDist">Distribución entre arribos</label><select id="arrivalDist"><option value="exp" selected>Exponencial — M</option><option value="det">Determinística</option><option value="gamma">Gamma / Erlang</option><option value="lognormal">Lognormal</option><option value="uniform">Uniforme</option></select><div class="hint">Para M/M/c usar exponencial.</div></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label for="arrivalCV">CV entre arribos</label><input id="arrivalCV" type="number" min="0" step="0.05" value="1.00"><div class="hint">Se usa en Gamma, Lognormal y Uniforme.</div></div>
+              <div class="field"><label for="horizon">Horizonte T</label><input id="horizon" type="number" min="1" step="10" value="500"><div class="hint">Tiempo total simulado.</div></div>
+            </div>
+            <div class="row-3">
+              <div class="field"><label for="warmup">Warm-up</label><input id="warmup" type="number" min="0" step="10" value="50"><div class="hint">Se excluye de promedios temporales.</div></div>
+              <div class="field"><label for="baseSeed">Semilla base</label><input id="baseSeed" type="number" step="1" value="20260324"><div class="hint">La primera corrida usa esta semilla.</div></div>
+              <div class="field"><label for="replications">Cantidad de semillas</label><input id="replications" type="number" min="1" max="60" step="1" value="8"><div class="hint">Corridas independientes.</div></div>
+            </div>
+            <div class="field"><label for="seedList">Semillas explícitas opcionales</label><textarea id="seedList" placeholder="Ej.: 101, 202, 303. Si queda vacío, se generan desde la semilla base."></textarea></div>
+            <div class="row-2">
+              <div class="field"><label for="selectedSeed">Trayectoria a visualizar</label><select id="selectedSeed"></select><div class="hint">Permite reproducir una corrida específica.</div></div>
+              <div class="field"><label for="speed">Velocidad de reproducción</label><select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option></select><div class="hint">Afecta sólo la animación.</div></div>
+            </div>
+            <div class="actions">
+              <button class="btn-primary" id="runBtn">Simular</button>
+              <button class="btn-secondary" id="loadMMcBtn">Ejemplo M/M/c</button>
+              <button class="btn-secondary" id="loadGGcBtn">Ejemplo G/G/c</button>
+              <button class="btn-ghost" id="exportSummaryBtn">CSV resumen</button>
+              <button class="btn-ghost" id="exportTraceBtn">CSV trayectoria</button>
+            </div>
+            <div class="note-box">
+              <strong>Lectura docente sugerida:</strong> cuando todas las distribuciones son exponenciales, la salida de una etapa M/M/c estable puede tratarse como Poisson, lo que conecta con Burke. Cuando pasamos a G/G/c, la simulación se vuelve el objeto principal de análisis.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd"><h2>Etapas de la línea</h2><p>Editá servidores, media de servicio y variabilidad de cada estación.</p></div>
+          <div class="body table-wrap">
+            <table>
+              <thead><tr><th>Etapa</th><th>Serv.</th><th>Media serv.</th><th>Distribución</th><th>CV serv.</th><th>Acciones</th></tr></thead>
+              <tbody id="stagesBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+
+      <div class="pane-divider" id="paneDivider" title="Arrastrá para cambiar el ancho del modelador" aria-hidden="true"></div>
+
+      <main class="content-stack">
+        <section class="panel">
+          <div class="hd"><h2>Indicadores globales</h2><p>Promedios entre semillas. Los tiempos de clientes se calculan sobre clientes que arribaron después del warm-up.</p></div>
+          <div class="body">
+            <div class="stats-grid" id="globalStats"></div>
+            <div id="statusBanner" class="status-banner status-ok"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd"><h2>Comparación de semillas</h2><p>Sirve para discutir variabilidad de una simulación, estabilidad aparente y sensibilidad de resultados.</p></div>
+          <div class="body table-wrap"><table><thead><tr><th>Semilla</th><th>Arribos</th><th>Salidas</th><th>Throughput</th><th>Wq total</th><th>W total</th><th>Lq total</th><th>L total</th><th>Cuello</th><th>Evento cap</th></tr></thead><tbody id="seedCompareBody"></tbody></table></div>
+        </section>
+
+        <section class="panel">
+          <div class="hd"><h2>Resultados por etapa</h2><p>Promedios temporales y de clientes por estación, agregados entre corridas.</p></div>
+          <div class="body table-wrap"><table><thead><tr><th>Etapa</th><th>c</th><th>μ por serv.</th><th>Capacidad</th><th>Util.</th><th>Lq</th><th>L</th><th>Wq</th><th>W</th><th>Throughput</th><th>Q máx.</th></tr></thead><tbody id="stageResultsBody"></tbody></table></div>
+        </section>
+
+        <section class="two-col">
+          <div class="panel">
+            <div class="hd"><h3>Referencia analítica / aproximada</h3><p>Exacta para etapas M/M/c; aproximación Allen-Cunneen cuando hay variabilidad general.</p></div>
+            <div class="body table-wrap"><table><thead><tr><th>Etapa</th><th>Tipo</th><th>ρ</th><th>Lq ref.</th><th>Wq ref.</th><th>W ref.</th><th>Comentario</th></tr></thead><tbody id="referenceBody"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="hd"><h3>Diagnóstico gerencial</h3><p>Resumen automático para priorizar mejoras.</p></div>
+            <div class="body"><div class="stack" id="diagnosticCards"></div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd"><h2>Gráficos temporales de la trayectoria seleccionada</h2><p>La trayectoria elegida puede cambiarse desde el selector de semillas.</p></div>
+          <div class="body chart-grid">
+            <div class="card"><h4>WIP y cola total</h4><p>Clientes en todo el sistema y clientes esperando.</p><canvas id="totalChart" width="760" height="280"></canvas></div>
+            <div class="card"><h4>Colas por etapa</h4><p>Evolución de <span class="mono">Qᵢ(t)</span> para cada buffer.</p><canvas id="queuesChart" width="760" height="280"></canvas></div>
+            <div class="card"><h4>Servidores ocupados por etapa</h4><p>Cantidad de servidores ocupados en cada estación.</p><canvas id="busyChart" width="760" height="280"></canvas></div>
+            <div class="card"><h4>Utilización acumulada</h4><p>Convergencia de la utilización por etapa durante la corrida.</p><canvas id="utilChart" width="760" height="280"></canvas></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="hd"><h2>Reproducción evento por evento</h2><p>Vista dinámica de buffers, servidores y salidas para la semilla seleccionada.</p></div>
+          <div class="body">
+            <div class="play-actions">
+              <button class="btn-primary" id="playBtn">▶ Reproducir</button>
+              <button class="btn-secondary" id="pauseBtn">❚❚ Pausar</button>
+              <button class="btn-ghost" id="stepBtn">Paso a paso</button>
+              <button class="btn-ghost" id="resetPlayBtn">Reiniciar</button>
+            </div>
+            <div class="pillbar">
+              <span class="badge">Tiempo: <span id="clockText" class="mono">0.000</span></span>
+              <span class="badge">Evento: <span id="eventText" class="mono">—</span></span>
+              <span class="badge">Q total: <span id="qText" class="mono">0</span></span>
+              <span class="badge">L total: <span id="lText" class="mono">0</span></span>
+              <span class="badge">Salidas: <span id="departText" class="mono">0</span></span>
+            </div>
+            <div class="slider-line" style="margin-top:12px;">
+              <input id="timeline" type="range" min="0" max="0" value="0">
+              <div class="small">Evento <span id="eventIndexText" class="mono">0</span> / <span id="eventTotalText" class="mono">0</span></div>
+            </div>
+            <div class="play-line">
+              <div class="play-stages" id="playStages"></div>
+              <div class="card"><h4>Últimos eventos</h4><p>Se muestran los eventos recientes respecto del punto seleccionado.</p><div class="event-log" id="eventLog"></div></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmt = (x, d=4) => Number.isFinite(x) ? Number(x).toFixed(d) : '—';
+    const fmtPct = (x, d=1) => Number.isFinite(x) ? (100*x).toFixed(d)+'%' : '—';
+    const mean = (a) => a.length ? a.reduce((x,y)=>x+y,0)/a.length : NaN;
+    const sd = (a) => a.length > 1 ? Math.sqrt(a.reduce((s,x)=>s+(x-mean(a))**2,0)/(a.length-1)) : 0;
+    const clamp = (x,a,b) => Math.max(a, Math.min(b,x));
+    const colors = ['--p0','--p1','--p2','--p3','--p4','--p5','--p6'];
+    function theme(name, fallback='') { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback; }
+    function hexToRgba(hex, alpha) { const h=(hex||'').replace('#','').trim(); if(![3,6].includes(h.length)) return `rgba(255,255,255,${alpha})`; const full=h.length===3?h.split('').map(c=>c+c).join(''):h; const n=parseInt(full,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`; }
+
+    const state = {
+      stages: [], summaries: [], references: [], traceCache: new Map(), currentTrace: null, lastParams: null,
+      playIndex: -1, timer: null, draggedStage: null
+    };
+
+    function defaultStage(i) {
+      return { name:`Etapa ${i}`, servers:1, serviceMean:1.20, dist:'exp', cv:1.00 };
+    }
+    function resetDefaultStages() {
+      state.stages = [
+        { name:'Recepción', servers:2, serviceMean:1.15, dist:'exp', cv:1 },
+        { name:'Control', servers:1, serviceMean:0.95, dist:'exp', cv:1 },
+        { name:'Resolución', servers:2, serviceMean:1.45, dist:'exp', cv:1 }
+      ];
+      renderStagesUI();
+    }
+
+    function distLabel(d) { return ({exp:'Exponencial', det:'Determinística', gamma:'Gamma', lognormal:'Lognormal', uniform:'Uniforme'})[d] || d; }
+    function distCV2(d, cv) {
+      if (d === 'exp') return 1;
+      if (d === 'det') return 0;
+      if (d === 'uniform') return Math.pow(Math.min(Math.max(cv||0,0),0.577),2);
+      return Math.pow(Math.max(cv||0,0),2);
+    }
+    function stageMu(s) { return 1 / Math.max(1e-9, Number(s.serviceMean)); }
+
+    function renderModelLine() {
+      const line = $('modelLine');
+      const pieces = [];
+      pieces.push(`<div class="fixed-node"><div class="node-icon">🚪</div><div class="node-title">Source</div><div class="node-sub">Arribos externos<br>λ = ${fmt(Number($('lambda').value),2)}</div></div>`);
+      pieces.push(`<div class="arrow">→</div>`);
+      if (!state.stages.length) pieces.push(`<div class="drop-hint">Soltá aquí una etapa</div>`);
+      state.stages.forEach((s,i) => {
+        pieces.push(`
+          <div class="stage-node" draggable="true" data-stage-index="${i}">
+            <div class="node-icon">⚙️</div>
+            <div class="node-title">${escapeHtml(s.name || `Etapa ${i+1}`)}</div>
+            <div class="node-sub">Queue + Delay<br>c=${s.servers} · media=${fmt(Number(s.serviceMean),2)} · ${distLabel(s.dist)}</div>
+            <div class="node-controls">
+              <button class="btn-ghost btn-small" data-action="move-left" data-i="${i}">←</button>
+              <button class="btn-ghost btn-small" data-action="move-right" data-i="${i}">→</button>
+              <button class="btn-danger btn-small" data-action="delete" data-i="${i}">×</button>
+            </div>
+          </div>`);
+        pieces.push(`<div class="arrow">→</div>`);
+      });
+      pieces.push(`<div class="fixed-node"><div class="node-icon">🏁</div><div class="node-title">Sink</div><div class="node-sub">Salidas del sistema</div></div>`);
+      line.innerHTML = pieces.join('');
+      line.querySelectorAll('.stage-node').forEach(node => {
+        node.addEventListener('dragstart', e => { state.draggedStage = Number(node.dataset.stageIndex); node.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+        node.addEventListener('dragend', () => node.classList.remove('dragging'));
+        node.addEventListener('dragover', e => e.preventDefault());
+        node.addEventListener('drop', e => {
+          e.preventDefault();
+          const to = Number(node.dataset.stageIndex);
+          const from = state.draggedStage;
+          if (Number.isInteger(from) && from !== to) moveStage(from, to);
+          state.draggedStage = null;
+        });
+      });
+    }
+    function renderStagesTable() {
+      $('stagesBody').innerHTML = state.stages.map((s,i)=>`
+        <tr>
+          <td><input class="stage-name-input" data-field="name" data-i="${i}" value="${escapeAttr(s.name)}"></td>
+          <td><input type="number" min="1" max="30" step="1" data-field="servers" data-i="${i}" value="${s.servers}"></td>
+          <td><input type="number" min="0.0001" step="0.05" data-field="serviceMean" data-i="${i}" value="${s.serviceMean}"></td>
+          <td><select data-field="dist" data-i="${i}">
+            <option value="exp" ${s.dist==='exp'?'selected':''}>Exponencial — M</option>
+            <option value="det" ${s.dist==='det'?'selected':''}>Determinística</option>
+            <option value="gamma" ${s.dist==='gamma'?'selected':''}>Gamma / Erlang</option>
+            <option value="lognormal" ${s.dist==='lognormal'?'selected':''}>Lognormal</option>
+            <option value="uniform" ${s.dist==='uniform'?'selected':''}>Uniforme</option>
+          </select></td>
+          <td><input type="number" min="0" step="0.05" data-field="cv" data-i="${i}" value="${s.cv}"></td>
+          <td>
+            <button class="btn-ghost btn-small" data-action="duplicate" data-i="${i}">Duplicar</button>
+            <button class="btn-danger btn-small" data-action="delete" data-i="${i}">Borrar</button>
+          </td>
+        </tr>`).join('');
+    }
+    function renderStagesUI() { renderModelLine(); renderStagesTable(); }
+    function addStage(copy=null) { const n=state.stages.length+1; state.stages.push(copy ? {...copy, name:`${copy.name} copia`} : defaultStage(n)); renderStagesUI(); }
+    function deleteStage(i) { if (state.stages.length <= 1) return alert('Dejá al menos una etapa en la línea.'); state.stages.splice(i,1); renderStagesUI(); }
+    function duplicateStage(i) { addStage(state.stages[i]); }
+    function moveStage(from, to) { const [s]=state.stages.splice(from,1); state.stages.splice(to,0,s); renderStagesUI(); }
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+    function escapeAttr(s) { return escapeHtml(s).replace(/'/g,'&#39;'); }
+
+    function mulberry32(seed) {
+      let t = (Number(seed) || 1) >>> 0;
+      return function() { t += 0x6D2B79F5; let r=Math.imul(t^(t>>>15),t|1); r^=r+Math.imul(r^(r>>>7),r|61); return ((r^(r>>>14))>>>0)/4294967296; };
+    }
+    function normalSample(rng) {
+      const u1 = Math.max(1e-12, rng()); const u2 = Math.max(1e-12, rng());
+      return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+    }
+    function gammaSample(shape, scale, rng) {
+      if (shape <= 0) return 0;
+      if (shape < 1) return gammaSample(shape + 1, scale, rng) * Math.pow(Math.max(1e-12, rng()), 1/shape);
+      const d = shape - 1/3, c = 1/Math.sqrt(9*d);
+      while (true) {
+        let x = normalSample(rng); let v = 1 + c*x;
+        if (v <= 0) continue;
+        v = v*v*v;
+        const u = rng();
+        if (u < 1 - 0.0331*x*x*x*x) return scale*d*v;
+        if (Math.log(u) < 0.5*x*x + d*(1 - v + Math.log(v))) return scale*d*v;
+      }
+    }
+    function sampleByDist(dist, meanVal, cvVal, rng) {
+      const m = Math.max(1e-9, Number(meanVal));
+      if (dist === 'det') return m;
+      if (dist === 'exp') return -Math.log(Math.max(1e-12, 1-rng())) * m;
+      const cv = Math.max(0, Number(cvVal) || 0);
+      if (cv <= 1e-9) return m;
+      if (dist === 'gamma') {
+        const shape = 1/(cv*cv); const scale = m/shape; return gammaSample(shape, scale, rng);
+      }
+      if (dist === 'lognormal') {
+        const sigma2 = Math.log(1 + cv*cv); const sigma = Math.sqrt(sigma2); const mu = Math.log(m) - sigma2/2;
+        return Math.exp(mu + sigma*normalSample(rng));
+      }
+      if (dist === 'uniform') {
+        const cvCap = Math.min(cv, 0.577); const half = Math.sqrt(3)*cvCap*m;
+        return Math.max(1e-9, m - half + 2*half*rng());
+      }
+      return m;
+    }
+
+    function factorial(n) { let a=1; for(let i=2;i<=n;i++) a*=i; return a; }
+    function mmcMetrics(lambda, mu, c) {
+      const a=lambda/mu, rho=lambda/(c*mu), stable=rho<1;
+      if (!stable) return {rho,stable,Lq:NaN,L:NaN,Wq:NaN,W:NaN,P0:NaN};
+      let den=0; for(let n=0;n<=c-1;n++) den += Math.pow(a,n)/factorial(n);
+      den += Math.pow(a,c)/(factorial(c)*(1-rho));
+      const P0=1/den;
+      const Lq=(P0*Math.pow(a,c)*rho)/(factorial(c)*Math.pow(1-rho,2));
+      const Wq=Lq/lambda; const W=Wq+1/mu; const L=lambda*W;
+      return {rho,stable,Lq,L,Wq,W,P0};
+    }
+    function computeReferences(params) {
+      const allM = params.arrivalDist === 'exp' && params.stages.every(s => s.dist === 'exp');
+      const ca2 = params.arrivalDist === 'exp' ? 1 : distCV2(params.arrivalDist, params.arrivalCV);
+      return params.stages.map((s,i) => {
+        const mu = stageMu(s), c = Number(s.servers), m = mmcMetrics(params.lambda, mu, c);
+        if (!m.stable) return {...m, type: allM ? 'M/M/c exacta' : 'G/G/c aprox.', comment:'No estable: λ ≥ c·μ.'};
+        if (allM) return {...m, type:'M/M/c exacta', comment:'Por Burke, el arribo efectivo a la siguiente etapa se mantiene Poisson.'};
+        const cs2 = distCV2(s.dist, s.cv);
+        const factor = Math.max(0, (ca2 + cs2)/2);
+        const Wq = m.Wq * factor;
+        const W = Wq + 1/mu;
+        return {rho:m.rho, stable:true, Lq:params.lambda*Wq, L:params.lambda*W, Wq, W, P0:m.P0, type:'G/G/c aprox.', comment:'Allen-Cunneen por etapa aislada; en tándem general conviene confiar en la simulación.'};
+      });
+    }
+
+    function simulateLine(params, seed, collectTrace=false) {
+      const rng = mulberry32(seed);
+      const n = params.stages.length, horizon=params.horizon, warmup=Math.min(params.warmup, horizon-1e-9);
+      const effHorizon = Math.max(1e-9, horizon - warmup);
+      const servers = params.stages.map((s, si) => Array.from({length:s.servers}, (_,j)=>({stage:si, id:j+1, busy:false, customerId:null, startTime:null, endTime:Infinity, totalBusy:0, totalBusyObs:0, completed:0, intervals:[]})));
+      const queues = Array.from({length:n}, () => []);
+      const customers = [];
+      const customerMap = new Map();
+      const areasQ = Array(n).fill(0), areasL = Array(n).fill(0), areasB = Array(n).fill(0), maxQ = Array(n).fill(0), rawAreasB = Array(n).fill(0);
+      const events = [], timeSeries = [], cumulativeUtilSeries = [];
+      let t=0, lastTime=0, arrivals=0, departures=0, customerCounter=0, truncated=false;
+      const maxEvents = 220000;
+      const interarrivalMean = 1 / Math.max(1e-9, params.lambda);
+      let nextArrival = sampleByDist(params.arrivalDist, interarrivalMean, params.arrivalCV, rng);
+
+      function currentCounts() {
+        const q = queues.map(x => x.length);
+        const b = servers.map(row => row.filter(s => s.busy).length);
+        return { q, b, totalQ:q.reduce((a,b)=>a+b,0), totalL:q.reduce((a,b)=>a+b,0)+b.reduce((a,b)=>a+b,0) };
+      }
+      function updateAreas(newTime) {
+        const dtRaw = newTime - lastTime;
+        if (dtRaw < -1e-9) return;
+        const counts = currentCounts();
+        for (let i=0;i<n;i++) rawAreasB[i] += counts.b[i] * dtRaw;
+        const from = Math.max(lastTime, warmup), to = Math.min(newTime, horizon);
+        if (to > from) {
+          const dt = to - from;
+          for (let i=0;i<n;i++) { areasQ[i] += counts.q[i]*dt; areasL[i] += (counts.q[i]+counts.b[i])*dt; areasB[i] += counts.b[i]*dt; }
+        }
+        lastTime = newTime;
+      }
+      function ensureStageRec(customer, si, now) {
+        if (!customer.stages[si]) customer.stages[si] = { queueArrival:now, serviceStart:null, serviceEnd:null, wait:null, serviceTime:null, server:null };
+        return customer.stages[si];
+      }
+      function firstIdle(si) { return servers[si].find(s => !s.busy) || null; }
+      function startService(si, customer, server, now) {
+        const rec = ensureStageRec(customer, si, now);
+        if (!Number.isFinite(rec.queueArrival)) rec.queueArrival = now;
+        const st = sampleByDist(params.stages[si].dist, params.stages[si].serviceMean, params.stages[si].cv, rng);
+        rec.serviceStart = now; rec.wait = now - rec.queueArrival; rec.serviceTime = st; rec.server = server.id;
+        server.busy = true; server.customerId = customer.id; server.startTime = now; server.endTime = now + st;
+        server.intervals.push({ start:now, end:null, customerId:customer.id });
+      }
+      function enterStage(si, customer, now) {
+        const rec = ensureStageRec(customer, si, now); rec.queueArrival = now;
+        const idle = firstIdle(si);
+        if (idle) { startService(si, customer, idle, now); return `Cliente ${customer.id} entra directo a servicio en ${params.stages[si].name}.`; }
+        queues[si].push(customer); maxQ[si] = Math.max(maxQ[si], queues[si].length); return `Cliente ${customer.id} espera en cola de ${params.stages[si].name}.`;
+      }
+      function maybeStartNext(si, now) {
+        while (queues[si].length > 0) {
+          const idle = firstIdle(si); if (!idle) return;
+          const customer = queues[si].shift(); startService(si, customer, idle, now);
+        }
+      }
+      function registerTrace(type, customerId, stage, detail) {
+        if (!collectTrace) return;
+        const counts = currentCounts();
+        events.push({
+          idx:events.length, time:t, type, customerId, stage, detail, arrivals, departures,
+          q:counts.q, b:counts.b, totalQ:counts.totalQ, totalL:counts.totalL,
+          queues:queues.map(q => q.slice(0,18).map(c => c.id)),
+          servers:servers.map(row => row.map(s => ({ id:s.id, busy:s.busy, customerId:s.customerId, startTime:s.startTime, endTime:s.endTime })))
+        });
+        timeSeries.push({ time:t, totalQ:counts.totalQ, totalL:counts.totalL, q:counts.q.slice(), b:counts.b.slice() });
+        cumulativeUtilSeries.push({ time:t, u:rawAreasB.map(x => t > 0 ? x/t : 0) });
+      }
+      if (collectTrace) { timeSeries.push({time:0,totalQ:0,totalL:0,q:Array(n).fill(0),b:Array(n).fill(0)}); cumulativeUtilSeries.push({time:0,u:Array(n).fill(0)}); }
+
+      while (true) {
+        let nextCompletion=Infinity, compStage=-1, compServer=null;
+        for (let i=0;i<n;i++) for (const s of servers[i]) if (s.busy && s.endTime < nextCompletion) { nextCompletion=s.endTime; compStage=i; compServer=s; }
+        const nextEvent = Math.min(nextArrival, nextCompletion);
+        if (!Number.isFinite(nextEvent) || nextEvent > horizon) break;
+        if (events.length > maxEvents || (!collectTrace && arrivals+departures > maxEvents)) { truncated=true; break; }
+        updateAreas(nextEvent); t = nextEvent;
+        if (nextCompletion <= nextArrival) {
+          const server = compServer; const customer = customerMap.get(server.customerId); const rec = ensureStageRec(customer, compStage, t);
+          rec.serviceEnd = t;
+          server.totalBusy += t - server.startTime;
+          const obsFrom = Math.max(server.startTime, warmup), obsTo = Math.min(t, horizon);
+          if (obsTo > obsFrom) server.totalBusyObs += obsTo - obsFrom;
+          server.completed += 1;
+          const last = server.intervals[server.intervals.length-1]; if (last && last.end === null) last.end = t;
+          server.busy=false; server.customerId=null; server.startTime=null; server.endTime=Infinity;
+          let detail = `Cliente ${customer.id} completa ${params.stages[compStage].name}.`;
+          if (compStage === n-1) { customer.departureSystem=t; departures += 1; detail += ' Sale del sistema.'; }
+          else { detail += ' ' + enterStage(compStage+1, customer, t); }
+          maybeStartNext(compStage, t);
+          registerTrace('salida de servicio', customer.id, compStage+1, detail);
+        } else {
+          customerCounter += 1; arrivals += 1;
+          const customer = { id:customerCounter, arrivalSystem:t, departureSystem:null, stages:[] };
+          customers.push(customer); customerMap.set(customer.id, customer);
+          const detail = enterStage(0, customer, t);
+          registerTrace('arribo externo', customer.id, 1, detail);
+          nextArrival = t + sampleByDist(params.arrivalDist, interarrivalMean, params.arrivalCV, rng);
+        }
+      }
+      updateAreas(horizon); t = horizon;
+      for (let i=0;i<n;i++) for (const s of servers[i]) if (s.busy && s.startTime !== null) {
+        s.totalBusy += horizon - s.startTime;
+        const obsFrom = Math.max(s.startTime, warmup), obsTo = horizon;
+        if (obsTo > obsFrom) s.totalBusyObs += obsTo - obsFrom;
+        const last = s.intervals[s.intervals.length-1]; if (last && last.end === null) last.end = horizon;
+      }
+      if (collectTrace) {
+        const counts = currentCounts();
+        timeSeries.push({ time:horizon, totalQ:counts.totalQ, totalL:counts.totalL, q:counts.q.slice(), b:counts.b.slice() });
+        cumulativeUtilSeries.push({ time:horizon, u:rawAreasB.map(x => horizon>0 ? x/horizon : 0) });
+      }
+
+      const completed = customers.filter(c => Number.isFinite(c.departureSystem));
+      const completedForTimes = completed.filter(c => c.arrivalSystem >= warmup);
+      const baseCompleted = completedForTimes.length ? completedForTimes : completed;
+      const totalWait = baseCompleted.map(c => c.stages.reduce((a,s)=>a+(s.wait||0),0));
+      const totalService = baseCompleted.map(c => c.stages.reduce((a,s)=>a+(s.serviceTime||0),0));
+      const totalSystem = baseCompleted.map(c => c.departureSystem - c.arrivalSystem);
+      const stageWait = [], stageSystem = [], stageThrough = [];
+      for (let i=0;i<n;i++) {
+        const arr = completed.filter(c => c.stages[i] && c.stages[i].queueArrival >= warmup);
+        stageWait[i] = arr.map(c => c.stages[i].wait || 0);
+        stageSystem[i] = arr.map(c => (c.stages[i].wait||0) + (c.stages[i].serviceTime||0));
+        stageThrough[i] = servers[i].reduce((a,s)=>a+s.completed,0)/Math.max(1e-9,horizon);
+      }
+      const stageUtil = servers.map((row,i) => row.reduce((a,s)=>a+s.totalBusyObs,0)/(Math.max(1,row.length)*effHorizon));
+      const stageCompleted = servers.map(row => row.reduce((a,s)=>a+s.completed,0));
+      const summary = {
+        seed, horizon, warmup, arrivals, departures, truncated,
+        throughput:departures/Math.max(1e-9,horizon),
+        totalQMean:areasQ.reduce((a,b)=>a+b,0)/effHorizon,
+        totalLMean:areasL.reduce((a,b)=>a+b,0)/effHorizon,
+        totalWaitMean:mean(totalWait), totalServiceMean:mean(totalService), totalSystemMean:mean(totalSystem),
+        stageQMean:areasQ.map(x=>x/effHorizon), stageLMean:areasL.map(x=>x/effHorizon), stageUtil, stageCompleted,
+        stageWaitMean:stageWait.map(mean), stageSystemMean:stageSystem.map(mean), stageThroughput:stageThrough, maxQ,
+        bottleneck:stageUtil.indexOf(Math.max(...stageUtil)) + 1
+      };
+      const trace = collectTrace ? { seed, events, timeSeries, cumulativeUtilSeries, servers, params } : null;
+      return { summary, trace };
+    }
+
+    function readParams() {
+      const lambda = Number($('lambda').value), horizon=Number($('horizon').value), warmup=Number($('warmup').value);
+      const stages = state.stages.map((s,i)=>({ name:s.name || `Etapa ${i+1}`, servers:Math.max(1, Math.round(Number(s.servers)||1)), serviceMean:Math.max(1e-9, Number(s.serviceMean)||1), dist:s.dist || 'exp', cv:Math.max(0, Number(s.cv)||0) }));
+      if (!(lambda > 0) || !(horizon > 0) || warmup < 0 || warmup >= horizon) throw new Error('Revisá λ, T y warm-up: λ y T deben ser positivos, y warm-up debe ser menor que T.');
+      if (!stages.length) throw new Error('La línea debe tener al menos una etapa.');
+      return { lambda, arrivalDist:$('arrivalDist').value, arrivalCV:Math.max(0, Number($('arrivalCV').value)||0), horizon, warmup, stages };
+    }
+    function seedArray() {
+      const explicit = $('seedList').value.split(/[;,\s]+/).map(x=>x.trim()).filter(Boolean).map(Number).filter(Number.isFinite);
+      if (explicit.length) return explicit.slice(0,60);
+      const base = Number($('baseSeed').value) || 1; const reps = clamp(Math.round(Number($('replications').value)||1),1,60);
+      return Array.from({length:reps}, (_,i)=>base + i*1009);
+    }
+
+    function aggregateResults(summaries, params) {
+      const nStages = params.stages.length;
+      const ag = { globals:{}, stages:[] };
+      const fields = ['throughput','totalQMean','totalLMean','totalWaitMean','totalSystemMean','totalServiceMean'];
+      fields.forEach(f => { const arr=summaries.map(s=>s[f]).filter(Number.isFinite); ag.globals[f]={mean:mean(arr), sd:sd(arr), n:arr.length}; });
+      for (let i=0;i<nStages;i++) {
+        const obj = {};
+        ['stageQMean','stageLMean','stageUtil','stageWaitMean','stageSystemMean','stageThroughput','maxQ'].forEach(f => {
+          const arr=summaries.map(s=>Array.isArray(s[f]) ? s[f][i] : NaN).filter(Number.isFinite); obj[f]={mean:mean(arr), sd:sd(arr), n:arr.length};
+        });
+        ag.stages.push(obj);
+      }
+      return ag;
+    }
+    function ciText(obj, d=3) { if (!obj || !Number.isFinite(obj.mean)) return '—'; const half = obj.n>1 ? 1.96*obj.sd/Math.sqrt(obj.n) : 0; return `${fmt(obj.mean,d)}${obj.n>1 ? ` ± ${fmt(half,d)}` : ''}`; }
+    function renderGlobal(ag, summaries, params) {
+      const g=ag.globals;
+      const bottleneckCounts = {};
+      summaries.forEach(s => bottleneckCounts[s.bottleneck]=(bottleneckCounts[s.bottleneck]||0)+1);
+      const mostB = Object.entries(bottleneckCounts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
+      $('globalStats').innerHTML = [
+        {k:'Throughput', v:ciText(g.throughput), s:'Salidas por unidad de tiempo. Media ± IC95% entre semillas.'},
+        {k:'Lq total', v:ciText(g.totalQMean), s:'Clientes promedio esperando en todos los buffers.'},
+        {k:'L total', v:ciText(g.totalLMean), s:'WIP promedio total en la línea.'},
+        {k:'Wq total', v:ciText(g.totalWaitMean), s:'Espera acumulada promedio de clientes completados.'},
+        {k:'W total', v:ciText(g.totalSystemMean), s:'Tiempo total promedio dentro del sistema.'},
+        {k:'Tiempo proceso', v:ciText(g.totalServiceMean), s:'Tiempo neto promedio de servicio, sin esperas.'},
+        {k:'Cuello más frecuente', v:mostB==='—'?'—':`Etapa ${mostB}`, s:'Etapa con mayor utilización en más semillas.'},
+        {k:'Corridas', v:String(summaries.length), s:'Cantidad de semillas efectivamente simuladas.'}
+      ].map(card=>`<div class="stat"><div class="k">${card.k}</div><div class="v">${card.v}</div><div class="s">${card.s}</div></div>`).join('');
+      const refs = computeReferences(params); const unstable = refs.map((r,i)=>r.stable?null:i+1).filter(Boolean);
+      const hasGeneral = params.arrivalDist !== 'exp' || params.stages.some(s => s.dist !== 'exp');
+      const capped = summaries.some(s=>s.truncated);
+      const banner = $('statusBanner');
+      if (unstable.length) { banner.className='status-banner status-danger'; banner.innerHTML=`Atención: la capacidad nominal no alcanza en las etapas <span class="mono">${unstable.join(', ')}</span>. En horizonte finito se simula, pero no hay régimen estacionario estable.`; }
+      else if (hasGeneral) { banner.className='status-banner status-warn'; banner.innerHTML=`Sistema nominalmente estable. Como hay distribuciones generales, las fórmulas exactas M/M/c dejan de aplicar; usá la simulación como evidencia principal y las aproximaciones sólo como referencia.${capped?' Algunas corridas alcanzaron el tope de eventos.':''}`; }
+      else { banner.className='status-banner status-ok'; banner.innerHTML=`Sistema M/M/c en serie nominalmente estable. Las referencias por etapa son exactas bajo el supuesto de arribos Poisson y servicios exponenciales.${capped?' Algunas corridas alcanzaron el tope de eventos.':''}`; }
+    }
+    function renderSeedCompare(summaries) {
+      $('seedCompareBody').innerHTML = summaries.map(s=>`
+        <tr><td><strong>${s.seed}</strong></td><td>${s.arrivals}</td><td>${s.departures}</td><td>${fmt(s.throughput)}</td><td>${fmt(s.totalWaitMean)}</td><td>${fmt(s.totalSystemMean)}</td><td>${fmt(s.totalQMean)}</td><td>${fmt(s.totalLMean)}</td><td>Etapa ${s.bottleneck}</td><td>${s.truncated?'Sí':'No'}</td></tr>`).join('');
+    }
+    function renderStageResults(ag, params) {
+      $('stageResultsBody').innerHTML = params.stages.map((s,i)=>`
+        <tr><td><strong>${escapeHtml(s.name)}</strong></td><td>${s.servers}</td><td>${fmt(stageMu(s))}</td><td>${fmt(s.servers*stageMu(s))}</td><td>${ciText(ag.stages[i].stageUtil)}</td><td>${ciText(ag.stages[i].stageQMean)}</td><td>${ciText(ag.stages[i].stageLMean)}</td><td>${ciText(ag.stages[i].stageWaitMean)}</td><td>${ciText(ag.stages[i].stageSystemMean)}</td><td>${ciText(ag.stages[i].stageThroughput)}</td><td>${ciText(ag.stages[i].maxQ,1)}</td></tr>`).join('');
+    }
+    function renderReferences(params) {
+      state.references = computeReferences(params);
+      $('referenceBody').innerHTML = state.references.map((r,i)=>`
+        <tr><td><strong>${escapeHtml(params.stages[i].name)}</strong></td><td>${r.type}</td><td>${fmt(r.rho)}</td><td>${fmt(r.Lq)}</td><td>${fmt(r.Wq)}</td><td>${fmt(r.W)}</td><td>${r.comment}</td></tr>`).join('');
+    }
+    function renderDiagnostics(ag, summaries, params) {
+      const avgUtils = ag.stages.map((s,i)=>({i, u:s.stageUtil.mean, q:s.stageQMean.mean, wq:s.stageWaitMean.mean})).sort((a,b)=>b.u-a.u);
+      const b = avgUtils[0];
+      const totalCap = params.stages.map(s=>s.servers*stageMu(s));
+      const minCapIdx = totalCap.indexOf(Math.min(...totalCap));
+      const waitShare = ag.globals.totalSystemMean.mean > 0 ? ag.globals.totalWaitMean.mean / ag.globals.totalSystemMean.mean : NaN;
+      const highVariability = params.arrivalDist !== 'exp' || params.arrivalCV > 1.2 || params.stages.some(s => distCV2(s.dist,s.cv) > 1.44);
+      const cards = [
+        `<div class="note-box"><strong>1) Cuello de botella observado:</strong><br>La mayor utilización promedio aparece en <span class="mono">${escapeHtml(params.stages[b.i].name)}</span> con utilización ${fmtPct(b.u)}. Revisá primero esta estación antes de invertir en capacidad aguas arriba o abajo.</div>`,
+        `<div class="note-box"><strong>2) Cuello de botella nominal:</strong><br>La menor capacidad nominal es <span class="mono">${escapeHtml(params.stages[minCapIdx].name)}</span> con capacidad ${fmt(totalCap[minCapIdx])} clientes/tiempo. Si coincide con el cuello observado, la recomendación es más clara.</div>`,
+        `<div class="note-box"><strong>3) Palanca de mejora:</strong><br>${waitShare > .5 ? 'Más de la mitad del tiempo total parece ser espera; conviene evaluar capacidad adicional, reducción de variabilidad o priorización.' : 'El tiempo de proceso pesa relativamente más que la espera; conviene revisar productividad media de servicio y no sólo colas.'}</div>`,
+        `<div class="note-box"><strong>4) Variabilidad:</strong><br>${highVariability ? 'Hay variabilidad general alta o distribuciones no exponenciales. Compará escenarios de reducción de CV contra escenarios de más servidores.' : 'El caso está cerca del mundo M/M/c. Es buen escenario para contrastar simulación versus fórmulas.'}</div>`
+      ];
+      $('diagnosticCards').innerHTML = cards.join('');
+    }
+
+    function drawAxes(ctx,W,H,pad,xLabel,yLabel,xMin,xMax,yMax,tickX=5,tickY=4) {
+      const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+      ctx.strokeStyle=theme('--border','#1e2646'); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ch); ctx.lineTo(pad.l+cw,pad.t+ch); ctx.stroke();
+      ctx.font='11px system-ui'; ctx.fillStyle=theme('--muted','#9aa4b2'); ctx.textAlign='center';
+      for(let i=0;i<=tickX;i++){ const x=pad.l+cw*i/tickX; const val=xMin+(xMax-xMin)*i/tickX; ctx.beginPath(); ctx.moveTo(x,pad.t+ch); ctx.lineTo(x,pad.t+ch+4); ctx.stroke(); ctx.fillText(fmt(val,1),x,H-12); }
+      ctx.textAlign='right';
+      for(let i=0;i<=tickY;i++){ const y=pad.t+ch-ch*i/tickY; const val=yMax*i/tickY; ctx.beginPath(); ctx.moveTo(pad.l-4,y); ctx.lineTo(pad.l,y); ctx.stroke(); ctx.fillText(fmt(val,1),pad.l-7,y+4); }
+      ctx.textAlign='center'; ctx.fillText(xLabel,pad.l+cw/2,H-2); ctx.save(); ctx.translate(14,pad.t+ch/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore();
+      return {cw,ch};
+    }
+    function drawStepMulti(canvasId, series, defs, horizon, yLabel, yMaxOverride=null) {
+      const canvas=$(canvasId), ctx=canvas.getContext('2d'), W=canvas.width,H=canvas.height; ctx.clearRect(0,0,W,H); ctx.fillStyle=theme('--chart-bg','#0c1226'); ctx.fillRect(0,0,W,H);
+      if(!series || series.length < 2) { ctx.fillStyle=theme('--muted','#9aa4b2'); ctx.font='14px system-ui'; ctx.fillText('Sin trayectoria para graficar.',20,36); return; }
+      const pad={l:50,r:18,t:24,b:40};
+      let yMax = yMaxOverride || Math.max(1, ...series.flatMap(s => defs.map(d => Number(d.get(s)) || 0)));
+      yMax = Math.max(1, yMax);
+      const {cw,ch}=drawAxes(ctx,W,H,pad,'Tiempo',yLabel,0,Math.max(horizon,1e-9),yMax,5,Math.min(5,Math.ceil(yMax)));
+      const xs=t=>pad.l+(t/Math.max(horizon,1e-9))*cw, ys=y=>pad.t+ch-(y/yMax)*ch;
+      ctx.strokeStyle=hexToRgba(theme('--ink','#e7ecf3'),.08); for(let i=1;i<=4;i++){ const y=pad.t+ch*i/5; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke(); }
+      defs.forEach((def,di)=>{ ctx.beginPath(); ctx.lineWidth=2.2; ctx.strokeStyle=def.color; let started=false; for(let i=0;i<series.length-1;i++){ const a=series[i], b=series[i+1]; const x1=xs(a.time), x2=xs(b.time); const y1=ys(def.get(a)); const y2=ys(def.get(b)); if(!started){ ctx.moveTo(x1,y1); started=true; } ctx.lineTo(x2,y1); ctx.lineTo(x2,y2); } ctx.stroke(); ctx.fillStyle=def.color; ctx.font='12px system-ui'; ctx.textAlign='left'; ctx.fillText(def.label, pad.l+8, 16+di*15); });
+    }
+    function renderCharts(trace) {
+      if (!trace) return;
+      const params = trace.params, h=params.horizon;
+      drawStepMulti('totalChart', trace.timeSeries, [
+        {label:'L total', color:theme('--p0'), get:s=>s.totalL}, {label:'Q total', color:theme('--p1'), get:s=>s.totalQ}
+      ], h, 'Clientes');
+      drawStepMulti('queuesChart', trace.timeSeries, params.stages.map((st,i)=>({label:`Q${i+1}`, color:theme(colors[i%colors.length]), get:s=>s.q[i]||0})), h, 'Clientes en cola');
+      drawStepMulti('busyChart', trace.timeSeries, params.stages.map((st,i)=>({label:`B${i+1}`, color:theme(colors[i%colors.length]), get:s=>s.b[i]||0})), h, 'Servidores ocupados', Math.max(...params.stages.map(s=>s.servers),1));
+      drawStepMulti('utilChart', trace.cumulativeUtilSeries, params.stages.map((st,i)=>({label:`U${i+1}`, color:theme(colors[i%colors.length]), get:s=>s.u[i]||0})), h, 'Util. acumulada', 1);
+    }
+
+    function renderPlayback(index=-1) {
+      const trace=state.currentTrace; if(!trace) return;
+      const events=trace.events, params=trace.params;
+      $('timeline').max=Math.max(0,events.length-1); $('eventTotalText').textContent=String(events.length);
+      if(index < 0 || !events.length) {
+        state.playIndex=-1; $('timeline').value=0; $('eventIndexText').textContent='0'; $('clockText').textContent='0.000'; $('eventText').textContent='inicio'; $('qText').textContent='0'; $('lText').textContent='0'; $('departText').textContent='0';
+        $('playStages').innerHTML = params.stages.map((s,i)=>emptyPlayStage(s,i)).join(''); $('eventLog').innerHTML='<div class="event-row">Todavía no se reprodujo ningún evento.</div>'; return;
+      }
+      const i=clamp(index,0,events.length-1), ev=events[i]; state.playIndex=i; $('timeline').value=i; $('eventIndexText').textContent=String(i+1); $('clockText').textContent=fmt(ev.time,3); $('eventText').textContent=`${ev.type} · etapa ${ev.stage}`; $('qText').textContent=String(ev.totalQ); $('lText').textContent=String(ev.totalL); $('departText').textContent=String(ev.departures);
+      $('playStages').innerHTML = params.stages.map((s,si)=>playStageHTML(s,si,ev,trace)).join('');
+      const start=Math.max(0,i-7); $('eventLog').innerHTML=events.slice(start,i+1).reverse().map(e=>`<div class="event-row"><strong>${fmt(e.time,3)}</strong> · ${e.type} · cliente ${e.customerId} · etapa ${e.stage}<br>${escapeHtml(e.detail)}<br><span class="muted">Q=${e.totalQ} · L=${e.totalL} · salidas=${e.departures}</span></div>`).join('');
+    }
+    function emptyPlayStage(s,i) {
+      return `<div class="play-stage"><div class="play-stage-head"><span>${escapeHtml(s.name)}</span><span class="badge">c=${s.servers}</span></div><div class="small">Buffer previo</div><div class="buffer-bin"><span class="muted">vacío</span></div><div class="server-mini-grid">${Array.from({length:s.servers},(_,j)=>`<div class="server-mini"><span class="server-state">Libre</span><span>S${j+1}</span><div class="progress"><span style="width:0%"></span></div></div>`).join('')}</div></div>`;
+    }
+    function serverProgress(ev, trace, si, sj) {
+      const srv = trace.servers[si][sj]; const intv = [...srv.intervals].reverse().find(x => x.start <= ev.time && (x.end ?? trace.params.horizon) >= ev.time);
+      if (!intv) return 0; const span=Math.max(1e-9,(intv.end??trace.params.horizon)-intv.start); return clamp((ev.time-intv.start)/span,0,1);
+    }
+    function playStageHTML(s,si,ev,trace) {
+      const q = ev.queues[si] || [], b = ev.b[si] || 0;
+      const qChips = q.length ? q.map(id=>`<span class="chip">${id}</span>`).join('') : '<span class="muted">vacío</span>';
+      const servers = ev.servers[si].map((srv,j)=>{
+        const prog = srv.busy ? serverProgress(ev,trace,si,j)*100 : 0;
+        return `<div class="server-mini ${srv.busy?'busy':''}"><span class="server-state">${srv.busy?'Ocupado':'Libre'}</span><span>S${srv.id} ${srv.busy?`· C${srv.customerId}`:''}</span><span class="muted">Fin: ${srv.busy?fmt(srv.endTime,2):'—'}</span><div class="progress"><span style="width:${prog}%"></span></div></div>`;
+      }).join('');
+      return `<div class="play-stage"><div class="play-stage-head"><span>${escapeHtml(s.name)}</span><span class="badge">Q=${q.length} · B=${b}/${s.servers}</span></div><div class="small">Buffer previo</div><div class="buffer-bin">${qChips}</div><div class="server-mini-grid">${servers}</div></div>`;
+    }
+    function pausePlayback(){ if(state.timer){ clearInterval(state.timer); state.timer=null; } }
+    function playPlayback(){ pausePlayback(); if(!state.currentTrace || !state.currentTrace.events.length) return; const speed=Number($('speed').value)||1; state.timer=setInterval(()=>{ if(state.playIndex >= state.currentTrace.events.length-1){ pausePlayback(); return; } renderPlayback(state.playIndex+1); }, Math.max(20,260/speed)); }
+
+    function fillSeedSelector(seeds) {
+      $('selectedSeed').innerHTML = seeds.map(s=>`<option value="${s}">${s}</option>`).join('');
+    }
+    function loadTraceForSeed(seed) {
+      if (!state.lastParams) return;
+      const key=String(seed);
+      if (!state.traceCache.has(key)) state.traceCache.set(key, simulateLine(state.lastParams, Number(seed), true).trace);
+      state.currentTrace=state.traceCache.get(key); renderCharts(state.currentTrace); renderPlayback(-1);
+    }
+    function runAll() {
+      try {
+        pausePlayback();
+        const params=readParams(); const seeds=seedArray(); fillSeedSelector(seeds);
+        state.lastParams=params; state.summaries=[]; state.traceCache.clear();
+        seeds.forEach((seed,idx)=>{ const res=simulateLine(params, seed, idx===0); state.summaries.push(res.summary); if(idx===0) state.traceCache.set(String(seed), res.trace); });
+        const ag=aggregateResults(state.summaries, params);
+        renderGlobal(ag,state.summaries,params); renderSeedCompare(state.summaries); renderStageResults(ag,params); renderReferences(params); renderDiagnostics(ag,state.summaries,params);
+        $('selectedSeed').value=String(seeds[0]); loadTraceForSeed(seeds[0]);
+      } catch(err) { alert(err.message || String(err)); }
+    }
+    function exportRows(filename, rows) {
+      const csv = rows.map(row=>row.map(v=>{ const s=String(v??''); return /[",;\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }).join(',')).join('\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    function exportSummary() {
+      if(!state.summaries.length || !state.lastParams) return;
+      const rows=[['seccion','semilla','etapa','metrica','valor']];
+      state.summaries.forEach(s=>{
+        ['arrivals','departures','throughput','totalQMean','totalLMean','totalWaitMean','totalSystemMean','totalServiceMean','bottleneck','truncated'].forEach(k=>rows.push(['global',s.seed,'',k,s[k]]));
+        state.lastParams.stages.forEach((st,i)=>{ rows.push(['etapa',s.seed,i+1,'nombre',st.name],['etapa',s.seed,i+1,'servidores',st.servers],['etapa',s.seed,i+1,'utilizacion',s.stageUtil[i]],['etapa',s.seed,i+1,'Lq',s.stageQMean[i]],['etapa',s.seed,i+1,'L',s.stageLMean[i]],['etapa',s.seed,i+1,'Wq',s.stageWaitMean[i]],['etapa',s.seed,i+1,'W',s.stageSystemMean[i]],['etapa',s.seed,i+1,'throughput',s.stageThroughput[i]],['etapa',s.seed,i+1,'maxQ',s.maxQ[i]]); });
+      });
+      exportRows('simulador_colas_multietapa_resumen.csv', rows);
+    }
+    function exportTrace() {
+      const tr=state.currentTrace; if(!tr) return;
+      const rows=[['tiempo','evento','cliente','etapa','arribos','salidas','Q_total','L_total','Q_por_etapa','B_por_etapa','detalle']];
+      tr.events.forEach(e=>rows.push([fmt(e.time,6),e.type,e.customerId,e.stage,e.arrivals,e.departures,e.totalQ,e.totalL,e.q.join('|'),e.b.join('|'),e.detail]));
+      exportRows(`simulador_colas_multietapa_trayectoria_${tr.seed}.csv`, rows);
+    }
+    function loadMMcExample(){ $('lambda').value='0.90'; $('arrivalDist').value='exp'; $('arrivalCV').value='1'; $('horizon').value='650'; $('warmup').value='80'; $('baseSeed').value='20260324'; $('replications').value='10'; $('seedList').value=''; state.stages=[{name:'Recepción',servers:2,serviceMean:1.15,dist:'exp',cv:1},{name:'Control documental',servers:1,serviceMean:0.95,dist:'exp',cv:1},{name:'Resolución',servers:2,serviceMean:1.45,dist:'exp',cv:1},{name:'Cierre',servers:1,serviceMean:0.85,dist:'exp',cv:1}]; renderStagesUI(); runAll(); }
+    function loadGGcExample(){ $('lambda').value='0.82'; $('arrivalDist').value='gamma'; $('arrivalCV').value='1.35'; $('horizon').value='800'; $('warmup').value='120'; $('baseSeed').value='13579'; $('replications').value='12'; $('seedList').value=''; state.stages=[{name:'Ingreso',servers:2,serviceMean:1.00,dist:'gamma',cv:0.70},{name:'Validación',servers:1,serviceMean:0.88,dist:'lognormal',cv:1.45},{name:'Análisis senior',servers:2,serviceMean:1.62,dist:'gamma',cv:0.95},{name:'Backoffice',servers:1,serviceMean:0.92,dist:'uniform',cv:0.35}]; renderStagesUI(); runAll(); }
+
+    $('addStageBtn').addEventListener('click',()=>addStage());
+    $('duplicateLastBtn').addEventListener('click',()=> state.stages.length && duplicateStage(state.stages.length-1));
+    $('resetStagesBtn').addEventListener('click',resetDefaultStages);
+    $('runBtn').addEventListener('click',runAll);
+    $('loadMMcBtn').addEventListener('click',loadMMcExample);
+    $('loadGGcBtn').addEventListener('click',loadGGcExample);
+    $('exportSummaryBtn').addEventListener('click',exportSummary);
+    $('exportTraceBtn').addEventListener('click',exportTrace);
+    $('playBtn').addEventListener('click',playPlayback); $('pauseBtn').addEventListener('click',pausePlayback); $('stepBtn').addEventListener('click',()=>{ pausePlayback(); if(state.currentTrace) renderPlayback(Math.min(state.playIndex+1,state.currentTrace.events.length-1)); }); $('resetPlayBtn').addEventListener('click',()=>{ pausePlayback(); renderPlayback(-1); });
+    $('timeline').addEventListener('input',e=>{ pausePlayback(); renderPlayback(Number(e.target.value)); });
+    $('selectedSeed').addEventListener('change',e=>{ pausePlayback(); loadTraceForSeed(e.target.value); });
+    $('lambda').addEventListener('input',renderModelLine);
+    $('stagesBody').addEventListener('change', e=>{
+      const el=e.target; const i=Number(el.dataset.i), field=el.dataset.field; if(!Number.isInteger(i) || !field) return;
+      let v=el.value; if(['servers'].includes(field)) v=Math.max(1,Math.round(Number(v)||1)); if(['serviceMean'].includes(field)) v=Math.max(1e-9,Number(v)||1); if(['cv'].includes(field)) v=Math.max(0,Number(v)||0);
+      state.stages[i][field]=v; renderStagesUI();
+    });
+    $('stagesBody').addEventListener('click', e=>{ const btn=e.target.closest('button'); if(!btn) return; const i=Number(btn.dataset.i); if(btn.dataset.action==='delete') deleteStage(i); if(btn.dataset.action==='duplicate') duplicateStage(i); });
+    $('modelLine').addEventListener('click', e=>{ const btn=e.target.closest('button'); if(!btn) return; const i=Number(btn.dataset.i), a=btn.dataset.action; if(a==='delete') deleteStage(i); if(a==='move-left' && i>0) moveStage(i,i-1); if(a==='move-right' && i<state.stages.length-1) moveStage(i,i+1); });
+    document.querySelectorAll('[data-palette="stage"]').forEach(el=>{ el.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain','stage'); }); });
+    $('modelLine').addEventListener('dragover',e=>e.preventDefault());
+    $('modelLine').addEventListener('drop',e=>{ e.preventDefault(); if(e.dataTransfer.getData('text/plain')==='stage') addStage(); });
+    window.addEventListener('resize',()=>{ if(state.currentTrace) renderCharts(state.currentTrace); });
+
+    const layoutPrefs = { modeKey:'colasMultietapaLayoutMode', widthKey:'colasMultietapaPaneWidth' };
+    function setWorkspaceLayout(mode, persist=true) {
+      const allowed = new Set(['model','split','results','focus']);
+      const selected = allowed.has(mode) ? mode : 'model';
+      const grid = $('workspaceGrid');
+      if (!grid) return;
+      grid.classList.remove('layout-model','layout-split','layout-results','layout-focus');
+      grid.classList.add(`layout-${selected}`);
+      document.querySelectorAll('[data-layout]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.layout === selected);
+        btn.setAttribute('aria-selected', btn.dataset.layout === selected ? 'true' : 'false');
+      });
+      const range = $('paneWidthRange');
+      if (range) range.disabled = selected !== 'split';
+      if (persist) localStorage.setItem(layoutPrefs.modeKey, selected);
+      setTimeout(() => { if (state.currentTrace) renderCharts(state.currentTrace); }, 40);
+    }
+    function setPaneWidth(px, persist=true) {
+      const grid = $('workspaceGrid');
+      if (!grid) return;
+      const width = clamp(Number(px)||760, 420, 1180);
+      grid.style.setProperty('--left-pane', `${width}px`);
+      if ($('paneWidthRange')) $('paneWidthRange').value = String(Math.round(width));
+      if ($('paneWidthText')) $('paneWidthText').textContent = `${Math.round(width)} px`;
+      if (persist) localStorage.setItem(layoutPrefs.widthKey, String(Math.round(width)));
+      if (state.currentTrace) renderCharts(state.currentTrace);
+    }
+    function initWorkspaceLayout() {
+      const savedWidth = Number(localStorage.getItem(layoutPrefs.widthKey) || 760);
+      setPaneWidth(savedWidth, false);
+      const savedMode = localStorage.getItem(layoutPrefs.modeKey) || 'model';
+      setWorkspaceLayout(savedMode, false);
+
+      document.querySelectorAll('[data-layout]').forEach(btn => {
+        btn.addEventListener('click', () => setWorkspaceLayout(btn.dataset.layout));
+      });
+      $('paneWidthRange')?.addEventListener('input', e => {
+        setPaneWidth(e.target.value);
+        setWorkspaceLayout('split');
+      });
+
+      const divider = $('paneDivider');
+      const grid = $('workspaceGrid');
+      let dragging = false;
+      divider?.addEventListener('pointerdown', e => {
+        dragging = true; document.body.classList.add('resizing');
+        divider.setPointerCapture?.(e.pointerId);
+        setWorkspaceLayout('split');
+      });
+      window.addEventListener('pointermove', e => {
+        if (!dragging || !grid) return;
+        const rect = grid.getBoundingClientRect();
+        const maxWidth = Math.min(1180, Math.max(420, rect.width - 360));
+        const width = clamp(e.clientX - rect.left, 420, maxWidth);
+        setPaneWidth(width, false);
+      });
+      window.addEventListener('pointerup', () => {
+        if (!dragging) return;
+        dragging = false; document.body.classList.remove('resizing');
+        const range = $('paneWidthRange');
+        if (range) localStorage.setItem(layoutPrefs.widthKey, range.value);
+      });
+    }
+
+    initWorkspaceLayout();
+    resetDefaultStages(); runAll();
+  </script>
+</body>
+</html>
