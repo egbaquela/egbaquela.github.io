@@ -1,0 +1,162 @@
+:root {
+  --bg: #ffffff;
+  --text: #1f2933;
+  --muted: #5f6b7a;
+  --border: #e5e7eb;
+  --accent: #1f4e79;
+  --accent-soft: #eef5fb;
+  --max-width: 1080px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.65;
+}
+
+.site-header {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.brand-name {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.brand-subtitle {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.main-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.92rem;
+}
+
+.main-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.main-nav a:hover {
+  color: var(--accent);
+}
+
+.site-main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.hero {
+  padding: 3rem 0 2rem;
+  max-width: 880px;
+}
+
+.hero h1 {
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.hero-actions a,
+.cta-links a {
+  display: inline-block;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.section-title {
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.info-card {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  text-decoration: none;
+  color: var(--text);
+  background: #fff;
+}
+
+.info-card:hover {
+  border-color: var(--accent);
+}
+
+.card-kicker {
+  color: var(--accent);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.info-card h3 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.info-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.site-cta,
+.site-footer {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.site-footer {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.small {
+  font-size: 0.8rem;
+}
